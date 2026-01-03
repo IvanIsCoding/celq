@@ -130,13 +130,16 @@ fn main() -> io::Result<()> {
         }
     };
 
-    // Handle input and execute the program
     match handle_input(&program, &arg_variables, cli.null_input, cli.slurp) {
-        Ok((output, is_truthy)) => {
-            println!("{}", output);
+        Ok(results) => {
+            // Print all outputs
+            for (output, _) in &results {
+                println!("{}", output);
+            }
 
-            // If boolean mode is enabled, exit with appropriate code
+            // If boolean mode is enabled, exit with appropriate code based on last result
             if cli.boolean {
+                let is_truthy = results.last().map(|(_, truthy)| *truthy).unwrap_or(false);
                 let exit_code = if is_truthy { 0 } else { 1 };
                 process::exit(exit_code);
             }
