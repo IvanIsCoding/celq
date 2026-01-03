@@ -125,6 +125,7 @@ test!(list_literal, &["[1, 2, 3]"], "{}", "[1,2,3]");
 test!(list_size, &["size([1, 2, 3, 4])"], "{}", "4");
 test!(list_in, &["2 in [1, 2, 3]"], "{}", "true");
 test!(list_index, &["[10, 20, 30][1]"], "{}", "20");
+test!(list_no_key_sorting, &["-S", "[30, 20, 10]"], "{}", "[30,20,10]");
 
 // Map operations
 test!(
