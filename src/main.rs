@@ -1,5 +1,7 @@
+use cel::Program;
 use clap::Parser;
 use std::io::{self, BufRead};
+use std::process;
 
 #[derive(Debug, Clone)]
 struct Argument {
@@ -44,7 +46,8 @@ impl std::str::FromStr for Argument {
 #[command(about = "CEL expression evaluator", long_about = None)]
 struct Cli {
     /// Define argument variables, types, and (optional) values
-    /// Format: name:type=value
+    /// Format: name:type or name:type=value
+    /// If value is omitted, environment variable will be used
     #[arg(short = 'a', long = "arg", value_name = "name:type=value")]
     args: Vec<Argument>,
 
@@ -81,6 +84,22 @@ fn main() -> io::Result<()> {
     for arg in &cli.args {
         println!("  {} ({}): {:?}", arg.name, arg.type_name, arg.value);
     }
+
+    // Compile the CEL program
+    println!("\nCompiling CEL expression: {}", cli.expression);
+    let program = match Program::compile(&cli.expression) {
+        Ok(prog) => {
+            println!("✓ Program compiled successfully");
+            prog
+        }
+        Err(parse_errors) => {
+            eprintln!("✗ Failed to compile CEL expression:");
+            for error in &parse_errors.errors {
+                eprintln!("  Error: {:?}", error);
+            }
+            process::exit(2);
+        }
+    };
 
     // Read input from stdin unless null_input
     if !cli.null_input {
