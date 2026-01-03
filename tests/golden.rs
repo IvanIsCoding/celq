@@ -27,12 +27,24 @@ fn golden_test(args: &[&str], input: &str, out_ex: &str) -> io::Result<()> {
         .args(args)
         .stdin(process::Stdio::piped())
         .stdout(process::Stdio::piped())
+        .stderr(process::Stdio::piped())
         .spawn()?;
 
     use io::Write;
-    child.stdin.take().unwrap().write_all(input.as_bytes())?;
+    // Write input and explicitly drop stdin to close it
+    {
+        let mut stdin = child.stdin.take().unwrap();
+        stdin.write_all(input.as_bytes())?;
+        // stdin is dropped here, closing the pipe
+    }
+    
     let output = child.wait_with_output()?;
-    assert!(output.status.success());
+    
+    if !output.status.success() {
+        eprintln!("Process failed with status: {}", output.status);
+        eprintln!("stderr: {}", String::from_utf8_lossy(&output.stderr));
+        panic!("Test failed");
+    }
 
     let out_act = str::from_utf8(&output.stdout).expect("invalid UTF-8 in output");
     // remove '\r' from output for compatibility with Windows
@@ -40,7 +52,7 @@ fn golden_test(args: &[&str], input: &str, out_ex: &str) -> io::Result<()> {
     if out_ex.trim() != out_act.trim() {
         println!("Expected output:\n{}\n---", out_ex);
         println!("Actual output:\n{}\n---", out_act);
-        process::exit(2);
+        panic!("Output mismatch");
     }
     Ok(())
 }
