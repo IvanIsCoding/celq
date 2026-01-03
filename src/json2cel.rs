@@ -17,14 +17,6 @@ pub fn json_to_cel_variables(
     let cel_value = json_value_to_cel_value(&json_value);
     variables.insert(".".to_string(), cel_value);
 
-    // If the top-level is an object, also add each field as a separate variable
-    if let JsonValue::Object(map) = json_value {
-        for (key, value) in map {
-            let cel_value = json_value_to_cel_value(&value);
-            variables.insert(key, cel_value);
-        }
-    }
-
     Ok(variables)
 }
 
