@@ -1,7 +1,9 @@
+use anyhow::{Context, Result};
 use cel::Program;
+use cel::parser::ParseErrors;
 use clap::Parser;
-use std::io;
-use std::process;
+use std::path::PathBuf;
+use std::{fs, io, process};
 
 mod args2cel;
 mod cel2json;
@@ -24,11 +26,16 @@ fn main() -> io::Result<()> {
     let cli = Cli::parse();
 
     // Compile the CEL program
-    let program = match Program::compile(&cli.expression) {
+    let program = match compile_expression(cli.expression.as_deref(), cli.from_file.as_ref()) {
         Ok(prog) => prog,
-        Err(parse_errors) => {
-            for error in &parse_errors.errors {
-                eprintln!("  Error: {:?}", error);
+        Err(err) => {
+            // Preserve your existing error-reporting behavior
+            if let Some(parse_errors) = err.downcast_ref::<ParseErrors>() {
+                for error in &parse_errors.errors {
+                    eprintln!("  Error: {:?}", error);
+                }
+            } else {
+                eprintln!("Error: {err:#}");
             }
             process::exit(2);
         }
@@ -77,4 +84,15 @@ fn main() -> io::Result<()> {
     }
 
     Ok(())
+}
+
+fn compile_expression(expression: Option<&str>, from_file: Option<&PathBuf>) -> Result<Program> {
+    let source = if let Some(path) = from_file {
+        fs::read_to_string(path)
+            .with_context(|| format!("failed to read expression file `{}`", path.display()))?
+    } else {
+        expression.context("missing CEL expression")?.to_owned()
+    };
+
+    Program::compile(&source).map_err(|e| anyhow::anyhow!(e))
 }

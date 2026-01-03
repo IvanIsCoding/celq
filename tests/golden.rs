@@ -20,7 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+use std::fs;
 use std::{env, io, process, str};
+use tempfile::NamedTempFile;
 
 fn golden_test(args: &[&str], input: &str, out_ex: &str) -> io::Result<()> {
     let mut child = process::Command::new(env!("CARGO_BIN_EXE_celq"))
@@ -125,7 +127,12 @@ test!(list_literal, &["[1, 2, 3]"], "{}", "[1,2,3]");
 test!(list_size, &["size([1, 2, 3, 4])"], "{}", "4");
 test!(list_in, &["2 in [1, 2, 3]"], "{}", "true");
 test!(list_index, &["[10, 20, 30][1]"], "{}", "20");
-test!(list_no_key_sorting, &["-S", "[30, 20, 10]"], "{}", "[30,20,10]");
+test!(
+    list_no_key_sorting,
+    &["-S", "[30, 20, 10]"],
+    "{}",
+    "[30,20,10]"
+);
 
 // Map operations
 test!(
@@ -376,3 +383,31 @@ test!(
     "",
     "25"
 );
+
+#[test]
+fn from_file_simple_expression() -> io::Result<()> {
+    let file = NamedTempFile::new()?;
+    fs::write(file.path(), "2 + 3 * 4")?;
+
+    let path = file.path().to_str().expect("non-utf8 temp path");
+
+    golden_test(&["-f", path, "-n"], "", "14")
+}
+
+#[test]
+fn from_file_multiline_expression() -> io::Result<()> {
+    let file = NamedTempFile::new()?;
+    fs::write(
+        file.path(),
+        r#"
+            (
+                this.a +
+                this.b
+            ) * this.c
+        "#,
+    )?;
+
+    let path = file.path().to_str().expect("non-utf8 temp path");
+
+    golden_test(&["--from-file", path], r#"{"a":1, "b":2, "c":3}"#, "9")
+}

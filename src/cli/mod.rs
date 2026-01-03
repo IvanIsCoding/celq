@@ -2,6 +2,7 @@
 // Original: https://github.com/cloud-custodian/cel-python/blob/3a134c10394058c73a6bbe0e4ca7e862ea9707b3/docs/source/cli.rst
 // Copyright 2020 The Cloud Custodian Authors.
 // SPDX-License-Identifier: Apache-2.0
+use clap::ArgGroup;
 use clap::Parser;
 
 #[derive(Debug, Clone)]
@@ -47,7 +48,16 @@ impl std::str::FromStr for Argument {
 
 #[derive(Parser, Debug)]
 #[command(name = "celq")]
-#[command(about = "CEL expression evaluator", long_about = None)]
+#[command(
+    name = "celq",
+    about = "CEL expression evaluator",
+    long_about = None,
+    group(
+        ArgGroup::new("program")
+            .required(true)
+            .args(&["expression", "from_file"])
+    )
+)]
 pub struct Cli {
     /// Define argument variables, types, and (optional) values
     /// Format: name:type or name:type=value
@@ -80,9 +90,13 @@ pub struct Cli {
     #[arg(short = 'S', long = "sort-keys")]
     pub sort_keys: bool,
 
+    /// Read CEL expression from a file
+    #[arg(short = 'f', long = "from-file", value_name = "FILE")]
+    pub from_file: Option<std::path::PathBuf>,
+
     /// CEL expression to evaluate
     #[arg(value_name = "expr")]
-    pub expression: String,
+    pub expression: Option<String>,
 }
 
 fn parse_parallelism(s: &str) -> Result<i32, String> {
