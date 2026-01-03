@@ -164,15 +164,15 @@ pub fn handle_input(
     slurp: bool,
     parallelism: i32,
 ) -> Result<Vec<(String, bool)>> {
-    if null_input {
-        // No input from stdin - use empty cursor
-        let empty_cursor = Cursor::new(Vec::<u8>::new());
-        let reader = BufReader::new(empty_cursor);
-        handle_buffer(program, arg_variables, reader, slurp, parallelism)
-    } else {
+    if !null_input {
         // Read from stdin
         let stdin = io::stdin();
         let reader = BufReader::new(stdin.lock());
+        handle_buffer(program, arg_variables, reader, slurp, parallelism)
+    } else {
+        // No input from stdin - use empty cursor
+        let empty_cursor = Cursor::new(Vec::<u8>::new());
+        let reader = BufReader::new(empty_cursor);
         handle_buffer(program, arg_variables, reader, slurp, parallelism)
     }
 }
