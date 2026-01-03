@@ -3,7 +3,10 @@ use clap::Parser;
 use std::io::{self, BufRead};
 use std::process;
 
+mod args2cel;
 mod json2cel;
+
+use args2cel::args_to_cel_variables;
 use json2cel::json_to_cel_variables;
 
 #[derive(Debug, Clone)]
@@ -99,6 +102,25 @@ fn main() -> io::Result<()> {
             for error in &parse_errors.errors {
                 eprintln!("  Error: {:?}", error);
             }
+            process::exit(2);
+        }
+    };
+
+    // Convert CLI arguments to CEL variables
+    let arg_tuples: Vec<(String, String, Option<String>)> = cli
+        .args
+        .iter()
+        .map(|a| (a.name.clone(), a.type_name.clone(), a.value.clone()))
+        .collect();
+
+    println!("\nConverting CLI arguments to CEL variables...");
+    let arg_variables = match args_to_cel_variables(&arg_tuples) {
+        Ok(vars) => {
+            println!("✓ Successfully converted {} arguments", vars.len());
+            vars
+        }
+        Err(e) => {
+            eprintln!("✗ Failed to convert arguments: {}", e);
             process::exit(2);
         }
     };
