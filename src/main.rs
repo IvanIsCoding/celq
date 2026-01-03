@@ -15,14 +15,14 @@ pub use json2cel::json_to_cel_variables;
 struct Argument {
     name: String,
     type_name: String,
-    value: Option<String>,
+    value: String,
 }
 
 impl std::str::FromStr for Argument {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // Format: name:type or name:type=value
+        // Format: name:type=value
         let parts: Vec<&str> = s.splitn(2, ':').collect();
         if parts.len() != 2 {
             return Err(format!(
@@ -34,16 +34,19 @@ impl std::str::FromStr for Argument {
         let name = parts[0].to_string();
         let type_and_value = parts[1];
 
-        let (type_name, value) = if let Some(eq_pos) = type_and_value.find('=') {
-            let (t, v) = type_and_value.split_at(eq_pos);
-            (t.to_string(), Some(v[1..].to_string())) // Skip the '=' character
-        } else {
-            (type_and_value.to_string(), None)
-        };
+        let eq_pos = type_and_value.find('=').ok_or_else(|| {
+            format!(
+                "Missing value for argument '{}'. Expected 'name:type=value'",
+                name
+            )
+        })?;
+
+        let (type_name, value_with_eq) = type_and_value.split_at(eq_pos);
+        let value = value_with_eq[1..].to_string(); // Skip the '=' character
 
         Ok(Argument {
             name,
-            type_name,
+            type_name: type_name.to_string(),
             value,
         })
     }
@@ -109,7 +112,7 @@ fn main() -> io::Result<()> {
     };
 
     // Convert CLI arguments to CEL variables
-    let arg_tuples: Vec<(String, String, Option<String>)> = cli
+    let arg_tuples: Vec<(String, String, String)> = cli
         .args
         .iter()
         .map(|a| (a.name.clone(), a.type_name.clone(), a.value.clone()))

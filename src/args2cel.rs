@@ -30,17 +30,11 @@ impl std::error::Error for ArgConversionError {}
 /// Convert CLI arguments into a BTreeMap of CEL values.
 /// Only supports simple types: int, uint, float, string, bool
 pub fn args_to_cel_variables(
-    args: &[(String, String, Option<String>)], // (name, type_name, optional value)
+    args: &[(String, String, String)], // (name, type_name, value)
 ) -> Result<BTreeMap<String, CelValue>, ArgConversionError> {
     let mut variables = BTreeMap::new();
 
-    for (name, type_name, value_opt) in args {
-        // If no value is provided, skip this argument
-        let value_str = match value_opt {
-            Some(v) => v,
-            None => continue, // Skip arguments without values
-        };
-
+    for (name, type_name, value_str) in args {
         let cel_value = match type_name.to_lowercase().as_str() {
             "int" | "i64" => {
                 let parsed = value_str.parse::<i64>().map_err(|e| {
