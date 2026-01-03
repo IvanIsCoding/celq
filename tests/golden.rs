@@ -36,10 +36,11 @@ fn golden_test(args: &[&str], input: &str, out_ex: &str) -> io::Result<()> {
         let mut stdin = child.stdin.take().unwrap();
         stdin.write_all(input.as_bytes())?;
         // stdin is dropped here, closing the pipe
+        drop(stdin);
     }
-    
+
     let output = child.wait_with_output()?;
-    
+
     if !output.status.success() {
         eprintln!("Process failed with status: {}", output.status);
         eprintln!("stderr: {}", String::from_utf8_lossy(&output.stderr));
@@ -128,9 +129,15 @@ test!(list_index, &["[10, 20, 30][1]"], "{}", "20");
 // Map operations
 test!(
     map_literal,
-    &[r#"{"a": 1, "b": 2}"#],
+    &["-S", r#"{"a": 1, "b": 2}"#],
     "{}",
     r#"{"a":1,"b":2}"#
+);
+test!(
+    map_nested_sorted,
+    &["-S", r#"{"person": {"name": "Alice", "age": 30}, "id": 1}"#],
+    "{}",
+    r#"{"id":1,"person":{"age":30,"name":"Alice"}}"#
 );
 test!(map_access, &[r#"{"a": 1, "b": 2}["a"]"#], "{}", "1");
 test!(
@@ -201,7 +208,7 @@ test!(
 // Arguments: float type
 test!(
     arg_float,
-    &["--arg", "pi:float=3.14159", "pi * 2"],
+    &["--arg", "pi:float=3.14159", "pi * 2.0"],
     "{}",
     "6.28318"
 );

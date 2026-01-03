@@ -26,17 +26,32 @@ pub fn handle_input(
     null_input: bool,
     slurp: bool,
     parallelism: i32,
+    sort_keys: bool,
 ) -> Result<Vec<(String, bool)>> {
     if !null_input {
         // Read from stdin
         let stdin = io::stdin();
         let reader = BufReader::new(stdin.lock());
-        handle_buffer(program, arg_variables, reader, slurp, parallelism)
+        handle_buffer(
+            program,
+            arg_variables,
+            reader,
+            slurp,
+            parallelism,
+            sort_keys,
+        )
     } else {
         // No input from stdin - use empty cursor
         let empty_cursor = Cursor::new(Vec::<u8>::new());
         let reader = BufReader::new(empty_cursor);
-        handle_buffer(program, arg_variables, reader, slurp, parallelism)
+        handle_buffer(
+            program,
+            arg_variables,
+            reader,
+            slurp,
+            parallelism,
+            sort_keys,
+        )
     }
 }
 
@@ -58,6 +73,7 @@ fn handle_buffer<R: Read>(
     reader: BufReader<R>,
     slurp: bool,
     parallelism: i32,
+    sort_keys: bool,
 ) -> Result<Vec<(String, bool)>> {
     if !slurp {
         // Determine thread pool size
@@ -82,7 +98,7 @@ fn handle_buffer<R: Read>(
 
         // If no lines were processed, execute with no input
         if lines.is_empty() {
-            let result = handle_json(program, arg_variables, None)?;
+            let result = handle_json(program, arg_variables, None, sort_keys)?;
             return Ok(vec![result]);
         }
 
@@ -94,7 +110,7 @@ fn handle_buffer<R: Read>(
             .install(|| {
                 lines
                     .par_iter()
-                    .map(|line| handle_json(program, arg_variables, Some(line)))
+                    .map(|line| handle_json(program, arg_variables, Some(line), sort_keys))
                     .collect()
             });
 
@@ -109,7 +125,7 @@ fn handle_buffer<R: Read>(
         }
 
         // Process the entire buffer as one JSON document
-        let result = handle_json(program, arg_variables, Some(&buffer))?;
+        let result = handle_json(program, arg_variables, Some(&buffer), sort_keys)?;
         Ok(vec![result])
     }
 }
@@ -128,6 +144,7 @@ fn handle_json(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
     json_str: Option<&str>,
+    sort_keys: bool,
 ) -> Result<(String, bool)> {
     // Create context with default values
     let mut context = Context::default();

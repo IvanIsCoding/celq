@@ -51,6 +51,7 @@ fn main() -> io::Result<()> {
         cli.null_input,
         cli.slurp,
         cli.parallelism,
+        cli.sort_keys,
     ) {
         Ok(results) => {
             // Print all outputs

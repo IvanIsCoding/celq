@@ -76,6 +76,10 @@ pub struct Cli {
     )]
     pub parallelism: i32,
 
+    /// Output the fields of each object with the keys in sorted order
+    #[arg(short = 'S', long = "sort-keys")]
+    pub sort_keys: bool,
+
     /// CEL expression to evaluate
     #[arg(value_name = "expr")]
     pub expression: String,
