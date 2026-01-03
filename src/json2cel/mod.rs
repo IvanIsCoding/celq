@@ -9,7 +9,11 @@ pub fn json_to_cel_variables(
     json_str: &str,
     slurp: bool,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
-    let json_value: JsonValue = serde_json::from_str(json_str)?;
+    let json_value: JsonValue = if !slurp {
+        serde_json::from_str(json_str)?
+    } else {
+        slurp_json_lines(Some(json_str))?
+    };
 
     let mut variables = BTreeMap::new();
 
@@ -57,6 +61,23 @@ fn json_value_to_cel_value(value: &JsonValue) -> CelValue {
             CelValue::Map(cel_map.into())
         }
     }
+}
+
+fn slurp_json_lines(json_str: Option<&str>) -> Result<JsonValue, serde_json::Error> {
+    let mut values = Vec::new();
+
+    if let Some(s) = json_str {
+        for line in s.lines() {
+            if line.trim().is_empty() {
+                continue;
+            }
+
+            let v: JsonValue = serde_json::from_str(line)?;
+            values.push(v);
+        }
+    }
+
+    Ok(JsonValue::Array(values))
 }
 
 #[cfg(test)]

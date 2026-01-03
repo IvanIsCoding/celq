@@ -153,10 +153,10 @@ fn test_handle_buffer_multiple_lines() {
 
 #[test]
 fn test_handle_buffer_slurp() {
-    let program = Program::compile("this.x + this.y").unwrap();
+    let program = Program::compile("this[0].x + this[1].x").unwrap();
     let args = BTreeMap::new();
-    let input = r#"{"x": 10,
-"y": 20}"#;
+    let input = r#"{"x": 10}
+{"x": 20}"#;
     let cursor = Cursor::new(input.as_bytes());
     let reader = BufReader::new(cursor);
 
