@@ -1,6 +1,7 @@
 use anyhow::{Context as AnyhowContext, Result};
 use cel::objects::Value as CelValue;
 use cel::{Context, Program};
+use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::io::{self, BufRead, BufReader, Cursor, Read};
 
@@ -77,6 +78,7 @@ fn handle_json(
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
 /// * `reader` - BufReader to read input from
 /// * `slurp` - If true, treat all input as a single JSON document
+/// * `parallelism` - Number of threads (-1 for all available)
 ///
 /// # Returns
 /// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
@@ -86,8 +88,49 @@ fn handle_buffer<R: Read>(
     arg_variables: &BTreeMap<String, CelValue>,
     reader: BufReader<R>,
     slurp: bool,
+    parallelism: i32,
 ) -> Result<Vec<(String, bool)>> {
-    if slurp {
+    if !slurp {
+        // Determine thread pool size
+        anyhow::ensure!(parallelism != 0, "Parallelism level cannot be 0");
+
+        let num_threads = if parallelism == -1 {
+            std::thread::available_parallelism()
+                .map(|n| n.get())
+                .unwrap_or(1)
+        } else {
+            parallelism as usize
+        };
+
+        // Collect all non-empty lines first
+        let lines: Vec<String> = reader
+            .lines()
+            .collect::<std::io::Result<Vec<_>>>()
+            .context("Failed to read lines from input")?
+            .into_iter()
+            .filter(|line| !line.trim().is_empty())
+            .collect();
+
+        // If no lines were processed, execute with no input
+        if lines.is_empty() {
+            let result = handle_json(program, arg_variables, None)?;
+            return Ok(vec![result]);
+        }
+
+        // Process lines in parallel, preserving order
+        let results: Result<Vec<_>> = rayon::ThreadPoolBuilder::new()
+            .num_threads(num_threads)
+            .build()
+            .context("Failed to build thread pool")?
+            .install(|| {
+                lines
+                    .par_iter()
+                    .map(|line| handle_json(program, arg_variables, Some(line)))
+                    .collect()
+            });
+
+        results
+    } else {
         // Read all input as a single document
         let mut buffer = String::new();
         for line in reader.lines() {
@@ -99,27 +142,6 @@ fn handle_buffer<R: Read>(
         // Process the entire buffer as one JSON document
         let result = handle_json(program, arg_variables, Some(&buffer))?;
         Ok(vec![result])
-    } else {
-        // Process line by line (NLJSON mode)
-        let mut results = Vec::new();
-
-        for line in reader.lines() {
-            let line = line.context("Failed to read line from input")?;
-            if line.trim().is_empty() {
-                continue; // Skip empty lines
-            }
-
-            let result = handle_json(program, arg_variables, Some(&line))?;
-            results.push(result);
-        }
-
-        // If no lines were processed, execute with no input
-        if results.is_empty() {
-            let result = handle_json(program, arg_variables, None)?;
-            results.push(result);
-        }
-
-        Ok(results)
     }
 }
 
@@ -130,6 +152,7 @@ fn handle_buffer<R: Read>(
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
 /// * `null_input` - If true, don't read from stdin
 /// * `slurp` - If true, treat all input as a single JSON document
+/// * `parallelism` - Number of threads to use for parallel processing (-1 for all available)
 ///
 /// # Returns
 /// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
@@ -139,17 +162,18 @@ pub fn handle_input(
     arg_variables: &BTreeMap<String, CelValue>,
     null_input: bool,
     slurp: bool,
+    parallelism: i32,
 ) -> Result<Vec<(String, bool)>> {
     if null_input {
         // No input from stdin - use empty cursor
         let empty_cursor = Cursor::new(Vec::<u8>::new());
         let reader = BufReader::new(empty_cursor);
-        handle_buffer(program, arg_variables, reader, slurp)
+        handle_buffer(program, arg_variables, reader, slurp, parallelism)
     } else {
         // Read from stdin
         let stdin = io::stdin();
         let reader = BufReader::new(stdin.lock());
-        handle_buffer(program, arg_variables, reader, slurp)
+        handle_buffer(program, arg_variables, reader, slurp, parallelism)
     }
 }
 

@@ -77,9 +77,33 @@ struct Cli {
     #[arg(short = 's', long = "slurp")]
     slurp: bool,
 
+    /// Parallelism level (number of threads, -1 for all available)
+    #[arg(
+        short = 'j',
+        long = "jobs",
+        value_name = "N",
+        default_value = "1",
+        value_parser = parse_parallelism
+    )]
+    parallelism: i32,
+
     /// CEL expression to evaluate
     #[arg(value_name = "expr")]
     expression: String,
+}
+
+fn parse_parallelism(s: &str) -> Result<i32, String> {
+    let value: i32 = s
+        .parse()
+        .map_err(|_| format!("'{}' is not a valid integer", s))?;
+
+    if value == 0 {
+        Err("parallelism level cannot be 0".to_string())
+    } else if value < 0 {
+        Ok(-1)
+    } else {
+        Ok(value)
+    }
 }
 
 fn main() -> io::Result<()> {
@@ -91,6 +115,7 @@ fn main() -> io::Result<()> {
     println!("  Boolean mode: {}", cli.boolean);
     println!("  Null input: {}", cli.null_input);
     println!("  Slurp mode: {}", cli.slurp);
+    println!("  Parallelism: {}", cli.parallelism);
 
     println!("\nArguments:");
     for arg in &cli.args {
@@ -123,7 +148,13 @@ fn main() -> io::Result<()> {
         }
     };
 
-    match handle_input(&program, &arg_variables, cli.null_input, cli.slurp) {
+    match handle_input(
+        &program,
+        &arg_variables,
+        cli.null_input,
+        cli.slurp,
+        cli.parallelism,
+    ) {
         Ok(results) => {
             // Print all outputs
             for (output, _) in &results {
