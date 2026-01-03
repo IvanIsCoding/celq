@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.85"
 authors = ["Ivan Carvalho <ivancarvalho@gatech.edu>"]
 repository = "https://github.com/IvanIsCoding/celq"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 anyhow = "1"
