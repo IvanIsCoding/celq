@@ -1,6 +1,6 @@
 use cel::Program;
 use clap::Parser;
-use std::io::{self, BufRead};
+use std::io;
 use std::process;
 
 mod args2cel;
