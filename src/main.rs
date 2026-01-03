@@ -3,6 +3,9 @@ use clap::Parser;
 use std::io::{self, BufRead};
 use std::process;
 
+mod json2cel;
+use json2cel::json_to_cel_variables;
+
 #[derive(Debug, Clone)]
 struct Argument {
     name: String,
@@ -18,7 +21,7 @@ impl std::str::FromStr for Argument {
         let parts: Vec<&str> = s.splitn(2, ':').collect();
         if parts.len() != 2 {
             return Err(format!(
-                "Invalid argument format '{}'. Expected 'name:type' or 'name:type=value'",
+                "Invalid argument format '{}'. Expected 'name:type=value'",
                 s
             ));
         }
@@ -47,7 +50,6 @@ impl std::str::FromStr for Argument {
 struct Cli {
     /// Define argument variables, types, and (optional) values
     /// Format: name:type or name:type=value
-    /// If value is omitted, environment variable will be used
     #[arg(short = 'a', long = "arg", value_name = "name:type=value")]
     args: Vec<Argument>,
 
