@@ -109,19 +109,6 @@ fn parse_parallelism(s: &str) -> Result<i32, String> {
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
 
-    println!("Parsed CLI arguments:");
-    println!("  Expression: {:?}", cli.expression);
-    println!("  Arguments: {:?}", cli.args);
-    println!("  Boolean mode: {}", cli.boolean);
-    println!("  Null input: {}", cli.null_input);
-    println!("  Slurp mode: {}", cli.slurp);
-    println!("  Parallelism: {}", cli.parallelism);
-
-    println!("\nArguments:");
-    for arg in &cli.args {
-        println!("  {} ({}): {:?}", arg.name, arg.type_name, arg.value);
-    }
-
     // Compile the CEL program
     let program = match Program::compile(&cli.expression) {
         Ok(prog) => prog,
