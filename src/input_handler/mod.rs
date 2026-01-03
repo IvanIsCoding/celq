@@ -15,7 +15,7 @@ use crate::json_to_cel_variables;
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
 /// * `null_input` - If true, don't read from stdin
-/// * `slurp` - If true, treat all input as a single JSON document
+/// * `slurp` - If true, treat all input with each line being an item in a JSON array
 /// * `parallelism` - Number of threads to use for parallel processing (-1 for all available)
 ///
 /// # Returns
@@ -62,7 +62,7 @@ pub fn handle_input(
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
 /// * `reader` - BufReader to read input from
-/// * `slurp` - If true, treat all input as a single JSON document
+/// * `slurp` - If true, treat all input with each line being an item in a JSON array
 /// * `parallelism` - Number of threads (-1 for all available)
 ///
 /// # Returns
@@ -103,19 +103,48 @@ fn handle_buffer<R: Read>(
             return Ok(vec![result]);
         }
 
-        // Process lines in parallel, preserving order
-        let results: Result<Vec<_>> = rayon::ThreadPoolBuilder::new()
-            .num_threads(num_threads)
-            .build()
-            .context("Failed to build thread pool")?
-            .install(|| {
-                lines
-                    .par_iter()
-                    .map(|line| handle_json(program, arg_variables, Some(line), slurp, sort_keys))
-                    .collect()
-            });
+        // Try to process the last line
+        let last_idx = lines.len() - 1;
+        let last_result = handle_json(
+            program,
+            arg_variables,
+            Some(&lines[last_idx]),
+            slurp,
+            sort_keys,
+        );
 
-        results
+        match last_result {
+            Ok(last_output) => {
+                // Last line succeeded, process remaining lines in parallel
+                if lines.len() == 1 {
+                    return Ok(vec![last_output]);
+                }
+
+                let remaining_results: Result<Vec<_>> = rayon::ThreadPoolBuilder::new()
+                    .num_threads(num_threads)
+                    .build()
+                    .context("Failed to build thread pool")?
+                    .install(|| {
+                        lines[..last_idx]
+                            .par_iter()
+                            .map(|line| {
+                                handle_json(program, arg_variables, Some(line), slurp, sort_keys)
+                            })
+                            .collect()
+                    });
+
+                let mut results = remaining_results?;
+                results.push(last_output);
+                Ok(results)
+            }
+            Err(_) => {
+                // Last line failed, try reading entire input as single JSON document
+                let full_buffer = lines.join("\n");
+                let result =
+                    handle_json(program, arg_variables, Some(&full_buffer), slurp, sort_keys)?;
+                Ok(vec![result])
+            }
+        }
     } else {
         // Read all input as a single document
         let mut buffer = String::new();
@@ -137,7 +166,7 @@ fn handle_buffer<R: Read>(
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
 /// * `json_str` - Optional JSON string to process
-/// * `slurp` - Whether the input was slurped as a single document
+/// * `slurp` - Whether the input was slurped with each line being an item in a JSON array
 /// * `sort_keys` - Whether to sort keys in the output JSON
 ///
 /// # Returns

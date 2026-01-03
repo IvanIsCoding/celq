@@ -250,9 +250,9 @@ test!(
     "30"
 );
 
-// Multiple JSON inputs (NLJSON)
+// Newline-Delimited JSON (NDJSON)
 test!(
-    nljson_multi_line,
+    ndjson_multi_line,
     &["this.value * 2"],
     r#"{"value":1}
 {"value":2}
@@ -261,12 +261,52 @@ test!(
 );
 
 test!(
-    nljson_filter,
+    ndjson_filter,
     &["this.age > 25"],
     r#"{"name":"Alice","age":30}
 {"name":"Bob","age":20}
 {"name":"Charlie","age":35}"#,
     "true\nfalse\ntrue"
+);
+
+// Multi-line JSON (pretty-printed)
+test!(
+    multiline_json_object,
+    &["this.a + ' and ' + string(this.c)"],
+    r#"{
+  "a": "b",
+  "c": "d"
+}"#,
+    "\"b and d\""
+);
+
+test!(
+    multiline_json_array,
+    &["this.map(x, x * 2)"],
+    r#"[
+  1,
+  2,
+  3,
+  4,
+  5
+]"#,
+    "[2,4,6,8,10]"
+);
+
+test!(
+    multiline_json_empty_first_line,
+    &["this.x + this.y"],
+    r#"
+{"x": 5, "y": 10}"#,
+    "15"
+);
+
+test!(
+    multiline_json_closing_brace_last,
+    &["this.foo"],
+    r#"{"foo": "bar"
+}"#,
+    "\"bar\""
 );
 
 // Null input mode
