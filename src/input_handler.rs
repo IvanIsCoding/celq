@@ -3,12 +3,15 @@ use cel::{Context, Program};
 use std::collections::BTreeMap;
 use std::io::{self, BufRead, BufReader, Cursor, Read};
 
+use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
 
 #[derive(Debug)]
 pub enum HandleError {
     IoError(io::Error),
     JsonParseError(serde_json::Error),
+    JsonSerializationError(serde_json::Error),
+
     ContextError(String),
     ExecutionError(cel::ExecutionError),
 }
@@ -18,6 +21,8 @@ impl std::fmt::Display for HandleError {
         match self {
             HandleError::IoError(e) => write!(f, "I/O error: {}", e),
             HandleError::JsonParseError(e) => write!(f, "JSON parse error: {}", e),
+            HandleError::JsonSerializationError(e) => write!(f, "JSON serialization error: {}", e),
+
             HandleError::ContextError(e) => write!(f, "Context error: {}", e),
             HandleError::ExecutionError(e) => write!(f, "Execution error: {:?}", e),
         }
@@ -89,9 +94,6 @@ fn handle_json(
     // Execute the program
     let result = program.execute(&context)?;
 
-    // Convert result to string
-    let output_string = format!("{:?}", result);
-
     // Determine if the result is truthy
     let is_truthy = match result {
         CelValue::Bool(b) => b,
@@ -104,6 +106,11 @@ fn handle_json(
         CelValue::Null => false,
         _ => true, // Other types are considered truthy
     };
+
+    // Convert result to JSON string
+    let json_value = cel_value_to_json_value(&result);
+    let output_string =
+        serde_json::to_string(&json_value).map_err(HandleError::JsonSerializationError)?;
 
     Ok((output_string, is_truthy))
 }

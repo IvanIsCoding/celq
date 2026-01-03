@@ -4,10 +4,12 @@ use std::io;
 use std::process;
 
 mod args2cel;
+mod cel2json;
 mod input_handler;
 mod json2cel;
 
 use args2cel::args_to_cel_variables;
+pub use cel2json::cel_value_to_json_value;
 use input_handler::handle_input;
 pub use json2cel::json_to_cel_variables;
 
