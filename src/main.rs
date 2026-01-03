@@ -16,6 +16,10 @@ use cli::Cli;
 use input_handler::handle_input;
 pub use json2cel::json_to_cel_variables;
 
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
 fn main() -> io::Result<()> {
     let cli = Cli::parse();
 

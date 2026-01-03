@@ -1,11 +1,17 @@
 [package]
 name = "celq"
+description = "A CEL command line query tool for JSON data"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["Ivan Carvalho <ivancarvalho@gatech.edu>"]
 repository = "https://github.com/IvanIsCoding/celq"
 license = "MIT OR Apache-2.0"
+keywords = ["cel", "query", "json"]
+categories = ["command-line-utilities"]
+
+[features]
+default = ["mimalloc"]
 
 [dependencies]
 anyhow = "1"
@@ -13,3 +19,4 @@ cel = { version = "0.12.0", features = ["bytes", "json"] }
 clap = { version = ">= 4.5.0, < 5.0.0", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.11"
+mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = true }
