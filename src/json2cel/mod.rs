@@ -7,6 +7,7 @@ use std::sync::Arc;
 /// The top-level JSON object is placed under the "this" key.
 pub fn json_to_cel_variables(
     json_str: &str,
+    slurp: bool,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
     let json_value: JsonValue = serde_json::from_str(json_str)?;
 

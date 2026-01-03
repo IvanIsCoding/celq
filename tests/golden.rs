@@ -290,7 +290,7 @@ test!(
 );
 
 // Slurp mode - treat all input as single JSON array
-/*test!(
+test!(
     slurp_mode,
     &["-s", "size(this)"],
     r#"{"id":1}
@@ -307,7 +307,6 @@ test!(
 {"value":30}"#,
     "60"
 );
-*/
 
 // Combining arguments with JSON input
 test!(

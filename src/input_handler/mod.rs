@@ -99,7 +99,7 @@ fn handle_buffer<R: Read>(
 
         // If no lines were processed, execute with no input
         if lines.is_empty() {
-            let result = handle_json(program, arg_variables, None, sort_keys)?;
+            let result = handle_json(program, arg_variables, None, slurp, sort_keys)?;
             return Ok(vec![result]);
         }
 
@@ -111,7 +111,7 @@ fn handle_buffer<R: Read>(
             .install(|| {
                 lines
                     .par_iter()
-                    .map(|line| handle_json(program, arg_variables, Some(line), sort_keys))
+                    .map(|line| handle_json(program, arg_variables, Some(line), slurp, sort_keys))
                     .collect()
             });
 
@@ -126,7 +126,7 @@ fn handle_buffer<R: Read>(
         }
 
         // Process the entire buffer as one JSON document
-        let result = handle_json(program, arg_variables, Some(&buffer), sort_keys)?;
+        let result = handle_json(program, arg_variables, Some(&buffer), slurp, sort_keys)?;
         Ok(vec![result])
     }
 }
@@ -137,6 +137,8 @@ fn handle_buffer<R: Read>(
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
 /// * `json_str` - Optional JSON string to process
+/// * `slurp` - Whether the input was slurped as a single document
+/// * `sort_keys` - Whether to sort keys in the output JSON
 ///
 /// # Returns
 /// * Ok((output_string, is_truthy)) - The output and whether it's truthy
@@ -145,6 +147,7 @@ fn handle_json(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
     json_str: Option<&str>,
+    slurp: bool,
     sort_keys: bool,
 ) -> Result<(String, bool)> {
     // Create context with default values
@@ -159,7 +162,8 @@ fn handle_json(
 
     // If we have input, parse it as JSON and add to context
     if let Some(json) = json_str {
-        let json_variables = json_to_cel_variables(json).context("Failed to parse JSON input")?;
+        let json_variables =
+            json_to_cel_variables(json, slurp).context("Failed to parse JSON input")?;
 
         // Add JSON variables to context
         for (name, value) in json_variables {
