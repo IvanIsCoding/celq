@@ -4,8 +4,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 
 /// Convert a JSON string into a BTreeMap of CEL values.
-/// The top-level JSON object's fields are placed under the "." key.
-/// If the JSON is not an object, it's placed directly under ".".
+/// The top-level JSON object is placed under the "." key.
 pub fn json_to_cel_variables(
     json_str: &str,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
