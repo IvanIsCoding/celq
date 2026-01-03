@@ -2,6 +2,7 @@ use anyhow::{Context as AnyhowContext, Result};
 use cel::objects::Value as CelValue;
 use cel::{Context, Program};
 use rayon::prelude::*;
+use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
 use std::io::{self, BufRead, BufReader, Cursor, Read};
 
@@ -177,9 +178,13 @@ fn handle_json(
     let is_truthy = is_cel_value_truthy(&result);
 
     // Convert result to JSON string
-    let json_value = cel_value_to_json_value(&result);
-    let output_string =
-        serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?;
+    let mut json_value = cel_value_to_json_value(&result);
+    let output_string = if !sort_keys {
+        serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?
+    } else {
+        sort_keys_recursive(&mut json_value);
+        serde_json::to_string(&json_value).context("Failed to serialize sorted result to JSON")?
+    };
 
     Ok((output_string, is_truthy))
 }
@@ -202,6 +207,31 @@ fn is_cel_value_truthy(value: &CelValue) -> bool {
         CelValue::Map(m) => !m.map.is_empty(),
         CelValue::Null => false,
         _ => true, // Other types are considered truthy
+    }
+}
+
+fn sort_keys_recursive(value: &mut JsonValue) {
+    use std::mem;
+    match value {
+        JsonValue::Object(map) => {
+            for v in map.values_mut() {
+                sort_keys_recursive(v);
+            }
+
+            // Rebuild the map in sorted key order
+            let old_map = mem::take(map);
+
+            let mut entries: Vec<_> = old_map.into_iter().collect();
+            entries.sort_by(|(a, _), (b, _)| a.cmp(b));
+
+            *map = entries.into_iter().collect();
+        }
+        JsonValue::Array(arr) => {
+            for v in arr {
+                sort_keys_recursive(v);
+            }
+        }
+        _ => {} // Null / Bool / Number / String
     }
 }
 
