@@ -14,7 +14,7 @@ fn test_handle_json_null_input() {
 
 #[test]
 fn test_handle_json_with_json() {
-    let program = Program::compile(".x + .y").unwrap();
+    let program = Program::compile("this.x + this.y").unwrap();
     let args = BTreeMap::new();
     let json = r#"{"x": 10, "y": 20}"#;
 
@@ -39,7 +39,7 @@ fn test_handle_json_with_args() {
 
 #[test]
 fn test_handle_json_args_and_json() {
-    let program = Program::compile("x + .value").unwrap();
+    let program = Program::compile("x + this.value").unwrap();
     let mut args = BTreeMap::new();
     args.insert("x".to_string(), CelValue::Int(100));
     let json = r#"{"value": 50}"#;
@@ -94,7 +94,7 @@ fn test_handle_json_truthiness_empty_string() {
 
 #[test]
 fn test_handle_json_invalid_json() {
-    let program = Program::compile(".x").unwrap();
+    let program = Program::compile("this.x").unwrap();
     let args = BTreeMap::new();
     let json = r#"not valid json"#;
 
@@ -115,7 +115,7 @@ fn test_handle_json_missing_variable() {
 
 #[test]
 fn test_handle_buffer_single_line() {
-    let program = Program::compile(".x").unwrap();
+    let program = Program::compile("this.x").unwrap();
     let args = BTreeMap::new();
     let input = r#"{"x": 42}"#;
     let cursor = Cursor::new(input.as_bytes());
@@ -130,7 +130,7 @@ fn test_handle_buffer_single_line() {
 
 #[test]
 fn test_handle_buffer_multiple_lines() {
-    let program = Program::compile(".x").unwrap();
+    let program = Program::compile("this.x").unwrap();
     let args = BTreeMap::new();
     let input = r#"{"x": 1}
 {"x": 2}
@@ -148,7 +148,7 @@ fn test_handle_buffer_multiple_lines() {
 
 #[test]
 fn test_handle_buffer_slurp() {
-    let program = Program::compile(".x + .y").unwrap();
+    let program = Program::compile("this.x + this.y").unwrap();
     let args = BTreeMap::new();
     let input = r#"{"x": 10,
 "y": 20}"#;
@@ -190,7 +190,7 @@ fn test_handle_input_null_input() {
 
 #[test]
 fn test_handle_buffer_skip_empty_lines() {
-    let program = Program::compile(".x").unwrap();
+    let program = Program::compile("this.x").unwrap();
     let args = BTreeMap::new();
     let input = r#"{"x": 1}
 
