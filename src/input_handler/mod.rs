@@ -8,67 +8,36 @@ use std::io::{self, BufRead, BufReader, Cursor, Read};
 use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
 
-/// Execute the CEL program with given JSON input and argument variables
+/// Process input from stdin and execute the CEL program
 ///
 /// # Arguments
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
-/// * `json_str` - Optional JSON string to process
+/// * `null_input` - If true, don't read from stdin
+/// * `slurp` - If true, treat all input as a single JSON document
+/// * `parallelism` - Number of threads to use for parallel processing (-1 for all available)
 ///
 /// # Returns
-/// * Ok((output_string, is_truthy)) - The output and whether it's truthy
+/// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
 /// * Err(anyhow::Error) - Any error that occurred
-fn handle_json(
+pub fn handle_input(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
-    json_str: Option<&str>,
-) -> Result<(String, bool)> {
-    // Create context with default values
-    let mut context = Context::default();
-
-    // Add argument variables to context
-    for (name, value) in arg_variables {
-        context
-            .add_variable(name.clone(), value.clone())
-            .with_context(|| format!("Failed to add variable '{}'", name))?;
+    null_input: bool,
+    slurp: bool,
+    parallelism: i32,
+) -> Result<Vec<(String, bool)>> {
+    if !null_input {
+        // Read from stdin
+        let stdin = io::stdin();
+        let reader = BufReader::new(stdin.lock());
+        handle_buffer(program, arg_variables, reader, slurp, parallelism)
+    } else {
+        // No input from stdin - use empty cursor
+        let empty_cursor = Cursor::new(Vec::<u8>::new());
+        let reader = BufReader::new(empty_cursor);
+        handle_buffer(program, arg_variables, reader, slurp, parallelism)
     }
-
-    // If we have input, parse it as JSON and add to context
-    if let Some(json) = json_str {
-        let json_variables = json_to_cel_variables(json).context("Failed to parse JSON input")?;
-
-        // Add JSON variables to context
-        for (name, value) in json_variables {
-            context
-                .add_variable(name.clone(), value)
-                .with_context(|| format!("Failed to add JSON variable '{}'", name))?;
-        }
-    }
-
-    // Execute the program
-    let result = program
-        .execute(&context)
-        .context("Failed to execute CEL program")?;
-
-    // Determine if the result is truthy
-    let is_truthy = match result {
-        CelValue::Bool(b) => b,
-        CelValue::Int(i) => i != 0,
-        CelValue::UInt(u) => u != 0,
-        CelValue::Float(f) => f != 0.0 && !f.is_nan(),
-        CelValue::String(ref s) => !s.is_empty(),
-        CelValue::List(ref l) => !l.is_empty(),
-        CelValue::Map(ref m) => !m.map.is_empty(),
-        CelValue::Null => false,
-        _ => true, // Other types are considered truthy
-    };
-
-    // Convert result to JSON string
-    let json_value = cel_value_to_json_value(&result);
-    let output_string =
-        serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?;
-
-    Ok((output_string, is_truthy))
 }
 
 /// Process input from a BufReader and execute the CEL program
@@ -145,35 +114,77 @@ fn handle_buffer<R: Read>(
     }
 }
 
-/// Process input from stdin and execute the CEL program
+/// Execute the CEL program with given JSON input and argument variables
 ///
 /// # Arguments
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
-/// * `null_input` - If true, don't read from stdin
-/// * `slurp` - If true, treat all input as a single JSON document
-/// * `parallelism` - Number of threads to use for parallel processing (-1 for all available)
+/// * `json_str` - Optional JSON string to process
 ///
 /// # Returns
-/// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
+/// * Ok((output_string, is_truthy)) - The output and whether it's truthy
 /// * Err(anyhow::Error) - Any error that occurred
-pub fn handle_input(
+fn handle_json(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
-    null_input: bool,
-    slurp: bool,
-    parallelism: i32,
-) -> Result<Vec<(String, bool)>> {
-    if !null_input {
-        // Read from stdin
-        let stdin = io::stdin();
-        let reader = BufReader::new(stdin.lock());
-        handle_buffer(program, arg_variables, reader, slurp, parallelism)
-    } else {
-        // No input from stdin - use empty cursor
-        let empty_cursor = Cursor::new(Vec::<u8>::new());
-        let reader = BufReader::new(empty_cursor);
-        handle_buffer(program, arg_variables, reader, slurp, parallelism)
+    json_str: Option<&str>,
+) -> Result<(String, bool)> {
+    // Create context with default values
+    let mut context = Context::default();
+
+    // Add argument variables to context
+    for (name, value) in arg_variables {
+        context
+            .add_variable(name.clone(), value.clone())
+            .with_context(|| format!("Failed to add variable '{}'", name))?;
+    }
+
+    // If we have input, parse it as JSON and add to context
+    if let Some(json) = json_str {
+        let json_variables = json_to_cel_variables(json).context("Failed to parse JSON input")?;
+
+        // Add JSON variables to context
+        for (name, value) in json_variables {
+            context
+                .add_variable(name.clone(), value)
+                .with_context(|| format!("Failed to add JSON variable '{}'", name))?;
+        }
+    }
+
+    // Execute the program
+    let result = program
+        .execute(&context)
+        .context("Failed to execute CEL program")?;
+
+    // Determine if the result is truthy
+    let is_truthy = is_cel_value_truthy(&result);
+
+    // Convert result to JSON string
+    let json_value = cel_value_to_json_value(&result);
+    let output_string =
+        serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?;
+
+    Ok((output_string, is_truthy))
+}
+
+/// Determine if a CEL value is truthy
+///
+/// # Arguments
+/// * `value` - The CEL value to check
+///
+/// # Returns
+/// * `true` if the value is considered truthy, `false` otherwise
+fn is_cel_value_truthy(value: &CelValue) -> bool {
+    match value {
+        CelValue::Bool(b) => *b,
+        CelValue::Int(i) => *i != 0,
+        CelValue::UInt(u) => *u != 0,
+        CelValue::Float(f) => *f != 0.0 && !f.is_nan(),
+        CelValue::String(s) => !s.is_empty(),
+        CelValue::List(l) => !l.is_empty(),
+        CelValue::Map(m) => !m.map.is_empty(),
+        CelValue::Null => false,
+        _ => true, // Other types are considered truthy
     }
 }
 
