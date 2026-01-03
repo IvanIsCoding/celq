@@ -96,14 +96,9 @@ fn main() -> io::Result<()> {
     }
 
     // Compile the CEL program
-    println!("\nCompiling CEL expression: {}", cli.expression);
     let program = match Program::compile(&cli.expression) {
-        Ok(prog) => {
-            println!("✓ Program compiled successfully");
-            prog
-        }
+        Ok(prog) => prog,
         Err(parse_errors) => {
-            eprintln!("✗ Failed to compile CEL expression:");
             for error in &parse_errors.errors {
                 eprintln!("  Error: {:?}", error);
             }
@@ -118,14 +113,10 @@ fn main() -> io::Result<()> {
         .map(|a| (a.name.clone(), a.type_name.clone(), a.value.clone()))
         .collect();
 
-    println!("\nConverting CLI arguments to CEL variables...");
     let arg_variables = match args_to_cel_variables(&arg_tuples) {
-        Ok(vars) => {
-            println!("✓ Successfully converted {} arguments", vars.len());
-            vars
-        }
+        Ok(vars) => vars,
         Err(e) => {
-            eprintln!("✗ Failed to convert arguments: {}", e);
+            eprintln!("Argument conversion failed: {}", e);
             process::exit(2);
         }
     };
