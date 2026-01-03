@@ -4,10 +4,12 @@ use std::io::{self, BufRead};
 use std::process;
 
 mod args2cel;
+mod input_handler;
 mod json2cel;
 
 use args2cel::args_to_cel_variables;
-use json2cel::json_to_cel_variables;
+use input_handler::handle_input;
+pub use json2cel::json_to_cel_variables;
 
 #[derive(Debug, Clone)]
 struct Argument {
@@ -125,47 +127,21 @@ fn main() -> io::Result<()> {
         }
     };
 
-    // Read input from stdin unless null_input
-    if !cli.null_input {
-        println!("\nReading JSON input from stdin...");
-        let stdin = io::stdin();
-        let reader = stdin.lock();
+    // Handle input and execute the program
+    match handle_input(&program, &arg_variables, cli.null_input, cli.slurp) {
+        Ok((output, is_truthy)) => {
+            println!("{}", output);
 
-        if cli.slurp {
-            // Read all input as a single document
-            let mut buffer = String::new();
-            for line in reader.lines() {
-                let line = line?;
-                buffer.push_str(&line);
-                buffer.push('\n');
-            }
-            println!(
-                "Slurped input ({} bytes): {}",
-                buffer.len(),
-                if buffer.len() > 100 {
-                    format!("{}...", &buffer[..100])
-                } else {
-                    buffer.clone()
-                }
-            );
-        } else {
-            // Read each line as a separate NLJSON document
-            println!("Reading NLJSON documents (one per line):");
-            for (i, line) in reader.lines().enumerate() {
-                let line = line?;
-                println!(
-                    "  Document {}: {}",
-                    i + 1,
-                    if line.len() > 100 {
-                        format!("{}...", &line[..100])
-                    } else {
-                        line
-                    }
-                );
+            // If boolean mode is enabled, exit with appropriate code
+            if cli.boolean {
+                let exit_code = if is_truthy { 0 } else { 1 };
+                process::exit(exit_code);
             }
         }
-    } else {
-        println!("\nNull input mode: not reading from stdin");
+        Err(e) => {
+            eprintln!("✗ Execution failed: {}", e);
+            process::exit(2);
+        }
     }
 
     Ok(())
