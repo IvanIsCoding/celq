@@ -1,3 +1,4 @@
+use anyhow::{Context as AnyhowContext, Result};
 use cel::objects::Value as CelValue;
 use cel::{Context, Program};
 use std::collections::BTreeMap;
@@ -5,49 +6,6 @@ use std::io::{self, BufRead, BufReader, Cursor, Read};
 
 use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
-
-#[derive(Debug)]
-pub enum HandleError {
-    IoError(io::Error),
-    JsonParseError(serde_json::Error),
-    JsonSerializationError(serde_json::Error),
-
-    ContextError(String),
-    ExecutionError(cel::ExecutionError),
-}
-
-impl std::fmt::Display for HandleError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            HandleError::IoError(e) => write!(f, "I/O error: {}", e),
-            HandleError::JsonParseError(e) => write!(f, "JSON parse error: {}", e),
-            HandleError::JsonSerializationError(e) => write!(f, "JSON serialization error: {}", e),
-
-            HandleError::ContextError(e) => write!(f, "Context error: {}", e),
-            HandleError::ExecutionError(e) => write!(f, "Execution error: {:?}", e),
-        }
-    }
-}
-
-impl std::error::Error for HandleError {}
-
-impl From<io::Error> for HandleError {
-    fn from(err: io::Error) -> Self {
-        HandleError::IoError(err)
-    }
-}
-
-impl From<serde_json::Error> for HandleError {
-    fn from(err: serde_json::Error) -> Self {
-        HandleError::JsonParseError(err)
-    }
-}
-
-impl From<cel::ExecutionError> for HandleError {
-    fn from(err: cel::ExecutionError) -> Self {
-        HandleError::ExecutionError(err)
-    }
-}
 
 /// Execute the CEL program with given JSON input and argument variables
 ///
@@ -58,12 +16,12 @@ impl From<cel::ExecutionError> for HandleError {
 ///
 /// # Returns
 /// * Ok((output_string, is_truthy)) - The output and whether it's truthy
-/// * Err(HandleError) - Any error that occurred
+/// * Err(anyhow::Error) - Any error that occurred
 fn handle_json(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
     json_str: Option<&str>,
-) -> Result<(String, bool), HandleError> {
+) -> Result<(String, bool)> {
     // Create context with default values
     let mut context = Context::default();
 
@@ -71,28 +29,25 @@ fn handle_json(
     for (name, value) in arg_variables {
         context
             .add_variable(name.clone(), value.clone())
-            .map_err(|e| {
-                HandleError::ContextError(format!("Failed to add variable '{}': {:?}", name, e))
-            })?;
+            .with_context(|| format!("Failed to add variable '{}'", name))?;
     }
 
     // If we have input, parse it as JSON and add to context
     if let Some(json) = json_str {
-        let json_variables = json_to_cel_variables(json)?;
+        let json_variables = json_to_cel_variables(json).context("Failed to parse JSON input")?;
 
         // Add JSON variables to context
         for (name, value) in json_variables {
-            context.add_variable(name.clone(), value).map_err(|e| {
-                HandleError::ContextError(format!(
-                    "Failed to add JSON variable '{}': {:?}",
-                    name, e
-                ))
-            })?;
+            context
+                .add_variable(name.clone(), value)
+                .with_context(|| format!("Failed to add JSON variable '{}'", name))?;
         }
     }
 
     // Execute the program
-    let result = program.execute(&context)?;
+    let result = program
+        .execute(&context)
+        .context("Failed to execute CEL program")?;
 
     // Determine if the result is truthy
     let is_truthy = match result {
@@ -110,7 +65,7 @@ fn handle_json(
     // Convert result to JSON string
     let json_value = cel_value_to_json_value(&result);
     let output_string =
-        serde_json::to_string(&json_value).map_err(HandleError::JsonSerializationError)?;
+        serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?;
 
     Ok((output_string, is_truthy))
 }
@@ -125,18 +80,18 @@ fn handle_json(
 ///
 /// # Returns
 /// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
-/// * Err(HandleError) - Any error that occurred
+/// * Err(anyhow::Error) - Any error that occurred
 fn handle_buffer<R: Read>(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
     reader: BufReader<R>,
     slurp: bool,
-) -> Result<Vec<(String, bool)>, HandleError> {
+) -> Result<Vec<(String, bool)>> {
     if slurp {
         // Read all input as a single document
         let mut buffer = String::new();
         for line in reader.lines() {
-            let line = line?;
+            let line = line.context("Failed to read line from input")?;
             buffer.push_str(&line);
             buffer.push('\n');
         }
@@ -149,7 +104,7 @@ fn handle_buffer<R: Read>(
         let mut results = Vec::new();
 
         for line in reader.lines() {
-            let line = line?;
+            let line = line.context("Failed to read line from input")?;
             if line.trim().is_empty() {
                 continue; // Skip empty lines
             }
@@ -178,13 +133,13 @@ fn handle_buffer<R: Read>(
 ///
 /// # Returns
 /// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
-/// * Err(HandleError) - Any error that occurred
+/// * Err(anyhow::Error) - Any error that occurred
 pub fn handle_input(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
     null_input: bool,
     slurp: bool,
-) -> Result<Vec<(String, bool)>, HandleError> {
+) -> Result<Vec<(String, bool)>> {
     if null_input {
         // No input from stdin - use empty cursor
         let empty_cursor = Cursor::new(Vec::<u8>::new());
@@ -303,10 +258,6 @@ mod tests {
         let result = handle_json(&program, &args, Some(json));
 
         assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            HandleError::JsonParseError(_)
-        ));
     }
 
     #[test]
@@ -317,10 +268,6 @@ mod tests {
         let result = handle_json(&program, &args, None);
 
         assert!(result.is_err());
-        assert!(matches!(
-            result.unwrap_err(),
-            HandleError::ExecutionError(_)
-        ));
     }
 
     #[test]
