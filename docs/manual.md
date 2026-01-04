@@ -19,7 +19,7 @@ Arguments:
   [expr]  CEL expression to evaluate
 
 Options:
-  -a, --arg <name:type=value>  Define argument variables, types, and (optional) values. Format: name:type=value
+  -a, --arg <name:type=value>  Define argument variables, types, and values. Format: name:type=value. Supported types: int, uint, float, bool, string
   -b, --boolean                Return a status code based on boolean output true = 0, false = 1, exception = 2
   -n, --null-input             Do not read JSON input from stdin
   -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NLJSON
