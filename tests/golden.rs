@@ -549,3 +549,28 @@ fn from_file_multiline_expression() -> io::Result<()> {
 
     golden_test(&["--from-file", path], r#"{"a":1, "b":2, "c":3}"#, "9")
 }
+
+#[test]
+fn test_boolean_false_exit_code() -> io::Result<()> {
+    let mut child = process::Command::new(env!("CARGO_BIN_EXE_celq"))
+        .args(["-n", "-b", "1 < 0"])
+        .stdin(process::Stdio::piped())
+        .stdout(process::Stdio::piped())
+        .stderr(process::Stdio::piped())
+        .spawn()?;
+
+    // Close stdin
+    drop(child.stdin.take());
+
+    let output = child.wait_with_output()?;
+
+    // Check that the exit code is 1 for false
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "Expected exit code 1 for false boolean result, got {:?}",
+        output.status.code()
+    );
+
+    Ok(())
+}
