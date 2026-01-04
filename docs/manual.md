@@ -32,7 +32,20 @@ Options:
 
 ## Quick Start
 
-TODO
+`celq` reads JSON from the input and lets users process it with CEL:
+
+```bash
+echo '["apples", "bananas", "blueberry"]' | celq 'this.filter(x, x.contains("a"))'
+# Outputs: ["apples","bananas"]
+```
+
+`celq` can also evaluate expressions with arguments, without reading from the input:
+
+```bash
+celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
+# Outputs: true
+```
+
 
 ## References
 
@@ -178,9 +191,35 @@ In contrast to `jq` and `cel-python`, `celq` names its root variable `this`. The
 
 The root variable can be tweaked through the
 
-### Binary output
+### Boolean output
 
+Inspired by `cel-python` and `test`, `celq` also supports the boolean output feature.
 
+If the flag `--boolean` or `-b` is passed to `celq`, it will set the return code based on the truthiness of the value:
+* `0` if the result is true
+* `1` if the result is false
+* `2` if there was an error
+
+That can be chained with bash if statements. For example:
+
+```bash
+#!/usr/bin/env bash
+
+FRUIT="apple"
+
+celq -n -b --arg="fruit:string=$FRUIT" 'fruit.contains("a")' > /dev/null
+rc=$?
+
+if [ "$rc" -eq 0 ]; then
+    echo "$FRUIT contains the letter a"
+else
+    echo "$FRUIT does not contain the letter a"
+fi
+```
+
+Will print: `apple contains the letter a`.
+
+Note that for NDJSON inputs, `celq` sets the value based on the value of the last JSON in the NDJSON input.
 
 ### Chaining
 
@@ -201,3 +240,6 @@ Also works as a way to output `"AAPL"` in the command, just like in the first ex
 3. If an argument is repeated, the last definition wins (e.g. `--arg=x:bool=false --arg=x:bool=true`, `x` will be true)
 4. `.` does not work as a root variable name
 
+## Pronunciation
+
+`celq` is pronounced *“selk”* / *“selq”*. Kind of like the word `silk` but with an `e` instead.
