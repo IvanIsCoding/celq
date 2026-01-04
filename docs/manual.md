@@ -2,6 +2,8 @@
 
 ## Installation
 
+### From source
+
 ```bash
 cargo install celq
 ```
@@ -31,3 +33,119 @@ Options:
 ## Quick Start
 
 TODO
+
+## References
+
+- [CEL Language Definition](https://github.com/google/cel-spec/blob/master/doc/langdef.md)
+- [cel-rust](https://github.com/cel-rust/cel-rust): the Rust implementation of CEL powering `celq`
+
+## Inspiration
+
+`celq` is heavily inspired by:
+1. [jq](https://jqlang.org/): the most popular command-line utility for dealing with JSON
+2. [cel-python](https://github.com/cloud-custodian/cel-python): a Python library with a CLI that heavily influenced `celq` (there are discrepancies, however)
+3. [jaq](https://github.com/01mf02/jaq): a `jq` clone written in Rust
+
+## Recipes
+
+We provide recipes with concrete examples for `celq`. During the recipes, we might refer to `yfinance.json`:
+
+```json
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "AAPL",
+          "regularMarketTime":1767387600,
+          "fullExchangeName": "NasdaqGS",
+          "instrumentType": "EQUITY",
+          "timezone": "EST",
+          "exchangeTimezoneName": "America/New_York",
+          "regularMarketPrice": 271.01,
+          "regularMarketDayHigh": 277.825,
+          "regularMarketDayLow": 269.02,
+          "longName": "Apple Inc.",
+          "chartPreviousClose": 250.42
+        }
+      }
+    ]
+  }
+}
+```
+
+This file contains the simplified response from the Yahoo Finance Unofficial JSON API.
+
+### Reading Files
+
+By default, `celq` reads from the standard input. To read from a file, pipe the output from `cat`.
+
+For example:
+```bash
+cat yfinance.json | celq "this.chart.result[0].meta.symbol"
+```
+
+The command outputs: `"AAPL"`. 
+
+### Writing Files
+
+`celq`' writes by default to the standard output. That output can be piped to a file.
+
+For example:
+```bash
+cat yfinance.json | celq "this.chart.result[0].meta.longName" > out.txt
+```
+
+Creates a file `out.txt` with the content `"Apple Inc."`
+
+### Output JSON
+
+`celq` always writes JSON to the standard output. That can become handy for transforming JSON.
+
+Take for example:
+
+```bash
+cat yfinance.json | celq '{"symbol": this.chart.result[0].meta.longName, "price": this.chart.result[0].meta.regularMarketPrice}'
+```
+
+The command outputs: `{"price":271.01,"symbol":"Apple Inc."}`
+
+Notice that by defaukt `celq` does not guarantee the key order of the output. If you require so, pass the `--sort-keys` option:
+
+```bash
+cat yfinance.json | celq --sort-keys '{"symbol": this.chart.result[0].meta.longName, "price": this.chart.result[0].meta.regularMarketPrice}'
+```
+
+### Reading CEL from a file
+
+In the previous example, the CEL expression for the JSON became long. Let's say we saved the expression in `stock.cel` with the following contents:
+
+```python
+{
+  "symbol": this.chart.result[0].meta.longName, 
+  "price": this.chart.result[0].meta.regularMarketPrice
+}
+```
+
+If we pass the `--from-file` argument, we can load the expression and keep the command succint:
+
+```bash
+cat yfinance.json | celq --from-file stock.cel
+```
+
+### Dealing with NDJSON
+
+### Logical Calculator
+
+`celq` can act as a calculator. If the `-n` option is provided, the tool will not read from the standard input. Combined with arguments, specified by `--arg:<VARIABLE_NAME>:<VARIABLE_TYPE>=<VALUE>`, this makes `celq` a logical calculator.
+
+Take for example:
+
+```bash
+celq -n --arg="x:bool=true" --arg="y:bool=false" '(x || y) && !(x && y)'
+```
+
+The command outputs: `true`.
+
+### Renaming the root variable
