@@ -180,7 +180,7 @@ NDJSON input can also be processed in parallel. Passing `-j -1` as an argument w
 
 ### Slurping
 
-`celq` supports slurping in a similar fashion to `jq`. If the `--slurp` flag is passed, each individual line of a NDJSON is treated as if it was an array entry.
+`celq` supports slurping, albeit in a more limited way than `jq`. If the `--slurp` flag is passed, each individual line of a NDJSON is treated as if it was an array entry.
 
 For example:
 
@@ -268,7 +268,7 @@ Also works as a way to output `"AAPL"` in the command, just like in the first ex
 
 ## JSON5 Support
 
-`celq` also supports [JSON5](https://json5.org/), the popular . It also indirectly supports [JSONC](https://jsonc.org/), because JSON5 is a superset of JSONC but don't quote me on that.
+`celq` also supports [JSON5](https://json5.org/), a popular JSON extension among config files. It also indirectly supports [JSONC](https://jsonc.org/), because JSON5 is a superset of JSONC but don't quote me on that.
 
 To enable the JSON5 parser, pass the `--from-json5` flag. For example:
 
@@ -280,13 +280,33 @@ Outputs: `[2,4,6,8]`. If the `--from-json5` flag is not passed, the command will
 
 Notice that passing the `--from-json5` clashes with the `--slurp` flag and with the NDJSON detection.
 
+## Pretty Printing
+
+`celq` by default uses a compact output. This is a contrast to `jq` where the compact output is an opt-in with the `-c` flag.
+
+With that being said, `celq` can pretty-print JSON via the `-p` flag:
+
+```bash
+echo '{"a": 1, "b": 2}' | celq -p 'this'
+```
+
+Outputs:
+
+```none
+{
+  "a": 1,
+  "b": 2
+}
+```
+
 ## Quirks
 
 1. Do not rely on the order of the JSON output, by default it is randomized due to Rust implementation details. If you need ordering, pass `--sort-keys` as an argument
 2. If an argument has the same name as the root variable, the root variable wins
 3. If an argument is repeated, the last definition wins (e.g. `--arg=x:bool=false --arg=x:bool=true`, `x` will be true)
 4. `.` does not work as a root variable name
-5. Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
+5. Pretty-printing can break chaining. `celq` is more limited than `jq` when parsing NDJSON, as it relies heavily on the new-line delimiters. If you pipe the output of a `celq -p` to `celq` again and the original input was NDJSON with multiple lines, things will break.
+6. Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
 
 ## Pronunciation
 
