@@ -15,7 +15,7 @@ pub fn json_to_cel_variables(
     let json_value: JsonValue = if !slurp && !from_json5 {
         serde_json::from_str(json_str)?
     } else if from_json5 {
-        json5::from_str(json_str).map_err(|e| serde_json::Error::custom(e))?
+        json5::from_str(json_str).map_err(serde_json::Error::custom)?
     } else {
         slurp_json_lines(Some(json_str))?
     };
