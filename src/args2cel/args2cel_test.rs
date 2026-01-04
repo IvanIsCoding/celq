@@ -16,10 +16,10 @@ fn test_uint() {
 
 #[test]
 fn test_float() {
-    let args = vec![("x".to_string(), "float".to_string(), "3.14".to_string())];
+    let args = vec![("x".to_string(), "float".to_string(), "1.23".to_string())];
     let vars = args_to_cel_variables(&args).unwrap();
     if let CelValue::Float(f) = vars.get("x").unwrap() {
-        assert!((f - 3.14).abs() < 0.001);
+        assert!((f - 1.23).abs() < 0.001);
     } else {
         panic!("Expected float");
     }
