@@ -6,9 +6,9 @@ use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
 use std::io::{self, BufRead, BufReader, Cursor, Read};
 
+use crate::InputParameters;
 use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
-use crate::InputParameters;
 
 /// Process input from stdin and execute the CEL program
 ///
@@ -55,7 +55,7 @@ fn handle_buffer<R: Read>(
     input_params: &InputParameters,
     reader: BufReader<R>,
 ) -> Result<Vec<(String, bool)>> {
-    if !input_params.slurp {
+    if !input_params.slurp && !input_params.from_json5 {
         // Determine thread pool size
         anyhow::ensure!(
             input_params.parallelism != 0,
@@ -87,12 +87,7 @@ fn handle_buffer<R: Read>(
 
         // Try to process the last line
         let last_idx = lines.len() - 1;
-        let last_result = handle_json(
-            program,
-            arg_variables,
-            input_params,
-            Some(&lines[last_idx]),
-        );
+        let last_result = handle_json(program, arg_variables, input_params, Some(&lines[last_idx]));
 
         match last_result {
             Ok(last_output) => {
@@ -121,12 +116,7 @@ fn handle_buffer<R: Read>(
             Err(_) => {
                 // Last line failed, try reading entire input as single JSON document
                 let full_buffer = lines.join("\n");
-                let result = handle_json(
-                    program,
-                    arg_variables,
-                    input_params,
-                    Some(&full_buffer),
-                )?;
+                let result = handle_json(program, arg_variables, input_params, Some(&full_buffer))?;
                 Ok(vec![result])
             }
         }
@@ -174,8 +164,13 @@ fn handle_json(
 
     // If we have input, parse it as JSON and add to context
     if let Some(json) = json_str {
-        let json_variables = json_to_cel_variables(json, &input_params.root_var, input_params.slurp)
-            .context("Failed to parse JSON input")?;
+        let json_variables = json_to_cel_variables(
+            json,
+            &input_params.root_var,
+            input_params.slurp,
+            input_params.from_json5,
+        )
+        .context("Failed to parse JSON input")?;
 
         // Add JSON variables to context
         for (name, value) in json_variables {

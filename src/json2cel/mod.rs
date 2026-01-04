@@ -9,8 +9,12 @@ pub fn json_to_cel_variables(
     json_str: &str,
     root_var: &str,
     slurp: bool,
+    from_json5: bool,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
-    let json_value: JsonValue = if !slurp {
+    let json_value: JsonValue = if !slurp && !from_json5 {
+        serde_json::from_str(json_str)?
+    } else if from_json5 {
+        // TODO: switch for proper JSON5
         serde_json::from_str(json_str)?
     } else {
         slurp_json_lines(Some(json_str))?
