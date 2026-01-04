@@ -1,4 +1,4 @@
-**celq** is a command-line tool for evaluating [Common Expression Language (CEL)](https://cel.dev/) expressions. It processes JSON input, performs computations, and outputs results. Think of it as if `jq` supported `CEL`.
+**celq** is a command-line tool for evaluating [Common Expression Language (CEL)](https://cel.dev/) expressions. It processes JSON input, performs computations, and outputs results. Think of it as if `jq` supported CEL.
 
 ## Installation
 
@@ -23,7 +23,7 @@ Options:
   -b, --boolean                Return a status code based on boolean output true = 0, false = 1, exception = 2
   -n, --null-input             Do not read JSON input from stdin
   -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NLJSON
-  -j, --jobs <N>               Parallelism level (number of threads, -1 for all available) [default: 1]
+  -j, --jobs <N>               Parallelism level for NDJSON inputs (number of threads, -1 for all available) [default: 1]
   -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
@@ -172,6 +172,8 @@ We'll get as the output:
 {"xy": 4.0}
 {"xy": 8.0}
 ```
+
+NDJSON input can also be processed in paralle. Passing `-j -1` as an argument will enable multi-threading with all available threads. Passing `-j N` as an argument will enable `N` threads. Each thread works on a separate line of the JSON independently.
 
 ### Logical Calculator
 

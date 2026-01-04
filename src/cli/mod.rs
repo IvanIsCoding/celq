@@ -76,7 +76,7 @@ pub struct Cli {
     /// Default is to treat each line as separate NLJSON
     #[arg(short = 's', long = "slurp")]
     pub slurp: bool,
-    /// Parallelism level (number of threads, -1 for all available)
+    /// Parallelism level for NDJSON inputs (number of threads, -1 for all available)
     #[arg(
         short = 'j',
         long = "jobs",
