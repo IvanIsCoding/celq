@@ -24,6 +24,7 @@ use crate::json_to_cel_variables;
 pub fn handle_input(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
+    root_var: &str,
     null_input: bool,
     slurp: bool,
     parallelism: i32,
@@ -36,6 +37,7 @@ pub fn handle_input(
         handle_buffer(
             program,
             arg_variables,
+            root_var,
             reader,
             slurp,
             parallelism,
@@ -48,6 +50,7 @@ pub fn handle_input(
         handle_buffer(
             program,
             arg_variables,
+            root_var,
             reader,
             slurp,
             parallelism,
@@ -71,6 +74,7 @@ pub fn handle_input(
 fn handle_buffer<R: Read>(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
+    root_var: &str,
     reader: BufReader<R>,
     slurp: bool,
     parallelism: i32,
@@ -99,7 +103,7 @@ fn handle_buffer<R: Read>(
 
         // If no lines were processed, execute with no input
         if lines.is_empty() {
-            let result = handle_json(program, arg_variables, None, slurp, sort_keys)?;
+            let result = handle_json(program, arg_variables, root_var, None, slurp, sort_keys)?;
             return Ok(vec![result]);
         }
 
@@ -108,6 +112,7 @@ fn handle_buffer<R: Read>(
         let last_result = handle_json(
             program,
             arg_variables,
+            root_var,
             Some(&lines[last_idx]),
             slurp,
             sort_keys,
@@ -128,7 +133,14 @@ fn handle_buffer<R: Read>(
                         lines[..last_idx]
                             .par_iter()
                             .map(|line| {
-                                handle_json(program, arg_variables, Some(line), slurp, sort_keys)
+                                handle_json(
+                                    program,
+                                    arg_variables,
+                                    root_var,
+                                    Some(line),
+                                    slurp,
+                                    sort_keys,
+                                )
                             })
                             .collect()
                     });
@@ -140,8 +152,14 @@ fn handle_buffer<R: Read>(
             Err(_) => {
                 // Last line failed, try reading entire input as single JSON document
                 let full_buffer = lines.join("\n");
-                let result =
-                    handle_json(program, arg_variables, Some(&full_buffer), slurp, sort_keys)?;
+                let result = handle_json(
+                    program,
+                    arg_variables,
+                    root_var,
+                    Some(&full_buffer),
+                    slurp,
+                    sort_keys,
+                )?;
                 Ok(vec![result])
             }
         }
@@ -155,7 +173,14 @@ fn handle_buffer<R: Read>(
         }
 
         // Process the entire buffer as one JSON document
-        let result = handle_json(program, arg_variables, Some(&buffer), slurp, sort_keys)?;
+        let result = handle_json(
+            program,
+            arg_variables,
+            root_var,
+            Some(&buffer),
+            slurp,
+            sort_keys,
+        )?;
         Ok(vec![result])
     }
 }
@@ -175,6 +200,7 @@ fn handle_buffer<R: Read>(
 fn handle_json(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
+    root_var: &str,
     json_str: Option<&str>,
     slurp: bool,
     sort_keys: bool,
@@ -192,7 +218,7 @@ fn handle_json(
     // If we have input, parse it as JSON and add to context
     if let Some(json) = json_str {
         let json_variables =
-            json_to_cel_variables(json, slurp).context("Failed to parse JSON input")?;
+            json_to_cel_variables(json, root_var, slurp).context("Failed to parse JSON input")?;
 
         // Add JSON variables to context
         for (name, value) in json_variables {

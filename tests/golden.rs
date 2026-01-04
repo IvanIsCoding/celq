@@ -423,6 +423,25 @@ test!(
     "25"
 );
 
+// Renaming root variable
+test!(
+    rename_root_variable,
+    &["-R=request", "(request.a + request.b) * request.c"],
+    r#"{"a":2,"b":3,"c":4}"#,
+    "20"
+);
+
+test!(
+    rename_root_variable_with_args,
+    &[
+        "--root-var=request",
+        "--arg=c:int=4",
+        "(request.a + request.b) * c"
+    ],
+    r#"{"a":2,"b":3}"#,
+    "20"
+);
+
 #[test]
 fn from_file_simple_expression() -> io::Result<()> {
     let file = NamedTempFile::new()?;

@@ -86,6 +86,10 @@ pub struct Cli {
     )]
     pub parallelism: i32,
 
+    /// Variable name for the root JSON input
+    #[arg(short = 'R', long = "root-var", default_value = "this")]
+    pub root_var: String,
+
     /// Output the fields of each object with the keys in sorted order
     #[arg(short = 'S', long = "sort-keys")]
     pub sort_keys: bool,

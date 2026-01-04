@@ -1,20 +1,22 @@
 use super::*;
 
+const ROOT_VAR: &str = "this";
+
 #[test]
 fn test_null() {
-    let vars = json_to_cel_variables("null", false).unwrap();
+    let vars = json_to_cel_variables("null", ROOT_VAR, false).unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Null));
 }
 
 #[test]
 fn test_number() {
-    let vars = json_to_cel_variables("42", false).unwrap();
+    let vars = json_to_cel_variables("42", ROOT_VAR, false).unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Int(42)));
 }
 
 #[test]
 fn test_string() {
-    let vars = json_to_cel_variables(r#""hello""#, false).unwrap();
+    let vars = json_to_cel_variables(r#""hello""#, ROOT_VAR, false).unwrap();
     if let CelValue::String(s) = vars.get("this").unwrap() {
         assert_eq!(s.as_str(), "hello");
     } else {
@@ -24,13 +26,13 @@ fn test_string() {
 
 #[test]
 fn test_bool() {
-    let vars = json_to_cel_variables("true", false).unwrap();
+    let vars = json_to_cel_variables("true", ROOT_VAR, false).unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Bool(true)));
 }
 
 #[test]
 fn test_array() {
-    let vars = json_to_cel_variables("[1, 2, 3]", false).unwrap();
+    let vars = json_to_cel_variables("[1, 2, 3]", ROOT_VAR, false).unwrap();
     if let CelValue::List(list) = vars.get("this").unwrap() {
         assert_eq!(list.len(), 3);
     } else {
@@ -40,7 +42,7 @@ fn test_array() {
 
 #[test]
 fn test_object() {
-    let vars = json_to_cel_variables(r#"{"x": 10, "y": 20}"#, false).unwrap();
+    let vars = json_to_cel_variables(r#"{"x": 10, "y": 20}"#, ROOT_VAR, false).unwrap();
 
     // Should have "this"
     assert_eq!(vars.len(), 1);
@@ -51,7 +53,7 @@ fn test_object() {
 
 #[test]
 fn test_nested_object() {
-    let vars = json_to_cel_variables(r#"{"outer": {"inner": 42}}"#, false).unwrap();
+    let vars = json_to_cel_variables(r#"{"outer": {"inner": 42}}"#, ROOT_VAR, false).unwrap();
 
     // Should have "this"
     assert_eq!(vars.len(), 1);

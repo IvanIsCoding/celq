@@ -59,6 +59,7 @@ fn main() -> io::Result<()> {
     match handle_input(
         &program,
         &arg_variables,
+        &cli.root_var,
         cli.null_input,
         cli.slurp,
         cli.parallelism,

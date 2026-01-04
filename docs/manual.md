@@ -22,6 +22,7 @@ Options:
   -n, --null-input             Do not read JSON input from stdin
   -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NLJSON
   -j, --jobs <N>               Parallelism level (number of threads, -1 for all available) [default: 1]
+  -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
   -h, --help                   Print help
