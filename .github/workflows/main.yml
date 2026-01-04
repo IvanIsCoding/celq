@@ -52,6 +52,7 @@ jobs:
 
   test:
     name: Test
+    needs: [build, format, clippy]
     strategy:
       fail-fast: false
       matrix:
@@ -83,6 +84,7 @@ jobs:
 
   docs:
     name: Documentation
+    needs: [build, format, clippy]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
