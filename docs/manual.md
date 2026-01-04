@@ -10,7 +10,7 @@ cargo install celq
 
 ## Overview
 
-```bash
+```none
 CEL expression evaluator
 
 Usage: celq [OPTIONS] <expr|--from-file <FILE>>
@@ -136,6 +136,30 @@ cat yfinance.json | celq --from-file stock.cel
 
 ### Dealing with NDJSON
 
+`celq` can deal with [Newline-Delimited JSON (NDJSON)](https://web.archive.org/web/20231218162511/https://ndjson.org/). That format is also called [JSON Lines (JSONL)](https://web.archive.org/web/20251130123805/https://jsonlines.org./).
+
+`celq` detects the content of multi-line files. Firstly, it tries to parse the input as a NDJSON where each line is a JSON value. If that fails, we parse the input as a single JSON file.
+
+Take for example the following file, `example.ndjson`:
+
+```ndjson
+{"x": 1.5, "y": 2.5}
+{"x": 3.5, "y": 4.5}
+```
+
+Giving NDJSON as an input will also return NDJSON as an output. If we run the command:
+
+```bash
+cat example.ndjson | celq '{"xy": this.x + this.y}'
+```
+
+We'll get as the output:
+
+```ndjson
+{"xy": 4.0}
+{"xy": 8.0}
+```
+
 ### Logical Calculator
 
 `celq` can act as a calculator. If the `-n` option is provided, the tool will not read from the standard input. Combined with arguments, specified by `--arg:<VARIABLE_NAME>:<VARIABLE_TYPE>=<VALUE>`, this makes `celq` a logical calculator.
@@ -149,3 +173,9 @@ celq -n --arg="x:bool=true" --arg="y:bool=false" '(x || y) && !(x && y)'
 The command outputs: `true`.
 
 ### Renaming the root variable
+
+In contrast to `jq` and `cel-python`, `celq` names its root variable `this`. The root `.` is an operator for CEL and leads to invalid expressions.
+
+The root variable can be tweaked through the
+
+### Binary output
