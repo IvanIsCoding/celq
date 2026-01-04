@@ -22,7 +22,11 @@ For detailed usage examples and recipes, see the [manual](docs/manual.md).
 
 ## Why?
 
-TODO
+There are implementations of CEL for [Go](https://github.com/google/cel-go), [C++](https://github.com/google/cel-cpp), [Python](https://github.com/cloud-custodian/cel-python), [JavaScript](https://github.com/marcbachmann/cel-js), [Rust](https://github.com/cel-rust/cel-rust), and possibly more languages.
+
+`celq` brings the same CEL syntax to the command-line. `celq` is not necessarily better than jq, but perhaps it makes it easier to reuse snippets of code accross multiple places.
+
+Moreover, the CEL specification is simpler than the jqlang specification. If you need something less powerful than `jq` or Python, then `celq` might be what you are looking for.
 
 ## Installation
 
@@ -50,11 +54,11 @@ Currently, there are no benchmarks for `celq`. I believe the tool is "good enoug
 
 ### REPL
 
-While conceptually interesting, `celq` does not aim to be a CEL REPL. That should live on a separate binary.
+While conceptually interesting, `celq` does not aim to be a CEL REPL. In the original author's view, that should live on a separate binary.
 
 ### YAML Support
 
-`celq` works with JSON. I originally considered supporting YAML as a supported input format. However, the amount of YAML edge cases pushed me back to JSON.
+`celq` works with JSON. I originally considered supporting YAML as a supported input format. However, the amount of YAML edge cases pushed me back to JSON. Although that might change in the future, please do not open an issue asking for YAML support as of today.
 
 ## Acknowledgments
 
