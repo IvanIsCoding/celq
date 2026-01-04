@@ -10,6 +10,14 @@ license = "MIT OR Apache-2.0"
 keywords = ["cel", "query", "json"]
 categories = ["command-line-utilities"]
 
+[lib]
+name = "celq"
+path = "src/lib.rs"
+
+[[bin]]
+name = "celq"
+path = "src/main.rs"
+
 [features]
 default = ["mimalloc"]
 
@@ -23,3 +31,6 @@ mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = 
 
 [dev-dependencies]
 tempfile = "3"
+
+[package.metadata.docs.rs]
+all-features = true
