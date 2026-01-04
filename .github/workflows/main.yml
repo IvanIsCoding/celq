@@ -5,6 +5,9 @@ on:
     branches: ["main"]
   pull_request:
     branches: ["main"]
+concurrency:
+  group: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
@@ -60,9 +63,9 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             rust: stable
-          - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-            rust: stable
+          #- os: ubuntu-24.04-arm
+          #  target: aarch64-unknown-linux-gnu
+          #  rust: stable
           - os: macos-latest
             target: aarch64-apple-darwin
             rust: stable
