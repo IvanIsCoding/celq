@@ -1,4 +1,4 @@
-**celq** is a command-line tool for evaluating Common Expression Language (CEL) expressions. It processes JSON input, performs computations, and outputs results. Think of it as if `jq` supported `CEL`.
+**celq** is a command-line tool for evaluating [Common Expression Language (CEL)](https://cel.dev/) expressions. It processes JSON input, performs computations, and outputs results. Think of it as if `jq` supported `CEL`.
 
 ## Installation
 
@@ -179,3 +179,25 @@ In contrast to `jq` and `cel-python`, `celq` names its root variable `this`. The
 The root variable can be tweaked through the
 
 ### Binary output
+
+
+
+### Chaining
+
+Because `celq` outputs the same format it reads as the input, chains are easy to make. For example:
+
+```bash
+cat yfinance.json | \
+  celq "this.chart.result[0]" | \
+  celq "this.meta.symbol"
+```
+
+Also works as a way to output `"AAPL"` in the command, just like in the first example. When combined with arguments and more elaborate scripts, that can make up for data pipelines.
+
+## Quirks
+
+1. Do not rely on the order of the JSON output, by default it is randomized due to Rust implementation details. If you need ordering, pass `--sort-keys` as an argument
+2. If an argument has the same name as the root variable, the root variable wins
+3. If an argument is repeated, the last definition wins (e.g. `--arg=x:bool=false --arg=x:bool=true`, `x` will be true)
+4. `.` does not work as a root variable name
+
