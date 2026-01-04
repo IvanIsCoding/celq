@@ -442,6 +442,48 @@ test!(
     "20"
 );
 
+// Multi-line JSON5 (with trailing comma and comment)
+test!(
+    multiline_json5_object,
+    &["--from-json5", "this.a + ' and ' + string(this.c)"],
+    r#"{
+  // This is a comment
+  "a": "b",
+  "c": "d",
+}"#,
+    "\"b and d\""
+);
+
+test!(
+    multiline_json5_array,
+    &["--from-json5", "this.map(x, x * 2)"],
+    r#"[
+  1,
+  2,
+  3,
+  4,
+  5, // trailing comma
+]"#,
+    "[2,4,6,8,10]"
+);
+
+test!(
+    multiline_json5_empty_first_line,
+    &["--from-json5", "this.x + this.y"],
+    r#"
+{x: 5, y: 10}"#, // unquoted keys
+    "15"
+);
+
+test!(
+    multiline_json5_closing_brace_last,
+    &["--from-json5", "this.foo"],
+    r#"{foo: "bar", // comment and trailing comma
+}"#,
+    "\"bar\""
+);
+
+// From file tests
 #[test]
 fn from_file_simple_expression() -> io::Result<()> {
     let file = NamedTempFile::new()?;

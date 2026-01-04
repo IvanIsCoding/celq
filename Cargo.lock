@@ -180,6 +180,7 @@ dependencies = [
  "json5",
  "mimalloc",
  "rayon",
+ "serde",
  "serde_json",
  "tempfile",
 ]

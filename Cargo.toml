@@ -25,6 +25,7 @@ default = ["mimalloc"]
 anyhow = "1"
 cel = { version = "0.12.0", features = ["bytes", "json", "regex", "chrono"] }
 clap = { version = ">= 4.5.0, < 5.0.0", features = ["derive"] }
+serde = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.11"
 mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = true }

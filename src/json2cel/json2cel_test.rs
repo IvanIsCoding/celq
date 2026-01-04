@@ -78,3 +78,21 @@ fn test_nested_object() {
         panic!("Expected map");
     }
 }
+
+#[test]
+fn test_json5_with_comment() {
+    let json5_input = r#"
+    {
+        // This is a comment
+        "x": 42
+    }
+    "#;
+    let vars = json_to_cel_variables(json5_input, ROOT_VAR, NO_SLURP, true).unwrap();
+
+    if let CelValue::Map(map) = vars.get("this").unwrap() {
+        let x_key = Key::String(Arc::new("x".to_string()));
+        assert!(matches!(map.get(&x_key).unwrap(), CelValue::Int(42)));
+    } else {
+        panic!("Expected map");
+    }
+}

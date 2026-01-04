@@ -1,4 +1,5 @@
 use cel::objects::{Key, Value as CelValue};
+use serde::de::Error as _;
 use serde_json::Value as JsonValue;
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
@@ -14,8 +15,7 @@ pub fn json_to_cel_variables(
     let json_value: JsonValue = if !slurp && !from_json5 {
         serde_json::from_str(json_str)?
     } else if from_json5 {
-        // TODO: switch for proper JSON5
-        serde_json::from_str(json_str)?
+        json5::from_str(json_str).map_err(|e| serde_json::Error::custom(e))?
     } else {
         slurp_json_lines(Some(json_str))?
     };
