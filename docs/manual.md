@@ -28,6 +28,7 @@ Options:
   -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
+  -p, --pretty-print
   -h, --help                   Print help
 ```
 

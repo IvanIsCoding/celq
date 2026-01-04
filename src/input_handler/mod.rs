@@ -190,11 +190,15 @@ fn handle_json(
 
     // Convert result to JSON string
     let mut json_value = cel_value_to_json_value(&result);
-    let output_string = if !input_params.sort_keys {
-        serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?
-    } else {
+
+    if input_params.sort_keys {
         sort_keys_recursive(&mut json_value);
-        serde_json::to_string(&json_value).context("Failed to serialize sorted result to JSON")?
+    }
+
+    let output_string = if input_params.pretty_print {
+        serde_json::to_string_pretty(&json_value).context("Failed to serialize result to JSON")?
+    } else {
+        serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?
     };
 
     Ok((output_string, is_truthy))

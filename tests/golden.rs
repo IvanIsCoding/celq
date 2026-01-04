@@ -483,6 +483,44 @@ test!(
     "\"bar\""
 );
 
+// Pretty-printing output
+test!(
+    map_nested_pretty,
+    &[
+        "-S",
+        "-p",
+        r#"{"person": {"name": "Alice", "age": 30}, "id": 1}"#
+    ],
+    "{}",
+    r#"{
+  "id": 1,
+  "person": {
+    "age": 30,
+    "name": "Alice"
+  }
+}"#
+);
+
+test!(
+    json5_to_pretty_sorted_json,
+    &["--from-json5", "--sort-keys", "--pretty-print", "this"],
+    r#"{
+  // Input with JSON5 features
+  person: {
+    name: "Alice",
+    age: 30,
+  },
+  id: 1, // trailing comma
+}"#,
+    r#"{
+  "id": 1,
+  "person": {
+    "age": 30,
+    "name": "Alice"
+  }
+}"#
+);
+
 // From file tests
 #[test]
 fn from_file_simple_expression() -> io::Result<()> {

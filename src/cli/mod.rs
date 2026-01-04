@@ -108,6 +108,9 @@ pub struct Cli {
     #[arg(short = 'f', long = "from-file", value_name = "FILE")]
     pub from_file: Option<std::path::PathBuf>,
 
+    #[arg(short = 'p', long = "pretty-print")]
+    pub pretty_print: bool,
+
     /// CEL expression to evaluate
     #[arg(value_name = "expr")]
     pub expression: Option<String>,
@@ -135,4 +138,5 @@ pub struct InputParameters {
     pub from_json5: bool,
     pub parallelism: i32,
     pub sort_keys: bool,
+    pub pretty_print: bool,
 }

@@ -64,6 +64,7 @@ fn main() -> io::Result<()> {
         from_json5: cli.from_json5,
         parallelism: cli.parallelism,
         sort_keys: cli.sort_keys,
+        pretty_print: cli.pretty_print,
     };
 
     match handle_input(&program, &arg_variables, &input_params) {

@@ -50,7 +50,7 @@ While `cel-rust` provides excellent compatibility with the CEL specification, th
 
 `celq` eagerly parses all JSON input into memory before evaluation. This design was made to simplify the code implementation, at the cost of memory and performance.
 
-Currently, there are no benchmarks for `celq`. I believe the tool is "good enough" for my personal use. That might be revisited in the future.
+Currently, there are no benchmarks for `celq`. I believe the tool is "good enough" for my personal use. That might be revisited in the future. In the meantime, expect `celq` to be slower than `jq`.
 
 ### List and Map Arguments
 
