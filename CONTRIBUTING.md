@@ -43,3 +43,13 @@ cargo doc --open
 ```
 
 Despite `celq` being a binary, docs.rs reads from `src/lib.rs`. Our current documentation lives in the `docs/` folder, so `src/lib.rs` should exclusively include the markdown from the docs folder.
+
+## Packaging
+
+Packaging `celq` for Linux, macOS, and Windows is a welcome contribution. If you add `celq` to a packaging repository, feel free to send a Pull Request updating the README to list that installation method.
+
+## MSRV
+
+The Minimum Supported Rust Version (MSRV) of `celq` trys to align with the MSRV of Debian stable. To see their current MSRV, search for [rustc](https://packages.debian.org/search?keywords=rustc) and see the version listed for stable.
+
+Notice that eventually that may lag behind the latest of rustc by a considerable margin. However, that guarantees that `celq` can be packaged by many Linux distributions.
