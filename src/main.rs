@@ -30,7 +30,6 @@ fn main() -> io::Result<()> {
     let program = match compile_expression(cli.expression.as_deref(), cli.from_file.as_ref()) {
         Ok(prog) => prog,
         Err(err) => {
-            // Preserve your existing error-reporting behavior
             if let Some(parse_errors) = err.downcast_ref::<ParseErrors>() {
                 for error in &parse_errors.errors {
                     eprintln!("  Error: {:?}", error);

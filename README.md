@@ -7,7 +7,7 @@
 `celq` reads JSON from the input and lets users process it with CEL:
 
 ```bash
-echo '["apples", "bananas", "blueberry"]' | celq 'this.filter(x, x.contains("a"))'
+echo '["apples", "bananas", "blueberry"]' | celq 'this.filter(s, s.contains("a"))'
 # Outputs: ["apples","bananas"]
 ```
 
