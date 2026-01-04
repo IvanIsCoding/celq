@@ -10,13 +10,14 @@ license = "MIT OR Apache-2.0"
 keywords = ["cel", "query", "json"]
 categories = ["command-line-utilities"]
 
-[lib]
-name = "celq"
-path = "src/lib.rs"
-
 [[bin]]
 name = "celq"
 path = "src/main.rs"
+
+# celq is not a library. This is merely a trick for docs.rs to build the manual.
+[lib]
+name = "celq"
+path = "src/lib.rs"
 
 [features]
 default = ["mimalloc"]
