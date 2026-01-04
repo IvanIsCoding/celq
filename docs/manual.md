@@ -23,6 +23,7 @@ Options:
   -b, --boolean                Return a status code based on boolean output true = 0, false = 1, exception = 2
   -n, --null-input             Do not read JSON input from stdin
   -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NLJSON
+      --from-json5             Parse input as JSON5 instead of JSON
   -j, --jobs <N>               Parallelism level for NDJSON inputs (number of threads, -1 for all available) [default: 1]
   -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
@@ -174,7 +175,27 @@ We'll get as the output:
 {"xy": 8.0}
 ```
 
-NDJSON input can also be processed in paralle. Passing `-j -1` as an argument will enable multi-threading with all available threads. Passing `-j N` as an argument will enable `N` threads. Each thread works on a separate line of the JSON independently.
+NDJSON input can also be processed in parallel. Passing `-j -1` as an argument will enable multi-threading with all available threads. Passing `-j N` as an argument will enable `N` threads. Each thread works on a separate line of the JSON independently.
+
+### Slurping
+
+`celq` supports slurping in a similar fashion to `jq`. If the `--slurp` flag is passed, each individual line of a NDJSON is treated as if it was an array entry.
+
+For example:
+
+```bash
+cat example.json | celq --slurp "this"
+```
+
+Outputs: `[{"y":2.5,"x":1.5},{"y":4.5,"x":3.5}]`. In short, it concatenated the input in a single list.
+
+That can be convenient. Let's say we want to access all values of `x`:
+
+```bash
+cat example.json | celq --slurp "this.map(t, t.x)"
+```
+
+The command outputs: `[1.5,3.5]`.
 
 ### Logical Calculator
 
@@ -243,6 +264,20 @@ cat yfinance.json | \
 ```
 
 Also works as a way to output `"AAPL"` in the command, just like in the first example. When combined with arguments and more elaborate scripts, that can make up for data pipelines.
+
+## JSON5 Support
+
+`celq` also supports [JSON5](https://json5.org/), the popular . It also indirectly supports [JSONC](https://jsonc.org/), because JSON5 is a superset of JSONC but don't quote me on that.
+
+To enable the JSON5 parser, pass the `--from-json5` flag. For example:
+
+```bash
+echo "[1, 2, 3, 4,]" | celq --from-json5 'this.map(x, x*2)'
+```
+
+Outputs: `[2,4,6,8]`. If the `--from-json5` flag is not passed, the command will fail because of the trailing comma on the list. JSON5 is more lenient than JSON and allows for trailing commas and comments.
+
+Notice that passing the `--from-json5` clashes with the `--slurp` flag and with the NDJSON detection.
 
 ## Quirks
 
