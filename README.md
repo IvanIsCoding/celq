@@ -1,4 +1,5 @@
-# celq [![Minimum rustc 1.90](https://img.shields.io/badge/rustc-1.90+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
+# celq [![Crates.io](https://img.shields.io/crates/v/celq.svg)](https://crates.io/crates/celq) [![Documentation](https://docs.rs/celq/badge.svg)](https://docs.rs/celq)
+ [![Minimum rustc 1.90](https://img.shields.io/badge/rustc-1.90+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html)
 
 **celq** is a command-line tool for evaluating [Common Expression Language (CEL)](https://cel.dev/) expressions. It processes JSON input, performs computations, and outputs results. Think of it as if [jq](https://jqlang.org/) supported CEL.
 
@@ -20,7 +21,7 @@ celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
 
 Closely related formats such as NDJSON and JSON5 are also supported.
 
-For detailed usage examples and recipes, see the [manual](docs/manual.md).
+For detailed usage examples and recipes, see the [manual](https://docs.rs/celq/latest/celq/).
 
 ## Why?
 

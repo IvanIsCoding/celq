@@ -9,6 +9,7 @@ repository = "https://github.com/IvanIsCoding/celq"
 license = "MIT OR Apache-2.0"
 keywords = ["cel", "query", "json"]
 categories = ["command-line-utilities"]
+documentation = "https://docs.rs/celq"
 
 [[bin]]
 name = "celq"
