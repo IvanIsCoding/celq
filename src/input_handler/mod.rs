@@ -8,15 +8,14 @@ use std::io::{self, BufRead, BufReader, Cursor, Read};
 
 use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
+use crate::InputParameters;
 
 /// Process input from stdin and execute the CEL program
 ///
 /// # Arguments
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
-/// * `null_input` - If true, don't read from stdin
-/// * `slurp` - If true, treat all input with each line being an item in a JSON array
-/// * `parallelism` - Number of threads to use for parallel processing (-1 for all available)
+/// * `input_params` - Input configuration parameters
 ///
 /// # Returns
 /// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
@@ -24,38 +23,18 @@ use crate::json_to_cel_variables;
 pub fn handle_input(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
-    root_var: &str,
-    null_input: bool,
-    slurp: bool,
-    parallelism: i32,
-    sort_keys: bool,
+    input_params: &InputParameters,
 ) -> Result<Vec<(String, bool)>> {
-    if !null_input {
+    if !input_params.null_input {
         // Read from stdin
         let stdin = io::stdin();
         let reader = BufReader::new(stdin.lock());
-        handle_buffer(
-            program,
-            arg_variables,
-            root_var,
-            reader,
-            slurp,
-            parallelism,
-            sort_keys,
-        )
+        handle_buffer(program, arg_variables, input_params, reader)
     } else {
         // No input from stdin - use empty cursor
         let empty_cursor = Cursor::new(Vec::<u8>::new());
         let reader = BufReader::new(empty_cursor);
-        handle_buffer(
-            program,
-            arg_variables,
-            root_var,
-            reader,
-            slurp,
-            parallelism,
-            sort_keys,
-        )
+        handle_buffer(program, arg_variables, input_params, reader)
     }
 }
 
@@ -64,9 +43,8 @@ pub fn handle_input(
 /// # Arguments
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
+/// * `input_params` - Input configuration parameters
 /// * `reader` - BufReader to read input from
-/// * `slurp` - If true, treat all input with each line being an item in a JSON array
-/// * `parallelism` - Number of threads (-1 for all available)
 ///
 /// # Returns
 /// * Ok(Vec<(output_string, is_truthy)>) - Vector of outputs and their truthiness
@@ -74,22 +52,22 @@ pub fn handle_input(
 fn handle_buffer<R: Read>(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
-    root_var: &str,
+    input_params: &InputParameters,
     reader: BufReader<R>,
-    slurp: bool,
-    parallelism: i32,
-    sort_keys: bool,
 ) -> Result<Vec<(String, bool)>> {
-    if !slurp {
+    if !input_params.slurp {
         // Determine thread pool size
-        anyhow::ensure!(parallelism != 0, "Parallelism level cannot be 0");
+        anyhow::ensure!(
+            input_params.parallelism != 0,
+            "Parallelism level cannot be 0"
+        );
 
-        let num_threads = if parallelism == -1 {
+        let num_threads = if input_params.parallelism == -1 {
             std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(1)
         } else {
-            parallelism as usize
+            input_params.parallelism as usize
         };
 
         // Collect all non-empty lines first
@@ -103,7 +81,7 @@ fn handle_buffer<R: Read>(
 
         // If no lines were processed, execute with no input
         if lines.is_empty() {
-            let result = handle_json(program, arg_variables, root_var, None, slurp, sort_keys)?;
+            let result = handle_json(program, arg_variables, input_params, None)?;
             return Ok(vec![result]);
         }
 
@@ -112,10 +90,8 @@ fn handle_buffer<R: Read>(
         let last_result = handle_json(
             program,
             arg_variables,
-            root_var,
+            input_params,
             Some(&lines[last_idx]),
-            slurp,
-            sort_keys,
         );
 
         match last_result {
@@ -133,14 +109,7 @@ fn handle_buffer<R: Read>(
                         lines[..last_idx]
                             .par_iter()
                             .map(|line| {
-                                handle_json(
-                                    program,
-                                    arg_variables,
-                                    root_var,
-                                    Some(line),
-                                    slurp,
-                                    sort_keys,
-                                )
+                                handle_json(program, arg_variables, input_params, Some(line))
                             })
                             .collect()
                     });
@@ -155,10 +124,8 @@ fn handle_buffer<R: Read>(
                 let result = handle_json(
                     program,
                     arg_variables,
-                    root_var,
+                    input_params,
                     Some(&full_buffer),
-                    slurp,
-                    sort_keys,
                 )?;
                 Ok(vec![result])
             }
@@ -173,14 +140,7 @@ fn handle_buffer<R: Read>(
         }
 
         // Process the entire buffer as one JSON document
-        let result = handle_json(
-            program,
-            arg_variables,
-            root_var,
-            Some(&buffer),
-            slurp,
-            sort_keys,
-        )?;
+        let result = handle_json(program, arg_variables, input_params, Some(&buffer))?;
         Ok(vec![result])
     }
 }
@@ -190,9 +150,8 @@ fn handle_buffer<R: Read>(
 /// # Arguments
 /// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
+/// * `input_params` - Input configuration parameters
 /// * `json_str` - Optional JSON string to process
-/// * `slurp` - Whether the input was slurped with each line being an item in a JSON array
-/// * `sort_keys` - Whether to sort keys in the output JSON
 ///
 /// # Returns
 /// * Ok((output_string, is_truthy)) - The output and whether it's truthy
@@ -200,10 +159,8 @@ fn handle_buffer<R: Read>(
 fn handle_json(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
-    root_var: &str,
+    input_params: &InputParameters,
     json_str: Option<&str>,
-    slurp: bool,
-    sort_keys: bool,
 ) -> Result<(String, bool)> {
     // Create context with default values
     let mut context = Context::default();
@@ -217,8 +174,8 @@ fn handle_json(
 
     // If we have input, parse it as JSON and add to context
     if let Some(json) = json_str {
-        let json_variables =
-            json_to_cel_variables(json, root_var, slurp).context("Failed to parse JSON input")?;
+        let json_variables = json_to_cel_variables(json, &input_params.root_var, input_params.slurp)
+            .context("Failed to parse JSON input")?;
 
         // Add JSON variables to context
         for (name, value) in json_variables {
@@ -238,7 +195,7 @@ fn handle_json(
 
     // Convert result to JSON string
     let mut json_value = cel_value_to_json_value(&result);
-    let output_string = if !sort_keys {
+    let output_string = if !input_params.sort_keys {
         serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?
     } else {
         sort_keys_recursive(&mut json_value);

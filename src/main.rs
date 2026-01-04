@@ -14,6 +14,7 @@ mod json2cel;
 use args2cel::args_to_cel_variables;
 pub use cel2json::cel_value_to_json_value;
 pub use cli::Argument;
+pub use cli::InputParameters;
 use cli::Cli;
 use input_handler::handle_input;
 pub use json2cel::json_to_cel_variables;
@@ -56,14 +57,19 @@ fn main() -> io::Result<()> {
         }
     };
 
+    let input_params = InputParameters {
+        root_var: cli.root_var,
+        null_input: cli.null_input,
+        slurp: cli.slurp,
+        from_json5: cli.from_json5,
+        parallelism: cli.parallelism,
+        sort_keys: cli.sort_keys,
+    };
+
     match handle_input(
         &program,
         &arg_variables,
-        &cli.root_var,
-        cli.null_input,
-        cli.slurp,
-        cli.parallelism,
-        cli.sort_keys,
+        &input_params,
     ) {
         Ok(results) => {
             // Print all outputs

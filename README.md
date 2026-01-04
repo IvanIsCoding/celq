@@ -18,6 +18,8 @@ celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
 # Outputs: true
 ```
 
+Closely related formats such as NDJSON and JSON5 are also supported.
+
 For detailed usage examples and recipes, see the [manual](docs/manual.md).
 
 ## Why?

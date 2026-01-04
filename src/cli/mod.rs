@@ -56,6 +56,10 @@ impl std::str::FromStr for Argument {
         ArgGroup::new("program")
             .required(true)
             .args(&["expression", "from_file"])
+    ),
+    group(
+        ArgGroup::new("input_format")
+            .args(&["slurp", "from_json5"])
     )
 )]
 pub struct Cli {
@@ -72,10 +76,16 @@ pub struct Cli {
     /// Do not read JSON input from stdin
     #[arg(short = 'n', long = "null-input")]
     pub null_input: bool,
+    
     /// Treat all input as a single JSON document
     /// Default is to treat each line as separate NLJSON
     #[arg(short = 's', long = "slurp")]
     pub slurp: bool,
+    
+    /// Parse input as JSON5 instead of JSON
+    #[arg(long = "from-json5")]
+    pub from_json5: bool,
+    
     /// Parallelism level for NDJSON inputs (number of threads, -1 for all available)
     #[arg(
         short = 'j',
@@ -115,4 +125,14 @@ fn parse_parallelism(s: &str) -> Result<i32, String> {
     } else {
         Ok(value)
     }
+}
+
+#[derive(Clone, Debug)]
+pub struct InputParameters {
+    pub root_var: String,
+    pub null_input: bool,
+    pub slurp: bool,
+    pub from_json5: bool,
+    pub parallelism: i32,
+    pub sort_keys: bool,
 }
