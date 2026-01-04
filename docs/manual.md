@@ -191,7 +191,15 @@ The command outputs: `true`.
 
 In contrast to `jq` and `cel-python`, `celq` names its root variable `this`. The root `.` is an operator for CEL and leads to invalid expressions.
 
-The root variable can be tweaked through the
+The root variable can be tweaked through the `--root-var` argument:
+
+For example:
+
+```bash
+cat yfinance.json | celq --root-var=request "request.chart.result[0].meta.longName"
+```
+
+Outputs: `"Apple Inc."`. This feature can be handy when reusing CEL snippets accross different environments, as they will not use `this` as a variable. That becomes particularly useful with the `--from-file` feature.
 
 ### Boolean output
 
@@ -241,6 +249,7 @@ Also works as a way to output `"AAPL"` in the command, just like in the first ex
 2. If an argument has the same name as the root variable, the root variable wins
 3. If an argument is repeated, the last definition wins (e.g. `--arg=x:bool=false --arg=x:bool=true`, `x` will be true)
 4. `.` does not work as a root variable name
+5. Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
 
 ## Pronunciation
 

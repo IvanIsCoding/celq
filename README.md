@@ -50,6 +50,10 @@ While `cel-rust` provides excellent compatibility with the CEL specification, th
 
 Currently, there are no benchmarks for `celq`. I believe the tool is "good enough" for my personal use. That might be revisited in the future.
 
+### List and Map Arguments
+
+Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
+
 ## Non-Goals
 
 ### REPL
