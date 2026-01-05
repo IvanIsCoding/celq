@@ -41,7 +41,7 @@ jobs:
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04 }
           
           # Linux x86-64 (native - musl static binary)
-          - { target: x86_x-unknown-linux-musl, os: ubuntu-24.04 }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04 }
           
           # Linux ARM64 (native)
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm }
