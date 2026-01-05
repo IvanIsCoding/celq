@@ -1,0 +1,25 @@
+name: Publish to crates.io
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  push:
+    tags:
+      - "v[0-9]*"      # Trigger on version tags like v1.0.0
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: crates_io_release
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Run tests
+        run: cargo test
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
