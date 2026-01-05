@@ -1,0 +1,95 @@
+# Release workflow for celq binaries
+# Credit: Inspired by https://github.com/01mf02/jaq/blob/main/.github/workflows/release.yml
+# Also see: https://github.com/BurntSushi/ripgrep/blob/61733f6378b62fa2dc2e7f3eff2f2e7182069ca9/.github/workflows/release.yml
+
+
+name: GitHub Release
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  push:
+    tags:
+      - "v[0-9]*"      # Trigger on version tags like v1.0.0
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NAME: celq
+  VERSION: ${{ github.ref_name }}
+
+# Required for gh release upload
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    environment: github_release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create --draft ${VERSION}
+
+  build:
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS ARM64 (native)
+          - { target: aarch64-apple-darwin, os: macos-15 }
+          
+          # Windows x86-64 (native)
+          - { target: x86_64-pc-windows-msvc, os: windows-2025 }
+          
+          # Linux x86-64 (native - glibc)
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04 }
+          
+          # Linux x86-64 (native - musl static binary)
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04 }
+          
+          # Linux ARM64 (native)
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Install musl tools (for musl targets)
+        if: contains(matrix.target, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
+
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Prepare binary for upload
+        id: paths
+        run: |
+          EXE_suffix="" 
+          case ${{ matrix.target }} in 
+            *-pc-windows-*) EXE_suffix=".exe" ;; 
+          esac
+          
+          BIN_PATH="target/${{ matrix.target }}/release/${NAME}${EXE_suffix}"
+          PKG_NAME=${NAME}-${{ matrix.target }}${EXE_suffix}
+          
+          cp ${BIN_PATH} ${PKG_NAME}
+          echo "PKG_NAME=${PKG_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Upload release binary
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload ${VERSION} ${{ steps.paths.outputs.PKG_NAME }}
