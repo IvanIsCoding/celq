@@ -270,7 +270,7 @@ cat yfinance.json | \
 
 Also works as a way to output `"AAPL"` in the command, just like in the first example. When combined with arguments and more elaborate scripts, that can make up for data pipelines.
 
-## JSON5 Support
+### JSON5 Support
 
 `celq` also supports [JSON5](https://json5.org/), a popular JSON extension among config files. It also indirectly supports [JSONC](https://jsonc.org/), because JSON5 is a superset of JSONC but don't quote me on that.
 
@@ -284,7 +284,7 @@ Outputs: `[2,4,6,8]`. If the `--from-json5` flag is not passed, the command will
 
 Notice that passing the `--from-json5` clashes with the `--slurp` flag and with the NDJSON detection.
 
-## Pretty Printing
+### Pretty Printing
 
 `celq` by default uses a compact output. This is a contrast to `jq` where the compact output is an opt-in with the `-c` flag.
 

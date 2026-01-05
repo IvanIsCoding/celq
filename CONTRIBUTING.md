@@ -39,7 +39,7 @@ Integration tests live in the `test/` folder, mostly in `tests/golden.rs`. When 
 The `celq` manual lives in docs.rs. To build it locally, run:
 
 ```bash
-cargo doc --open
+cargo doc --open --no-deps
 ```
 
 Despite `celq` being a binary, docs.rs reads from `src/lib.rs`. Our current documentation lives in the `docs/` folder, so `src/lib.rs` should exclusively include the markdown from the docs folder.
