@@ -50,6 +50,6 @@ Packaging `celq` for Linux, macOS, and Windows is a welcome contribution. If you
 
 ## MSRV
 
-The Minimum Supported Rust Version (MSRV) of `celq` trys to align with the MSRV of Debian stable. To see their current MSRV, search for [rustc](https://packages.debian.org/search?keywords=rustc) and see the version listed for stable.
+The Minimum Supported Rust Version (MSRV) of `celq` trys to align with the MSRV of Debian stable. To see their current MSRV, search for [rustc](https://packages.debian.org/search?keywords=rustc) and see the version listed for testing.
 
 Notice that eventually that may lag behind the latest of rustc by a considerable margin. However, that guarantees that `celq` can be packaged by many Linux distributions.

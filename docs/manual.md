@@ -95,18 +95,22 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
 
 ### Reading Files
 
-By default, `celq` reads from the standard input. To read from a file, pipe the output from `cat`.
+By default, `celq` reads from the standard input. To read from a file, use `<` for input redirection:
+```bash
+celq "this.chart.result[0].meta.symbol" < yfinance.json
+```
 
-For example:
+It's also possibile to pipe the output from `cat`:
+
 ```bash
 cat yfinance.json | celq "this.chart.result[0].meta.symbol"
 ```
 
-The command outputs: `"AAPL"`. 
+Both command outputs: `"AAPL"`.
 
 ### Writing Files
 
-`celq`' writes by default to the standard output. That output can be piped to a file.
+`celq` writes by default to the standard output. That output can be piped to a file.
 
 For example:
 ```bash
@@ -127,7 +131,7 @@ cat yfinance.json | celq '{"symbol": this.chart.result[0].meta.longName, "price"
 
 The command outputs: `{"price":271.01,"symbol":"Apple Inc."}`
 
-Notice that by defaukt `celq` does not guarantee the key order of the output. If you require so, pass the `--sort-keys` option:
+Notice that by default `celq` does not guarantee the key order of the output. If you require so, pass the `--sort-keys` option:
 
 ```bash
 cat yfinance.json | celq --sort-keys '{"symbol": this.chart.result[0].meta.longName, "price": this.chart.result[0].meta.regularMarketPrice}'
