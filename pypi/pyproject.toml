@@ -1,0 +1,39 @@
+[project]
+name = "celq"
+requires-python = ">=3.10"
+description = "A CEL command-line query tool for JSON data"
+readme = {file = "README.md", content-type = "text/markdown"}
+license-files = ["LICENSE"]
+version = "0.1.1a7"
+classifiers=[
+    "Intended Audience :: Developers",
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+]
+keywords = ["cel", "query", "json"]
+
+[project.urls]
+issues = "https://github.com/ivancarvalho/celq/issues"
+source = "https://github.com/ivancarvalho/celq"
+documentation ="https://docs.rs/celq"
+
+[[project.authors]]
+name = "Ivan Carvalho"
+email = "ivancarvalho@gatech.edu"
+
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[tool.maturin]
+bindings = "bin"
+manifest-path = "../Cargo.toml"
+module-name = "celq"
