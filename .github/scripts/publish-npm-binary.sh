@@ -13,6 +13,8 @@ NPM_DIR="npm"
 
 # Read release version from package.json using celq
 RELEASE_VERSION=$(cargo run -- "this.version" < "${NPM_DIR}/celq/package.json")
+RELEASE_VERSION=${RELEASE_VERSION#\"}
+RELEASE_VERSION=${RELEASE_VERSION%\"}
 
 # Derive OS and architecture from build name
 # Format: os-arch-variant (e.g., linux-x64-glibc, darwin-arm64)
