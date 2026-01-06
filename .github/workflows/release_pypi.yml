@@ -91,7 +91,7 @@ jobs:
           target: ${{ matrix.build.TARGET }}
           override: true
       - name: Build Python wheels (linux)
-        if: mstartsWith(matrix.build.NAME, 'linux')
+        if: startsWith(matrix.build.NAME, 'linux')
         uses: PyO3/maturin-action@v1
         with:
           working-directory: pypi
