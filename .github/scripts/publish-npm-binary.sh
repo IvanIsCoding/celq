@@ -55,6 +55,7 @@ fi
 cp "target/${TARGET}/release/${binary_name}" "${NPM_DIR}/${node_pkg}/bin/"
 
 # Publish package
-npm publish "${NPM_DIR}/${node_pkg}" --access public --dry-run
+cd "${NPM_DIR}/${node_pkg}"
+npm publish --access public --dry-run
 
 echo "Successfully published ${node_pkg}"
