@@ -119,7 +119,7 @@ jobs:
           sccache: "true"
           manylinux: musllinux_1_2
       - name: Upload Python wheels
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: "wheels-${{ matrix.build.TARGET }}"
           working-directory: pypi
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: publish-binaries
     steps:
-      - uses: actions/download-artifact@v4 # v4.3.0
+      - uses: actions/download-artifact@v4
         with:
           path: pypi/wheels
           pattern: wheels-*
