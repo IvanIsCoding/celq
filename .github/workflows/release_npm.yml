@@ -108,6 +108,6 @@ jobs:
           yarn install # requires optional dependencies to be present in the registry
           yarn build
           npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
-          npm publish --access public --dry-run
+          npm publish --access public
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
