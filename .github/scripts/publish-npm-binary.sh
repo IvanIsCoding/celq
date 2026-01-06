@@ -1,16 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: publish-npm-binary.sh <build-name> <build-os> <target> <release-version>
-# Example: publish-npm-binary.sh linux-x64-glibc ubuntu-24.04 x86_64-unknown-linux-gnu v1.0.0
+# Usage: publish-npm-binary.sh <build-name> <build-os> <target>
+# Example: publish-npm-binary.sh linux-x64-glibc ubuntu-24.04 x86_64-unknown-linux-gnu
 
 BUILD_NAME="$1"
 BUILD_OS="$2"
 TARGET="$3"
-RELEASE_VERSION="$4"
 
 BIN="celq"
 NPM_DIR="npm"
+
+# Read release version from package.json using celq
+RELEASE_VERSION=$(cargo run -- "this.version" < "${NPM_DIR}/celq/package.json")
 
 # Derive OS and architecture from build name
 # Format: os-arch-variant (e.g., linux-x64-glibc, darwin-arm64)
@@ -23,6 +25,7 @@ if [[ "$BUILD_OS" == windows-* ]]; then
 else
   node_pkg="${BIN}-${node_os}-${node_arch}"
 fi
+
 
 echo "Publishing ${node_pkg} version ${RELEASE_VERSION}"
 
