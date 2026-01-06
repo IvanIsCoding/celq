@@ -1,6 +1,6 @@
 {
-  "name": "@ivaniscoding/${node_pkg}",
-  "version": "${node_version}",
+  "name": "@ivaniscoding/" + node_pkg,
+  "version": node_version,
   "repository": {
     "type": "git",
     "url": "git+https://github.com/IvanIsCoding/celq.git"
@@ -13,10 +13,10 @@
     "url": "https://github.com/IvanIsCoding/celq/issues"
   },
   "os": [
-    "${node_os}"
+    node_os
   ],
   "cpu": [
-    "${node_arch}"
+    node_arch
   ],
   "publishConfig": {
     "access": "public"
