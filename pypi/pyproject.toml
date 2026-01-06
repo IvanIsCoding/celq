@@ -3,8 +3,8 @@ name = "celq"
 requires-python = ">=3.10"
 description = "A CEL command-line query tool for JSON data"
 readme = {file = "README.md", content-type = "text/markdown"}
-license-files = ["LICENSE"]
-version = "0.1.1a7"
+license-files = ["LICENSE-MIT", "LICENSE-APACHE"]
+version = "0.1.1a8"
 classifiers=[
     "Intended Audience :: Developers",
     "Programming Language :: Rust",
@@ -37,3 +37,9 @@ build-backend = "maturin"
 bindings = "bin"
 manifest-path = "../Cargo.toml"
 module-name = "celq"
+locked = true
+
+[dependency-groups]
+dev = [
+    "maturin>=1.9,<2",
+]

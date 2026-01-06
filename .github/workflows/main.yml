@@ -1,108 +1,135 @@
-name: CI
+name: Release to PyPI
 
 on:
+  workflow_dispatch:  # Manual trigger only
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-concurrency:
-  group: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
-  cancel-in-progress: true
+    tags:
+      - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
-env:
-  CARGO_TERM_COLOR: always
+permissions:
+  # IMPORTANT: this permission is mandatory for Trusted Publishing
+  id-token: write
+  contents: read
 
 jobs:
-  build:
-    name: Build (Linux x86-64)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust 1.90.0
-        uses: dtolnay/rust-toolchain@1.90.0
-      
-      - name: Build with locked dependencies
-        run: cargo build --locked
-
-  format:
-    name: Format Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-      
-      - name: Check formatting
-        run: cargo fmt --all -- --check
-
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust 1.90.0
-        uses: dtolnay/rust-toolchain@1.90.0
-        with:
-          components: clippy
-      
-      - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
-
-  test:
-    name: Test
-    needs: [build, format, clippy]
+  publish-binaries:
+    name: Publish binaries
+    runs-on: ${{ matrix.build.os }}
+    environment: pypi_release
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            rust: stable
-          - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
-            rust: stable
-          - os: macos-latest
-            target: aarch64-apple-darwin
-            rust: stable
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            rust: stable
-    runs-on: ${{ matrix.os }}
+        build:
+          - {
+              NAME: linux-x64-glibc,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-unknown-linux-gnu,
+            }
+          - {
+              NAME: linux-x64-musl,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-unknown-linux-musl,
+            }
+          - {
+              NAME: linux-arm64-glibc,
+              OS: ubuntu-24.04-arm,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-unknown-linux-gnu,
+            }
+          - {
+              NAME: linux-arm64-musl,
+              OS: ubuntu-24.04-arm,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-unknown-linux-musl,
+            }
+          - {
+              NAME: win32-x64-msvc,
+              OS: windows-2025,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-pc-windows-msvc,
+            }
+          - {
+              NAME: darwin-arm64,
+              OS: macos-15,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-apple-darwin,
+            }
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust ${{ matrix.rust }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [[ "${{ matrix.build.NAME }}" = *"-musl" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends \
+              --allow-unauthenticated musl-tools
+          fi
+
+      - name: Install Rust ${{ matrix.build.TOOLCHAIN }}
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.rust }}
-          targets: ${{ matrix.target }}
-      
-      - name: Run tests
-        run: cargo test --target ${{ matrix.target }}
+          toolchain: ${{ matrix.build.TOOLCHAIN }}
+          targets: ${{ matrix.build.TARGET }}
 
-  docs:
-    name: Documentation
-    needs: [build, format, clippy]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-      
-      - name: Build documentation
-        run: cargo doc --no-deps --all-features
-        env:
-          RUSTDOCFLAGS: "-D warnings"
-      
-      - name: Upload documentation
+      - name: Build Python wheels (linux x86-64 with sdist)
+        if: matrix.build.TARGET == 'x86_64-unknown-linux-gnu'
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: pypi
+          target: ${{ matrix.build.TARGET }}
+          args: --release --sdist --out dist
+          sccache: "true"
+          manylinux: auto
+
+      - name: Build Python wheels (linux non-x86-64)
+        if: startsWith(matrix.build.NAME, 'linux') && matrix.build.TARGET != 'x86_64-unknown-linux-gnu'
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: pypi
+          target: ${{ matrix.build.TARGET }}
+          args: --release --out dist
+          sccache: "true"
+          manylinux: ${{ matrix.build.TARGET == 'aarch64-unknown-linux-gnu' && '2_28' || (endsWith(matrix.build.TARGET, 'musl') && 'musllinux_1_2' || 'auto') }}
+
+      - name: Build Python wheels (macos & windows)
+        if: startsWith(matrix.build.OS, 'macos') || startsWith(matrix.build.OS, 'windows')
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: pypi
+          target: ${{ matrix.build.TARGET }}
+          args: --release --out dist
+          sccache: "true"
+
+      - name: Upload Python wheels
         uses: actions/upload-artifact@v4
         with:
-          name: documentation
-          path: target/doc/
-          retention-days: 1
+          name: "wheels-${{ matrix.build.TARGET }}"
+          path: pypi/dist
+
+  publish-pypi:
+    name: Publish PyPI package
+    runs-on: ubuntu-24.04
+    needs: publish-binaries
+    environment: pypi_release
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          pattern: wheels-*
+          merge-multiple: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.9.22"
+
+      - name: Publish to PyPI
+        run: uv publish --trusted-publishing always dist/*
