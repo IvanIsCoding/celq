@@ -6,6 +6,10 @@ on:
     tags:
       - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
+permissions:
+    # IMPORTANT: this permission is mandatory for Trusted Publishing
+    id-token: write
+
 jobs:
   publish-binaries:
     name: Publish binaries
