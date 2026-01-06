@@ -56,6 +56,7 @@ cp "target/${TARGET}/release/${binary_name}" "${NPM_DIR}/${node_pkg}/bin/"
 
 # Publish package
 cd "${NPM_DIR}/${node_pkg}"
+npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
 npm publish --access public --dry-run
 
 echo "Successfully published ${node_pkg}"
