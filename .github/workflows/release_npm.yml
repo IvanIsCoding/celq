@@ -107,6 +107,7 @@ jobs:
           cd npm/celq
           yarn install # requires optional dependencies to be present in the registry
           yarn build
-          npm publish --access public --dry-run
+          cd ../..
+          npm publish npm/celq --access public --dry-run
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
