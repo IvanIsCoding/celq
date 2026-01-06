@@ -83,7 +83,7 @@ jobs:
             "${{ matrix.build.OS }}" \
             "${{ matrix.build.TARGET }}"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-npm-base:
     name: Publish the base NPM package
@@ -110,4 +110,4 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
           npm publish --access public --dry-run
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
