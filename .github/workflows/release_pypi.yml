@@ -1,27 +1,141 @@
-name: CI
+name: Release to PyPI
 
 on:
+  workflow_dispatch:  # Manual trigger only
   push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-concurrency:
-  group: ${{ github.repository }}-${{ github.ref }}-${{ github.head_ref }}
-  cancel-in-progress: true
-
-env:
-  CARGO_TERM_COLOR: always
+    tags:
+      - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
 jobs:
-  build:
-    name: Build (Linux x86-64)
-    runs-on: ubuntu-latest
+  publish-binaries:
+    name: Publish binaries
+    runs-on: ${{ matrix.build.os }}
     environment: pypi_release
+    strategy:
+      fail-fast: false
+      matrix:
+        build:
+          - {
+              NAME: linux-x64-glibc,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-unknown-linux-gnu,
+            }
+          - {
+              NAME: linux-x64-musl,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-unknown-linux-musl,
+            }
+          #- {
+          #    NAME: linux-x86-musl,
+          #    OS: ubuntu-24.04,
+          #    TOOLCHAIN: stable,
+          #    TARGET: i686-unknown-linux-musl,
+          #  }
+          - {
+              NAME: linux-arm64-glibc,
+              OS: ubuntu-24.04-arm,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-unknown-linux-gnu,
+            }
+          - {
+              NAME: linux-arm64-musl,
+              OS: ubuntu-24.04-arm,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-unknown-linux-musl,
+            }
+          - {
+              NAME: win32-x64-msvc,
+              OS: windows-2025,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-pc-windows-msvc,
+            }
+         # - {
+         #     NAME: win32-x86-msvc,
+         #     OS: windows-2025,
+         #     TOOLCHAIN: stable,
+         #     TARGET: i686-pc-windows-msvc,
+         #   }
+         # - {
+         #     NAME: darwin-x64,
+         #    OS: macos-15,
+         #     TOOLCHAIN: stable,
+         #     TARGET: x86_64-apple-darwin,
+         #   }
+          - {
+              NAME: darwin-arm64,
+              OS: macos-15,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-apple-darwin,
+            }
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install Rust 1.90.0
-        uses: dtolnay/rust-toolchain@1.90.0
-      
-      - name: Build with locked dependencies
-        run: cargo build --locked
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [[ "${{ matrix.build.NAME }}" = *"-musl" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends \
+              --allow-unauthenticated musl-tools
+          fi
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ matrix.build.TOOLCHAIN }}
+          target: ${{ matrix.build.TARGET }}
+          override: true
+      - name: Build Python wheels (linux)
+        if: mstartsWith(matrix.build.NAME, 'linux')
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: pypi
+          target: ${{ matrix.build.TARGET }}
+          args: --release --sdist --out wheels
+          sccache: "true"
+          # https://github.com/PyO3/maturin-action/issues/245
+          manylinux: ${{ matrix.build.TARGET == 'aarch64-unknown-linux-gnu' && '2_28' || 'auto' }}
+      - name: Build Python wheels (macos & windows)
+        if: |
+          (startsWith(matrix.build.OS, 'macos') || startsWith(matrix.build.OS, 'windows'))
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: pypi
+          target: ${{ matrix.build.TARGET }}
+          args: --release --sdist --out wheels
+          sccache: "true"
+      - name: Build Python wheels (musl)
+        if: endsWith(matrix.build.OS, 'musl')
+        uses: PyO3/maturin-action@v1
+        with:
+          working-directory: pypi
+          target: ${{ matrix.build.TARGET }}
+          args: --release --sdist --out wheels
+          sccache: "true"
+          manylinux: musllinux_1_2
+      - name: Upload Python wheels
+        uses: actions/upload-artifact@v1
+        with:
+          name: "wheels-${{ matrix.build.TARGET }}"
+          working-directory: pypi
+          path: pypi/wheels
+
+  publish-pypi:
+    name: Publish PyPI package
+    runs-on: ubuntu-24.04
+    needs: publish-binaries
+    steps:
+      - uses: actions/download-artifact@v4 # v4.3.0
+        with:
+          path: pypi/wheels
+          pattern: wheels-*
+          merge-multiple: true
+      - name: Publish to PyPI
+        uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          MATURIN_REPOSITORY: 'pypi'
+        with:
+          command: upload
+          args: --skip-existing pypi/wheels/*
