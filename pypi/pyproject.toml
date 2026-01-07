@@ -21,8 +21,8 @@ classifiers=[
 keywords = ["cel", "query", "json"]
 
 [project.urls]
-issues = "https://github.com/ivancarvalho/celq/issues"
-source = "https://github.com/ivancarvalho/celq"
+issues = "https://github.com/IvanIsCoding/celq/issues"
+source = "https://github.com/IvanIsCoding/celq"
 documentation ="https://docs.rs/celq"
 
 [[project.authors]]
