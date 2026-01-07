@@ -132,6 +132,8 @@ All the documentation in the manual has been hand-crafted. That was done to keep
 
 This project is dual-licensed under the MIT License and Apache 2.0 licenses.  See [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE) file for details.
 
+The `install.sh` published with each GitHub release and its template at the root of the repository (`template_install.sh`) are licensed independently. Those files are under the CC0-1.0 license. They are the original work of Casey Rodarmor from [just](https://github.com/casey/just) and have been adapted for celq.
+
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
