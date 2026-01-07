@@ -41,7 +41,6 @@ locked = true
 
 [dependency-groups]
 dev = [
-    "cibuildwheel==3.3.1 ; python_full_version >= '3.12'",
     "maturin>=1.9,<2 ; python_full_version >= '3.12'",
 ]
 
@@ -49,4 +48,4 @@ dev = [
 before-all = "curl https://sh.rustup.rs -sSf | sh -s -- -y"
 build-frontend = "build[uv]"
 build = "cp312-*"
-skip = "pp* *-win32 *-manylinux_i686 *-musllinux_i686"  # Skip PyPy and 32-bit builds
+skip = "*-win32 *-manylinux_i686 *-musllinux_i686"  # Skip PyPy and 32-bit builds

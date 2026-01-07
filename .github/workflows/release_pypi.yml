@@ -65,7 +65,7 @@ jobs:
       - name: Build Python wheels (Linux with cibuildwheel)
         if: runner.os == 'Linux'
         run: |
-          uv run --directory pypi cibuildwheel --output-dir dist
+          uvx cibuildwheel@3.3.1  --output-dir pypi/dist pypi
 
       - name: Build Python wheels (Windows/macOS)
         if: runner.os != 'Linux'
