@@ -4,7 +4,7 @@ requires-python = ">=3.10"
 description = "A CEL command-line query tool for JSON data"
 readme = {file = "README.md", content-type = "text/markdown"}
 license-files = ["LICENSE-MIT", "LICENSE-APACHE"]
-version = "0.1.1a8"
+version = "0.1.1a9"
 classifiers=[
     "Intended Audience :: Developers",
     "Programming Language :: Rust",
@@ -41,5 +41,6 @@ locked = true
 
 [dependency-groups]
 dev = [
-    "maturin>=1.9,<2",
+    "cibuildwheel==3.3.1 ; python_full_version >= '3.12'",
+    "maturin>=1.9,<2 ; python_full_version >= '3.12'",
 ]
