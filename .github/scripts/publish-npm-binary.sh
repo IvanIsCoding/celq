@@ -59,7 +59,6 @@ cp "README.md" "${NPM_DIR}/${node_pkg}/"
 
 # Publish package
 cd "${NPM_DIR}/${node_pkg}"
-npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
 npm publish --access public
 
 echo "Successfully published ${node_pkg}"
