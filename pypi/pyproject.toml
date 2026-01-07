@@ -4,7 +4,7 @@ requires-python = ">=3.10"
 description = "A CEL command-line query tool for JSON data"
 readme = {file = "README.md", content-type = "text/markdown"}
 license-files = ["LICENSE-MIT", "LICENSE-APACHE"]
-version = "0.1.1a9"
+version = "0.1.1"
 classifiers=[
     "Intended Audience :: Developers",
     "Programming Language :: Rust",
