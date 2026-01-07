@@ -8,6 +8,11 @@ on:
     tags:
       - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
+permissions:
+  # IMPORTANT: this permission is mandatory for Trusted Publishing
+  id-token: write
+  contents: read
+
 jobs:
   publish-npm-binaries:
     name: Publish NPM packages
@@ -82,8 +87,6 @@ jobs:
             "${{ matrix.build.NAME }}" \
             "${{ matrix.build.OS }}" \
             "${{ matrix.build.TARGET }}"
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-npm-base:
     name: Publish the base NPM package
@@ -104,10 +107,10 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
+          STABLE_OR_NOT=$(cargo run -- --from-file ./.github/scripts/stable_or_not.cel  < "npm/celq/package.json")
+          STABLE_OR_NOT=${STABLE_OR_NOT#\"}
+          STABLE_OR_NOT=${STABLE_OR_NOT%\"}
           cd npm/celq
           yarn install # requires optional dependencies to be present in the registry
           yarn build
-          npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
           npm publish --access public
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

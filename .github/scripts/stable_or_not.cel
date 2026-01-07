@@ -1,0 +1,3 @@
+(this.version.contains("beta") 
+    || this.version.contains("alpha") 
+    || this.version.contains("rc") ) ? "prerelease" : "stable"

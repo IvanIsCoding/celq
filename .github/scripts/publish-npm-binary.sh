@@ -53,6 +53,9 @@ if [[ "$BUILD_OS" == windows-* ]]; then
 fi
 
 cp "target/${TARGET}/release/${binary_name}" "${NPM_DIR}/${node_pkg}/bin/"
+cp "LICENSE-MIT" "${NPM_DIR}/${node_pkg}/"
+cp "LICENSE-APACHE" "${NPM_DIR}/${node_pkg}/"
+cp "README.md" "${NPM_DIR}/${node_pkg}/"
 
 # Publish package
 cd "${NPM_DIR}/${node_pkg}"
