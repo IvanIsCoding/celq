@@ -4,15 +4,21 @@
 
 ### Pre-built Binaries
 
-We publish pre-built binaries in celq's [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases).
-
-### Homebrew (macOS)
-
-If you are a [macOS Homebrew](https://brew.sh/) user, then you can install celq with:
+We publish pre-built binaries for Linux, macOS, and Windows in celq's [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). To install the current version for Linux or macOS, run:
 
 ```bash
-brew install IvanIsCoding/tap/celq
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | sh
 ```
+
+Notice that the installer tries not to be clever and doesn't modify `$PATH` or overwrite existing files. To specify a destination, use the `--to` flag:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
+    sh -s -- --to DESTINATION
+```
+
+See the the [installation guide](`crate::installation_guide`) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, and more.
+
 #### Installing From Source 
 
 If you want to install from source, celq publishes to [crates.io](https://crates.io/crates/celq).
@@ -21,40 +27,9 @@ If you want to install from source, celq publishes to [crates.io](https://crates
 cargo install celq
 ```
 
-#### Installing With cargo-binstall
+### Other Methods
 
-If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) installed, you can install pre-built binaries directly:
-
-```bash
-cargo binstall celq
-```
-
-### Python
-
-celq is packaged for [PyPI](https://pypi.org/project/celq/). Python users can install it with `pip`:
-
-```bash
-pip install celq
-```
-
-If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used as a tool:
-```bash
-uvx celq -n '"Hello World"'
-```
-
-### NPM (Node.js/JavaScript)
-
-Node.js users can install celq in their project with:
-
-```bash
-npm install celq
-```
-
-This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with:
-
-```bash
-npx celq -n '"Hello World"'
-```
+See the the [installation guide](`crate::installation_guide`) for installation instructions with Homebrew, PyPI, NPM, binstall, and more.
 
 ## Overview
 

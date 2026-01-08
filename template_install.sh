@@ -117,6 +117,9 @@ if [ -z "${dest-}" ]; then
     # Try $HOME/.cargo/bin first (standard Cargo location)
     if [ -d "$HOME/.cargo/bin" ]; then
       dest="$HOME/.cargo/bin"
+    # Fall back to $HOME/.local/bin if it exists
+    elif [ -d "$HOME/.local/bin" ]; then
+      dest="$HOME/.local/bin"
     else
       dest="$HOME/bin"
     fi
@@ -162,6 +165,16 @@ say "Tag:         {{CELQ_VERSION}}"
 say "Target:      $target"
 say "Destination: $dest"
 say "Archive:     $archive"
+
+# Check if destination is in PATH
+if [[ ":$PATH:" != *":$dest:"* ]]; then
+  say ""
+  say "Warning: $dest is not in your PATH"
+  say "Add this to your shell profile (~/.bashrc, ~/.zshrc, etc.):"
+  say ""
+  say "    export PATH=\"$dest:\$PATH\""
+  say ""
+fi
 
 td=$(mktemp -d || mktemp -d -t tmp)
 
