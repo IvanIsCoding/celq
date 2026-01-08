@@ -38,14 +38,14 @@ Moreover, the CEL specification is simpler than the jqlang specification. If you
 We publish pre-built binaries for Linux, macOS, and Windows in celq's [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). To install the current version for Linux or macOS, run:
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | sh
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
 ```
 
 Notice that the installer tries not to be clever and doesn't modify `$PATH` or overwrite existing files. To specify a destination, use the `--to` flag:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
-    sh -s -- --to DESTINATION
+    bash -s -- --to DESTINATION
 ```
 
 See the the [installation guide](https://docs.rs/celq/latest/celq/) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, and more.
