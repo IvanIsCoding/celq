@@ -222,7 +222,7 @@ jobs:
           # Generate formula from template using sed
           sed -e "s/{{CELQ_VERSION}}/${VERSION_WITHOUT_V}/g" \
               -e "s/{{CELQ_SHA256}}/${SHA256}/g" \
-              celq-repo/.github/scripts/celq.rb > homebrew-tap/Formula/celq.rb
+              celq-repo/brew/celq.rb > homebrew-tap/Formula/celq.rb
           
           echo "Formula updated successfully"
 
