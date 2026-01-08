@@ -15,6 +15,10 @@ help() {
   cat <<'EOF'
 Install a binary release of celq hosted on GitHub
 
+This script detects what platform you're on and fetches an appropriate archive from
+https://github.com/IvanIsCoding/celq/releases
+then unpacks the binaries and installs them to $CARGO_HOME/bin ($HOME/.cargo/bin or $HOME/bin)
+
 USAGE:
     install.sh [options]
 
@@ -23,7 +27,7 @@ FLAGS:
     -f, --force     Force overwriting an existing binary
 
 OPTIONS:
-    --to LOCATION   Where to install the binary [default: ~/bin]
+    --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin or $HOME/.cargo/bin or $HOME/bin]
     --target TARGET
 EOF
 }
@@ -106,7 +110,19 @@ if [ -z "${target-}" ]; then
 fi
 
 if [ -z "${dest-}" ]; then
-  dest="$HOME/bin"
+  # Try to determine installation directory following Cargo conventions
+  if [ -n "${CARGO_HOME-}" ]; then
+    dest="$CARGO_HOME/bin"
+  elif [ -n "${HOME-}" ]; then
+    # Try $HOME/.cargo/bin first (standard Cargo location)
+    if [ -d "$HOME/.cargo/bin" ]; then
+      dest="$HOME/.cargo/bin"
+    else
+      dest="$HOME/bin"
+    fi
+  else
+    err "Cannot determine installation directory. Re-run with the --to option"
+  fi
 fi
 
 if [ -z "${target-}" ]; then
@@ -135,7 +151,7 @@ fi
 
 case $target in
   x86_64-pc-windows-msvc) extension=zip; need unzip;;
-  *) extension=tgz; need tar;;
+  *) extension=tar.gz; need tar;;
 esac
 
 archive="$releases/download/{{CELQ_VERSION}}/$crate-$target.$extension"
