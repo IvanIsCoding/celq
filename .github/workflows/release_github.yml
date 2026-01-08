@@ -196,7 +196,7 @@ jobs:
       - name: Clone homebrew-tap repository
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
         run: |
-          git clone https://x-access-token:${{ secrets.HOMEBREW_TAP_TOKEN }}@github.com/IvanIsCoding/homebrew-tap.git homebrew-tap
+          git clone https://x-access-token:${{ secrets.HOMEBREW_TAP_TOKEN }}@github.com/get-celq/homebrew-tap.git homebrew-tap
 
       - name: Update Homebrew formula
         if: steps.check_prerelease.outputs.is_prerelease == 'false'

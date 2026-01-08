@@ -55,7 +55,7 @@ See the the [installation guide](https://docs.rs/celq/latest/celq/) for more det
 If you are a [macOS Homebrew](https://brew.sh/) user, then you can install celq with:
 
 ```bash
-brew install IvanIsCoding/tap/celq
+brew install get-celq/tap/celq
 ```
 #### Installing From Source 
 

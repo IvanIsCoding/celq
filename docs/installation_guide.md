@@ -34,7 +34,7 @@ Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid
 If you are a [macOS Homebrew](https://brew.sh/) user, then you can install celq with:
 
 ```bash
-brew install IvanIsCoding/tap/celq
+brew install get-celq/tap/celq
 ```
 #### Installing From Source 
 
