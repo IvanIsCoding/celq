@@ -27,7 +27,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.1.1/install.s
 
 Will always install the same version, 0.1.1.
 
-Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` 
+Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. See also the [GitHub Actions](#github-actions)
 
 ### Homebrew (macOS)
 
