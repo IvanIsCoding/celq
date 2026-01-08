@@ -110,6 +110,9 @@ jobs:
           STABLE_OR_NOT=$(cargo run -- --from-file ./.github/scripts/stable_or_not.cel  < "npm/celq/package.json")
           STABLE_OR_NOT=${STABLE_OR_NOT#\"}
           STABLE_OR_NOT=${STABLE_OR_NOT%\"}
+          cp README.md npm/celq/README.md
+          cp LICENSE-APACHE npm/celq/LICENSE-APACHE
+          cp LICENSE-MIT npm/celq/LICENSE-MIT
           cd npm/celq
           yarn install # requires optional dependencies to be present in the registry
           yarn build
