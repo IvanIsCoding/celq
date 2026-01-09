@@ -137,7 +137,7 @@ jobs:
           
           # Archive name uses base target without libc version
           ARCHIVE_NAME="${NAME}-${{ matrix.target }}.tar.gz"
-          tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}}/release" "${BIN_NAME}"
+          tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}/release" "${BIN_NAME}"
           
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
