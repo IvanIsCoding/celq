@@ -11,6 +11,17 @@ keywords = ["cel", "query", "json"]
 categories = ["command-line-utilities"]
 documentation = "https://docs.rs/celq"
 
+include = [
+    "src/**",
+    "docs/**",
+    "tests/**",
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
+]
+
 [[bin]]
 name = "celq"
 path = "src/main.rs"
