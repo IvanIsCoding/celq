@@ -30,7 +30,7 @@ cargo test
 
 `celq` has two kind of tests: unit tests and integration tests.
 
-Unit tests live very close to the implementation. Next to the `mod.rs`, there's generally a `module_test.rs`. It's fine to use unit tests for smaller details.
+Unit tests live very close to the implementation. Next to the `module.rs`, there's generally a `module_test.rs`. It's fine to use unit tests for smaller details.
 
 Integration tests live in the `test/` folder, mostly in `tests/golden.rs`. When fixing a bug or adding a feature, please try to add a test covering multiple combinations to that file.
 
@@ -42,7 +42,7 @@ The `celq` manual lives in docs.rs. To build it locally, run:
 cargo doc --open --no-deps
 ```
 
-Despite `celq` being a binary, docs.rs reads from `src/lib.rs`. Our current documentation lives in the `docs/` folder, so `src/lib.rs` should exclusively include the markdown from the docs folder.
+Despite `celq` being a binary, docs.rs reads from `src/documentation.rs`. Our current documentation lives in the `docs/` folder, so `src/documentation.rs` should exclusively include the markdown from the docs folder.
 
 ## Packaging
 

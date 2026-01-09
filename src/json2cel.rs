@@ -86,4 +86,5 @@ fn slurp_json_lines(json_str: Option<&str>) -> Result<JsonValue, serde_json::Err
 }
 
 #[cfg(test)]
-mod json2cel_test;
+#[path = "json2cel_test.rs"]
+mod test;

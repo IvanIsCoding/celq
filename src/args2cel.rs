@@ -69,4 +69,5 @@ pub fn args_to_cel_variables(
 }
 
 #[cfg(test)]
-mod args2cel_test;
+#[path = "args2cel_test.rs"]
+mod test;

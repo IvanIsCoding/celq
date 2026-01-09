@@ -251,4 +251,5 @@ fn sort_keys_recursive(value: &mut JsonValue) {
 }
 
 #[cfg(test)]
-mod input_handler_test;
+#[path = "input_handler_test.rs"]
+mod test;
