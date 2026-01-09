@@ -94,7 +94,7 @@ Node.js users can install celq in their project with:
 npm install celq
 ```
 
-This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with:
+This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
 
 ```bash
 npx celq -n '"Hello World"'
@@ -102,17 +102,17 @@ npx celq -n '"Hello World"'
 
 ## Limitations
 
-### CEL Implementation Differences
-
-`celq` uses [cel-rust](https://github.com/cel-rust/cel-rust), a community-maintained Rust implementation of CEL, rather than the official Go implementation. 
-
-While `cel-rust` provides excellent compatibility with the CEL specification, there may be edge cases or advanced features where behavior differs from the official implementation. If you find one, feel free to report it at their repository.
-
 ### JSON Parsing
 
 `celq` eagerly parses all JSON input into memory before evaluation. This design was made to simplify the code implementation, at the cost of memory and performance.
 
 Currently, there are no benchmarks for `celq`. I believe the tool is "good enough" for my personal use. That might be revisited in the future. In the meantime, expect `celq` to be slower than `jq`.
+
+### CEL Implementation Differences
+
+`celq` uses [cel-rust](https://github.com/cel-rust/cel-rust), a community-maintained Rust implementation of CEL, rather than the official Go implementation. 
+
+While `cel-rust` provides excellent compatibility with the CEL specification, there may be edge cases or advanced features where behavior differs from the official implementation. If you find one, feel free to report it at their repository.
 
 ### List and Map Arguments
 
@@ -124,9 +124,9 @@ Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`
 
 While conceptually interesting, `celq` does not aim to be a CEL REPL. In the original author's view, that should live on a separate binary.
 
-### YAML Support
+### Full YAML Support
 
-`celq` works with JSON. I originally considered supporting YAML as a supported input format. However, the amount of YAML edge cases pushed me back to JSON. Although that might change in the future, please do not open an issue asking for YAML support as of today.
+`celq` works with JSON. YAML will be supported in the future as a best-effort. Full YAML support is out-of-scope, as the specification has too many edge cases.
 
 ## Acknowledgments
 

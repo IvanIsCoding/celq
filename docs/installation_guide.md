@@ -22,12 +22,21 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
 
 To pin a specific version, change the URL to include the version. For example:
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.1.1/install.sh | bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.1.2/install.sh | bash
 ```
 
-Will always install the same version, 0.1.1.
+Will always install the same version, 0.1.2.
 
-Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. See also the [GitHub Actions](#github-actions)
+By default, the installer always chooses Linux binaries that are the most portable (i.e. `musl`). It does not check the `glibc`. The `--target` flag can be convenient for those cases. For example:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
+    bash -s -- --target x86_64-unknown-linux-gnu
+```
+
+Will install the version that links against the glibc version.
+
+Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher.
 
 ### Homebrew (macOS)
 
@@ -73,7 +82,7 @@ Node.js users can install celq in their project with:
 npm install celq
 ```
 
-This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with:
+This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
 
 ```bash
 npx celq -n '"Hello World"'
