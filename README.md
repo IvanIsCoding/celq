@@ -25,7 +25,7 @@ For detailed usage examples and recipes, see the [manual](https://docs.rs/celq/l
 
 ## Why?
 
-There are implementations of CEL for [Go](https://github.com/google/cel-go), [C++](https://github.com/google/cel-cpp), [Java](https://github.com/google/cel-java), [Python](https://github.com/cloud-custodian/cel-python), [JavaScript](https://github.com/marcbachmann/cel-js), [Rust](https://github.com/cel-rust/cel-rust), [C#](https://github.com/telus-oss/cel-net), and possibly more languages.
+There are implementations of CEL for [JavaScript](https://github.com/marcbachmann/cel-js), [Python](https://github.com/cloud-custodian/cel-python), [Java](https://github.com/google/cel-java), [C++](https://github.com/google/cel-cpp), [C#](https://github.com/telus-oss/cel-net), [Go](https://github.com/google/cel-go), [Rust](https://github.com/cel-rust/cel-rust), and possibly more languages.
 
 `celq` brings the same CEL syntax to the command-line. `celq` is not necessarily better than jq, but perhaps it makes it easier to reuse snippets of code accross multiple places.
 
