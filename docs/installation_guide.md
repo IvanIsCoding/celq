@@ -36,7 +36,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
 
 Will install the version that links against the glibc version.
 
-Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher.
+Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. You might also find the [GitHub Actions](#github-actions) section valuable if running in that environment.
 
 ### Homebrew (macOS)
 
@@ -45,12 +45,17 @@ If you are a [macOS Homebrew](https://brew.sh/) user, then you can install celq 
 ```bash
 brew install get-celq/tap/celq
 ```
+
+The formula also works for [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux), but it will install from source instead of using bottles.
+
+### cargo
+
 #### Installing From Source 
 
 If you want to install from source, celq publishes to [crates.io](https://crates.io/crates/celq).
 
 ```bash
-cargo install celq
+cargo install celq --locked
 ```
 
 #### Installing With cargo-binstall
@@ -86,6 +91,46 @@ This adds celq to `package.json` and makes it available for scripts. It's also p
 
 ```bash
 npx celq -n '"Hello World"'
+```
+
+### GitHub Actions
+
+`celq` can be used in GitHub actions. For one-off commands, the [get-celq/celq-action](https://github.com/get-celq/celq-action) is the quickest way:
+
+```yaml
+- name: Example Celq Action
+  id: exampleID
+  uses: get-celq/celq-action@main
+  with:
+    cmd: celq 'this.exampleID' < example.json
+
+- name: Reuse a variable obtained in another step
+  run: echo ${{ steps.exampleID.outputs.result }}
+```
+
+The best practice for GitHub Actions is to select both the version for the tool:
+* The tool version is specified by the optional `version` parameter
+* The action version is specified `celq-action@actionVersion`
+
+For example:
+```yaml
+- name: Example Celq Action
+  id: exampleID
+  uses: get-celq/celq-action@v0.1
+  with:
+    version: '0.1.2'
+    cmd: celq 'this.exampleID' < example.json
+
+- name: Reuse a variable obtained in another step
+  run: echo ${{ steps.exampleID.outputs.result }}
+```
+
+If you are going to use `celq` in scripts or for multiple calls, we recommend using [taiki-e/install-action](https://github.com/taiki-e/install-action):
+
+```yaml
+- uses: taiki-e/install-action@v2
+  with:
+    tool: celq
 ```
 
 ## Acknowledgments

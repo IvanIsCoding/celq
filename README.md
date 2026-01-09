@@ -48,7 +48,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
     bash -s -- --to DESTINATION
 ```
 
-See the the [installation guide](https://docs.rs/celq/latest/celq/) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, and more.
+See the the [installation guide](https://docs.rs/celq/latest/celq/installation_guide) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, and more.
 
 ### Homebrew (macOS)
 
@@ -62,7 +62,7 @@ brew install get-celq/tap/celq
 If you want to install from source, celq publishes to [crates.io](https://crates.io/crates/celq).
 
 ```bash
-cargo install celq
+cargo install celq --locked
 ```
 
 #### Installing With cargo-binstall
@@ -98,6 +98,31 @@ This adds celq to `package.json` and makes it available for scripts. It's also p
 
 ```bash
 npx celq -n '"Hello World"'
+```
+
+### GitHub Actions
+
+`celq` can be used in GitHub actions. For one-off commands, the [get-celq/celq-action](https://github.com/get-celq/celq-action) is the quickest way:
+
+```yaml
+- name: Example Celq Action
+  id: exampleID
+  uses: get-celq/celq-action@main
+  with:
+    cmd: celq 'this.exampleID' < example.json
+
+- name: Reuse a variable obtained in another step
+  run: echo ${{ steps.exampleID.outputs.result }}
+```
+
+See the [installation guide](https://docs.rs/celq/latest/celq/installation_guide) for more details on GitHub actions such as pinning the `celq` version and the Action itself.
+
+If you are going to use `celq` in scripts or for multiple calls, we recommend using [taiki-e/install-action](https://github.com/taiki-e/install-action):
+
+```yaml
+- uses: taiki-e/install-action@v2
+  with:
+    tool: celq
 ```
 
 ## Limitations

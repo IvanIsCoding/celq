@@ -24,7 +24,7 @@ See the the [installation guide](`crate::installation_guide`) for more details o
 If you want to install from source, celq publishes to [crates.io](https://crates.io/crates/celq).
 
 ```bash
-cargo install celq
+cargo install celq --locked
 ```
 
 ### Other Methods
