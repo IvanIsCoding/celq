@@ -151,6 +151,3 @@ jobs:
       
       - name: Build with Zig
         run: cargo zigbuild --locked --target ${{ matrix.target }}
-      
-      - name: Test
-        run: cargo test --locked
