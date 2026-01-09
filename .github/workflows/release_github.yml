@@ -132,13 +132,12 @@ jobs:
       - name: Create release archive
         id: archive
         run: |
-          BUILD_TARGET="${{ matrix.target }}${{ matrix.zigtargetsuffix }}"
-          BIN_PATH="target/${BUILD_TARGET}/release/${NAME}"
+          BIN_PATH="target/${{ matrix.target }}/release/${NAME}"
           BIN_NAME="${NAME}"
           
           # Archive name uses base target without libc version
           ARCHIVE_NAME="${NAME}-${{ matrix.target }}.tar.gz"
-          tar czf "${ARCHIVE_NAME}" -C "target/${BUILD_TARGET}/release" "${BIN_NAME}"
+          tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}}/release" "${BIN_NAME}"
           
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
