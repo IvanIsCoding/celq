@@ -50,7 +50,8 @@ impl std::str::FromStr for Argument {
 #[command(name = "celq")]
 #[command(
     name = "celq",
-    about = "CEL expression evaluator",
+    about = "A CEL command-line query tool for JSON data",
+    version,
     long_about = None,
     group(
         ArgGroup::new("program")
