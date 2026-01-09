@@ -35,20 +35,14 @@ jobs:
           # macOS ARM64 (native)
           - { target: aarch64-apple-darwin, os: macos-15 }
 
-          # macOS ARM64 (native)
+          # macOS x86-64 (native)
           - { target: x86_64-apple-darwin, os: macos-15-intel }
           
           # Windows x86-64 (native)
           - { target: x86_64-pc-windows-msvc, os: windows-2025 }
           
-          # Linux x86-64 (native - glibc)
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04 }
-          
           # Linux x86-64 (native - musl static binary)
           - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04 }
-          
-          # Linux ARM64 (native)
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm }
 
           # Linux ARM64 (native - musl static binary)
           - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm }
@@ -101,11 +95,62 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload ${VERSION} ${{ steps.archive.outputs.ARCHIVE_NAME }}
+
+  build-zig:
+    name: ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
+    runs-on: ${{ matrix.os }}
+    environment: github_release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86-64 (zigbuild - glibc 2.28)
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04, zigtargetsuffix: .2.28 }
+          
+          # Linux ARM64 (zigbuild - glibc 2.28)
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, zigtargetsuffix: .2.28 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Install cargo-zigbuild
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild@0.20.1
+
+      - name: Build with Zig
+        run: cargo zigbuild --locked --release --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
+
+      - name: Create release archive
+        id: archive
+        run: |
+          BUILD_TARGET="${{ matrix.target }}${{ matrix.zigtargetsuffix }}"
+          BIN_PATH="target/${BUILD_TARGET}/release/${NAME}"
+          BIN_NAME="${NAME}"
+          
+          # Archive name uses base target without libc version
+          ARCHIVE_NAME="${NAME}-${{ matrix.target }}.tar.gz"
+          tar czf "${ARCHIVE_NAME}" -C "target/${BUILD_TARGET}/release" "${BIN_NAME}"
+          
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Upload release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload ${VERSION} ${{ steps.archive.outputs.ARCHIVE_NAME }}
   
   update-install-script:
     name: Update install script on GitHub Pages
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, build-zig]
     environment: github_release
     steps:
       - name: Checkout celq repository (for template)
@@ -173,7 +218,7 @@ jobs:
   update-homebrew-formula:
     name: Update Homebrew formula
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, build-zig]
     environment: github_release
     steps:
       - name: Checkout celq repository (for template)
