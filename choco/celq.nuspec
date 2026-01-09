@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>celq</id>
+    <version>0.1.2-alpha.2</version>
+    <title>celq</title>
+    <authors>Ivan Carvalho</authors>
+    <projectUrl>https://github.com/IvanIsCoding/celq</projectUrl>
+    <tags>cel json cli</tags>
+    <summary>A CEL command-line query tool for JSON data</summary>
+    <description>celq is a command-line tool that allows you to query JSON data using the Common Expression Language (CEL).</description>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>
