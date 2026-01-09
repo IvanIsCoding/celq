@@ -23,16 +23,16 @@ jobs:
       matrix:
         build:
           - {
-              NAME: linux-x64-glibc,
+              NAME: linux-x64-musl,
               OS: ubuntu-24.04,
               TOOLCHAIN: stable,
-              TARGET: x86_64-unknown-linux-gnu,
+              TARGET: x86_64-unknown-linux-musl,
             }
           - {
-              NAME: linux-arm64-glibc,
+              NAME: linux-arm64-musl,
               OS: ubuntu-24.04-arm,
               TOOLCHAIN: stable,
-              TARGET: aarch64-unknown-linux-gnu,
+              TARGET: aarch64-unknown-linux-musl,
             }
           - {
               NAME: win32-x64-msvc,
@@ -66,6 +66,12 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.build.TARGET }}
+      
+      - name: Install musl tools (for musl targets)
+        if: contains(matrix.build.TARGET, 'musl')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools
 
       - name: Build
         run: cargo build --release --locked --target ${{ matrix.build.TARGET }}

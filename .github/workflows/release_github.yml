@@ -34,6 +34,9 @@ jobs:
         include:
           # macOS ARM64 (native)
           - { target: aarch64-apple-darwin, os: macos-15 }
+
+          # macOS ARM64 (native)
+          - { target: x86_64-apple-darwin, os: macos-15-intel }
           
           # Windows x86-64 (native)
           - { target: x86_64-pc-windows-msvc, os: windows-2025 }
