@@ -201,12 +201,9 @@ fn handle_json(
         sort_keys_recursive(&mut json_value);
     }
 
-    let output_string = if input_params.raw_output {
-        if let serde_json::Value::String(s) = json_value {
-            s
-        } else if input_params.pretty_print {
-            serde_json::to_string_pretty(&json_value)
-                .context("Failed to serialize result to JSON")?
+    let output_string = if let serde_json::Value::String(s) = &json_value {
+        if input_params.raw_output {
+            s.clone()
         } else {
             serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?
         }
