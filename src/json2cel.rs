@@ -18,7 +18,17 @@ pub fn json_to_cel_variables(
     } else if from_json5 {
         json5::from_str(json_str).map_err(serde_json::Error::custom)?
     } else if from_toml {
-        toml::from_str(json_str).map_err(serde_json::Error::custom)?
+        #[cfg(feature = "from-toml")]
+        {
+            toml::from_str(json_str).map_err(serde_json::Error::custom)?
+        }
+
+        #[cfg(not(feature = "from-toml"))]
+        {
+            return Err(serde_json::Error::custom(
+                "Binary was compiled without TOML support",
+            ));
+        }
     } else if slurp {
         slurp_json_lines(Some(json_str))?
     } else {

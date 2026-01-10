@@ -24,6 +24,9 @@ jobs:
       
       - name: Build with locked dependencies
         run: cargo build --locked
+      
+      - name: Build with no-default-features
+        run: cargo build --locked --no-default-features
 
   format:
     name: Format Check

@@ -32,7 +32,8 @@ name = "celq"
 path = "src/documentation.rs"
 
 [features]
-default = ["mimalloc"]
+default = ["mimalloc", "from-toml"]
+from-toml = ["dep:toml"]
 
 [dependencies]
 anyhow = "1"
@@ -43,7 +44,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.11"
 mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = true }
 json5 = "0.4"
-toml = { version = "=0.9.8", default-features = false, features = ["parse", "serde", "preserve_order"] }
+toml = { version = "=0.9.8", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
 
 [dev-dependencies]
 tempfile = "3"
