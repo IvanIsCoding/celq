@@ -3,12 +3,18 @@
   <metadata>
     <id>celq</id>
     <version>CELQ_VERSION_PLACEHOLDER</version>
-    <title>celq</title>
+    <title>celq - Common Expression Language Query Tool</title>
     <authors>Ivan Carvalho</authors>
     <projectUrl>https://github.com/IvanIsCoding/celq</projectUrl>
-    <tags>cel json cli</tags>
+    <licenseUrl>https://github.com/IvanIsCoding/celq/blob/main/LICENSE-MIT</licenseUrl>
+    <docsUrl>https://docs.rs/celq</docsUrl>
+    <bugTrackerUrl>https://github.com/IvanIsCoding/celq/issues</bugTrackerUrl>
+    <projectSourceUrl>https://crates.io/crates/celq</projectSourceUrl>
+    <packageSourceUrl>https://github.com/IvanIsCoding/celq/tree/main/choco</packageSourceUrl>
+    <releaseNotes>https://github.com/IvanIsCoding/celq/releases</releaseNotes>
+    <tags>cel json rust</tags>
     <summary>A CEL command-line query tool for JSON data</summary>
-    <description>celq is a command-line tool that allows you to query JSON data using the Common Expression Language (CEL).</description>
+    <description>celq is a command-line tool that allows you to query JSON data using the Common Expression Language (CEL). Built with Rust and distributed via crates.io.</description>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />
