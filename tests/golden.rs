@@ -576,6 +576,60 @@ test!(
 }"#
 );
 
+// YAML tests
+
+// YAML with nested mappings
+#[cfg(feature = "from-yaml")]
+test!(
+    yaml_nested_mapping,
+    &[
+        "--from-yaml",
+        "this.database.host + ':' + string(this.database.port)"
+    ],
+    r#"database:
+  host: localhost
+  port: 5432
+  # Database configuration
+"#,
+    "\"localhost:5432\""
+);
+
+#[cfg(feature = "from-yaml")]
+test!(
+    yaml_array_of_mappings,
+    &["--from-yaml", "this.servers.map(s, s.ip)"],
+    r#"servers:
+  - ip: 192.168.1.1
+    name: alpha
+  - ip: 192.168.1.2
+    name: beta
+"#,
+    "[\"192.168.1.1\",\"192.168.1.2\"]"
+);
+
+#[cfg(feature = "from-yaml")]
+test!(
+    yaml_nested_keys,
+    &[
+        "--from-yaml",
+        "this.user.name + ' <' + this.user.email + '>'"
+    ],
+    r#"user:
+  name: Alice
+  email: alice@example.com
+"#,
+    "\"Alice <alice@example.com>\""
+);
+
+#[cfg(feature = "from-yaml")]
+test!(
+    yaml_flow_mapping,
+    &["--from-yaml", "this.point.x + this.point.y"],
+    r#"point: {x: 10, y: 20}
+"#,
+    "30"
+);
+
 // From file tests
 #[test]
 fn from_file_simple_expression() -> io::Result<()> {

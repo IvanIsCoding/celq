@@ -12,8 +12,9 @@ pub fn json_to_cel_variables(
     slurp: bool,
     from_json5: bool,
     from_toml: bool,
+    from_yaml: bool,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
-    let json_value: JsonValue = if !slurp && !from_json5 && !from_toml {
+    let json_value: JsonValue = if !slurp && !from_json5 && !from_toml && !from_yaml {
         serde_json::from_str(json_str)?
     } else if from_json5 {
         json5::from_str(json_str).map_err(serde_json::Error::custom)?
@@ -27,6 +28,18 @@ pub fn json_to_cel_variables(
         {
             return Err(serde_json::Error::custom(
                 "Binary was compiled without TOML support",
+            ));
+        }
+    } else if from_yaml {
+        #[cfg(feature = "from-yaml")]
+        {
+            serde_saphyr::from_str(json_str).map_err(serde_json::Error::custom)?
+        }
+
+        #[cfg(not(feature = "from-yaml"))]
+        {
+            return Err(serde_json::Error::custom(
+                "Binary was compiled without YAML support",
             ));
         }
     } else if slurp {

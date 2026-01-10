@@ -62,6 +62,7 @@ fn main() -> io::Result<()> {
         slurp: cli.slurp,
         from_json5: cli.from_json5,
         from_toml: cli.from_toml,
+        from_yaml: cli.from_yaml,
         parallelism: cli.parallelism,
         sort_keys: cli.sort_keys,
         pretty_print: cli.pretty_print,

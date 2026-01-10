@@ -55,7 +55,11 @@ fn handle_buffer<R: Read>(
     input_params: &InputParameters,
     reader: BufReader<R>,
 ) -> Result<Vec<(String, bool)>> {
-    if !input_params.slurp && !input_params.from_json5 && !input_params.from_toml {
+    if !input_params.slurp
+        && !input_params.from_json5
+        && !input_params.from_toml
+        && !input_params.from_yaml
+    {
         // Determine thread pool size
         anyhow::ensure!(
             input_params.parallelism != 0,
@@ -170,6 +174,7 @@ fn handle_json(
             input_params.slurp,
             input_params.from_json5,
             input_params.from_toml,
+            input_params.from_yaml,
         )
         .context("Failed to parse JSON input")?;
 

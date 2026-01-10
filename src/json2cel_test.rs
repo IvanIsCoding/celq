@@ -4,22 +4,25 @@ const ROOT_VAR: &str = "this";
 const NO_SLURP: bool = false;
 const NO_JSON5: bool = false;
 const NO_TOML: bool = false;
+const NO_YAML: bool = false;
 
 #[test]
 fn test_null() {
-    let vars = json_to_cel_variables("null", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML).unwrap();
+    let vars =
+        json_to_cel_variables("null", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML).unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Null));
 }
 
 #[test]
 fn test_number() {
-    let vars = json_to_cel_variables("42", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML).unwrap();
+    let vars = json_to_cel_variables("42", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML).unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Int(42)));
 }
 
 #[test]
 fn test_string() {
-    let vars = json_to_cel_variables(r#""hello""#, ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML).unwrap();
+    let vars = json_to_cel_variables(r#""hello""#, ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML)
+        .unwrap();
     if let CelValue::String(s) = vars.get("this").unwrap() {
         assert_eq!(s.as_str(), "hello");
     } else {
@@ -29,13 +32,15 @@ fn test_string() {
 
 #[test]
 fn test_bool() {
-    let vars = json_to_cel_variables("true", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML).unwrap();
+    let vars =
+        json_to_cel_variables("true", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML).unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Bool(true)));
 }
 
 #[test]
 fn test_array() {
-    let vars = json_to_cel_variables("[1, 2, 3]", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML).unwrap();
+    let vars =
+        json_to_cel_variables("[1, 2, 3]", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML).unwrap();
     if let CelValue::List(list) = vars.get("this").unwrap() {
         assert_eq!(list.len(), 3);
     } else {
@@ -51,6 +56,7 @@ fn test_object() {
         NO_SLURP,
         NO_JSON5,
         NO_TOML,
+        NO_YAML,
     )
     .unwrap();
 
@@ -69,6 +75,7 @@ fn test_nested_object() {
         NO_SLURP,
         NO_JSON5,
         NO_TOML,
+        NO_YAML,
     )
     .unwrap();
 
@@ -100,7 +107,8 @@ fn test_json5_with_comment() {
         "x": 42
     }
     "#;
-    let vars = json_to_cel_variables(json5_input, ROOT_VAR, NO_SLURP, true, NO_TOML).unwrap();
+    let vars =
+        json_to_cel_variables(json5_input, ROOT_VAR, NO_SLURP, true, NO_TOML, NO_YAML).unwrap();
 
     if let CelValue::Map(map) = vars.get("this").unwrap() {
         let x_key = Key::String(Arc::new("x".to_string()));
