@@ -19,7 +19,7 @@ celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
 # Outputs: true
 ```
 
-Closely related formats such as NDJSON and JSON5 are also supported. TOML is also supported.
+Popular configuration formats such as JSON5, YAML, and TOML are supported. The closely related format NDJSON is also supported.
 
 For detailed usage examples and recipes, see the [manual](https://docs.rs/celq/latest/celq/).
 
@@ -147,7 +147,7 @@ If you are going to use `celq` in scripts or for multiple calls, we recommend us
 
 ## Limitations
 
-### JSON Parsing
+### Eager JSON Parsing
 
 `celq` eagerly parses all JSON input into memory before evaluation. This design was made to simplify the code implementation, at the cost of memory and performance.
 
@@ -157,15 +157,11 @@ Currently, there are no benchmarks for `celq`. I believe the tool is "good enoug
 
 `celq` uses [cel-rust](https://github.com/cel-rust/cel-rust), a community-maintained Rust implementation of CEL, rather than the official Go implementation. 
 
-While `cel-rust` provides excellent compatibility with the CEL specification, there may be edge cases or advanced features where behavior differs from the official implementation. If you find one, feel free to report it at their repository.
+There may be edge cases or advanced features where behavior differs from the official implementation. If you find one, open an issue at the celq repository and we'll triage the issue before sending it to cel-rust.
 
 ### List and Map Arguments
 
 Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
-
-### Raw Output
-
-In the future, `celq` will support the `--raw-output` like `jq` does. In the meantime, saving `celq`'s output as an environment variable is painful because the quotes need to be manually stripped.
 
 ## Non-Goals
 
@@ -175,7 +171,7 @@ While conceptually interesting, `celq` does not aim to be a CEL REPL. In the ori
 
 ### Full YAML Support
 
-`celq` works with JSON. YAML will be supported in the future as a best-effort. Full YAML support is out-of-scope, as the specification has too many edge cases.
+`celq` works with JSON. YAML is supported as a best-effort. If the ingested YAML can be translated to JSON, `celq` most likely works fine. Full YAML support is out-of-scope, as the specification has too many edge cases.
 
 ## Acknowledgments
 

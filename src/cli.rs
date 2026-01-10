@@ -110,6 +110,10 @@ pub struct Cli {
     #[arg(short = 'R', long = "root-var", default_value = "this")]
     pub root_var: String,
 
+    /// If the output is a JSON string, output it raw without quotes
+    #[arg(short = 'r', long = "raw-output")]
+    pub raw_output: bool,
+
     /// Output the fields of each object with the keys in sorted order
     #[arg(short = 'S', long = "sort-keys")]
     pub sort_keys: bool,
@@ -151,4 +155,5 @@ pub struct InputParameters {
     pub parallelism: i32,
     pub sort_keys: bool,
     pub pretty_print: bool,
+    pub raw_output: bool,
 }

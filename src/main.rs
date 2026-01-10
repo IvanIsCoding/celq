@@ -66,6 +66,7 @@ fn main() -> io::Result<()> {
         parallelism: cli.parallelism,
         sort_keys: cli.sort_keys,
         pretty_print: cli.pretty_print,
+        raw_output: cli.raw_output,
     };
 
     match handle_input(&program, &arg_variables, &input_params) {

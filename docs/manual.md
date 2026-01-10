@@ -48,8 +48,10 @@ Options:
   -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NLJSON
       --from-json5             Parse input as JSON5 instead of JSON
       --from-toml              Parse input as TOML instead of JSON
+      --from-yaml              Parse input as YAML instead of JSON
   -j, --jobs <N>               Parallelism level for NDJSON inputs (number of threads, -1 for all available) [default: 1]
   -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
+  -r, --raw-output             If the output is a JSON string, output it raw without quotes
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
   -p, --pretty-print
@@ -318,6 +320,34 @@ celq --from-toml 'this.package.version' < Cargo.toml
 ```
 
 The output is `celq`'s development version.
+
+### YAML Support
+
+`celq` also supports [YAML](https://yaml.org/), another popular configuration format. For example, `celq` can query [CEL expressions commonly defined in YAML files](https://web.archive.org/web/20251108093453/https://blog.howardjohn.info/posts/cel-is-good/) and evaluate them!
+
+Take for example `config.yaml` with:
+
+```yaml
+environment: prod
+validation: |
+  spec.replicas >= 3 && 
+  spec.replicas <= 10
+```
+
+The `validation` field stores a CEL expression. We can query it when we pass the `--from-yaml` flag to `celq`:
+
+```bash
+celq --from-yaml 'this.validation' < config.yaml
+```
+
+After, we can chain it with arguments to evaluate the expression:
+
+```bash
+CEL_EXPR=$(celq --from-yaml --raw-output  'this.validation' < config.yaml)
+echo '{"replicas": 5}' | celq -b --root-var "spec" "$CEL_EXPR"
+```
+
+The output is `true` and the return code is 0. We validated that the number of replicas was between 3 and 10.
 
 ### Pretty Printing
 

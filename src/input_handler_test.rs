@@ -12,6 +12,7 @@ fn default_params() -> InputParameters {
         parallelism: -1,
         sort_keys: false,
         pretty_print: false,
+        raw_output: false,
     }
 }
 
