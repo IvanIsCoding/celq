@@ -163,6 +163,10 @@ There may be edge cases or advanced features where behavior differs from the off
 
 Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
 
+### Malformed expressions
+
+Currently, the error messages for CEL expressions that are invalid are cryptic. We will enhance them in future releases.
+
 ## Non-Goals
 
 ### REPL
