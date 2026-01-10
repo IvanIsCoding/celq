@@ -51,6 +51,10 @@ serde-saphyr = { version = "=0.0.14", default-features = false, optional = true 
 [dev-dependencies]
 tempfile = "3"
 
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
 [package.metadata.docs.rs]
 all-features = true
 
