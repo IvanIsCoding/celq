@@ -1,0 +1,62 @@
+name: Release to Chocolatey
+
+on:
+  workflow_dispatch:  # Manual trigger only
+  push:
+    tags:
+      - "v[0-9]*"      # Trigger on version tags like v1.0.0
+
+jobs:
+  release-chocolatey:
+    runs-on: windows-2025
+    environment: chocolatey_release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Get version from Cargo.toml
+        id: get_version
+        run: |
+          cargo build --release
+          $RELEASE_VERSION = target\release\celq.exe --from-toml "this.package.version" | Select-Object -First 1
+          $RELEASE_VERSION = $RELEASE_VERSION.Trim('"')
+          echo "VERSION=$RELEASE_VERSION" >> $env:GITHUB_OUTPUT
+          echo "Release version: $RELEASE_VERSION"
+        shell: pwsh
+
+      - name: Prepare Chocolatey package structure
+        run: |
+          mkdir tools
+          copy target\release\celq.exe tools\
+          copy LICENSE-MIT tools\LICENSE.txt
+        shell: cmd
+
+      - name: Create VERIFICATION.txt
+        run: |
+          echo "VERIFICATION" > tools\VERIFICATION.txt
+          echo "==========================================" >> tools\VERIFICATION.txt
+          echo "" >> tools\VERIFICATION.txt
+          echo "This package is built from source and published by the celq maintainers." >> tools\VERIFICATION.txt
+          echo "" >> tools\VERIFICATION.txt
+          echo "SHA256 hash of celq.exe:" >> tools\VERIFICATION.txt
+          CertUtil -hashfile tools\celq.exe SHA256 >> tools\VERIFICATION.txt
+        shell: cmd
+
+      - name: Template nuspec file
+        run: |
+          $content = Get-Content choco\celq.nuspec -Raw
+          $content = $content -replace "CELQ_VERSION_PLACEHOLDER", "${{ steps.get_version.outputs.VERSION }}"
+          $content | Set-Content celq.nuspec -Encoding UTF8
+        shell: pwsh
+
+      - name: Create Chocolatey package
+        run: choco pack celq.nuspec
+
+      - name: Publish to Chocolatey
+        run: choco push celq.${{ steps.get_version.outputs.VERSION }}.nupkg -s https://push.chocolatey.org/ --api-key=${{ secrets.CHOCO_API_KEY }}
+        shell: cmd
