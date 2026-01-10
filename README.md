@@ -19,7 +19,7 @@ celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
 # Outputs: true
 ```
 
-Closely related formats such as NDJSON and JSON5 are also supported.
+Closely related formats such as NDJSON and JSON5 are also supported. TOML is also supported.
 
 For detailed usage examples and recipes, see the [manual](https://docs.rs/celq/latest/celq/).
 

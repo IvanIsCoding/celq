@@ -88,7 +88,7 @@ pub struct Cli {
     #[arg(long = "from-json5")]
     pub from_json5: bool,
 
-    /// Parse input as JSON5 instead of JSON
+    /// Parse input as TOML instead of JSON
     #[arg(long = "from-toml")]
     pub from_toml: bool,
 

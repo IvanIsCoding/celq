@@ -34,7 +34,7 @@ See the the [installation guide](`crate::installation_guide`) for installation i
 ## Overview
 
 ```none
-CEL expression evaluator
+A CEL command-line query tool for JSON data
 
 Usage: celq [OPTIONS] <expr|--from-file <FILE>>
 
@@ -47,12 +47,14 @@ Options:
   -n, --null-input             Do not read JSON input from stdin
   -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NLJSON
       --from-json5             Parse input as JSON5 instead of JSON
+      --from-toml              Parse input as TOML instead of JSON
   -j, --jobs <N>               Parallelism level for NDJSON inputs (number of threads, -1 for all available) [default: 1]
   -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
   -p, --pretty-print
   -h, --help                   Print help
+  -V, --version                Print version
 ```
 
 ## Quick Start
@@ -306,6 +308,16 @@ echo "[1, 2, 3, 4,]" | celq --from-json5 'this.map(x, x*2)'
 Outputs: `[2,4,6,8]`. If the `--from-json5` flag is not passed, the command will fail because of the trailing comma on the list. JSON5 is more lenient than JSON and allows for trailing commas and comments.
 
 Notice that passing the `--from-json5` clashes with the `--slurp` flag and with the NDJSON detection.
+
+### TOML Support
+
+`celq` also supports [TOML](https://toml.io/en/), another popular configuration format. For example, `celq` can query it's own manifest file:
+
+```bash
+celq --from-toml 'this.package.version' < Cargo.toml
+```
+
+The output is `celq`'s development version.
 
 ### Pretty Printing
 
