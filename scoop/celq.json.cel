@@ -9,7 +9,7 @@
       "hash": celq_sha256
     }
   },
-  "bin": "target/x86_64-pc-windows-msvc/release/celq.exe",
+  "bin": "celq.exe",
   "checkver": {
     "github": "IvanIsCoding/celq"
   },

@@ -78,9 +78,10 @@ jobs:
           # Determine archive format based on platform
           case ${{ matrix.target }} in
             *-pc-windows-*)
-              # Windows: create .zip archive
+              # Windows: create .zip archive with just the binary name
               ARCHIVE_NAME="${NAME}-${{ matrix.target }}.zip"
-              7z a "${ARCHIVE_NAME}" "${BIN_PATH}"
+              7z a "${ARCHIVE_NAME}" "./${BIN_PATH}"
+              7z rn "${ARCHIVE_NAME}" "target/${{ matrix.target }}/release/${BIN_NAME}" "${BIN_NAME}"
               ;;
             *)
               # Linux/macOS: create .tar.gz archive
