@@ -45,8 +45,14 @@ fn test_array() {
 
 #[test]
 fn test_object() {
-    let vars =
-        json_to_cel_variables(r#"{"x": 10, "y": 20}"#, ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML).unwrap();
+    let vars = json_to_cel_variables(
+        r#"{"x": 10, "y": 20}"#,
+        ROOT_VAR,
+        NO_SLURP,
+        NO_JSON5,
+        NO_TOML,
+    )
+    .unwrap();
 
     // Should have "this"
     assert_eq!(vars.len(), 1);
@@ -57,8 +63,14 @@ fn test_object() {
 
 #[test]
 fn test_nested_object() {
-    let vars =
-        json_to_cel_variables(r#"{"outer": {"inner": 42}}"#, ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML).unwrap();
+    let vars = json_to_cel_variables(
+        r#"{"outer": {"inner": 42}}"#,
+        ROOT_VAR,
+        NO_SLURP,
+        NO_JSON5,
+        NO_TOML,
+    )
+    .unwrap();
 
     // Should have "this"
     assert_eq!(vars.len(), 1);

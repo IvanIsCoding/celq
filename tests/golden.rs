@@ -487,7 +487,10 @@ test!(
 // TOML with nested tables
 test!(
     toml_nested_table,
-    &["--from-toml", "this.database.host + ':' + string(this.database.port)"],
+    &[
+        "--from-toml",
+        "this.database.host + ':' + string(this.database.port)"
+    ],
     r#"[database]
 host = "localhost"
 port = 5432
@@ -512,7 +515,10 @@ name = "beta"
 
 test!(
     toml_dotted_keys,
-    &["--from-toml", "this.user.name + ' <' + this.user.email + '>'"],
+    &[
+        "--from-toml",
+        "this.user.name + ' <' + this.user.email + '>'"
+    ],
     r#"user.name = "Alice"
 user.email = "alice@example.com"
 "#,
