@@ -113,9 +113,6 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          STABLE_OR_NOT=$(cargo run -- --from-file ./.github/scripts/stable_or_not.cel  < "Cargo.toml")
-          STABLE_OR_NOT=${STABLE_OR_NOT#\"}
-          STABLE_OR_NOT=${STABLE_OR_NOT%\"}
           RELEASE_VERSION=$(cargo run -- --from-toml  "this.package.version" < "Cargo.toml")
           RELEASE_VERSION=${RELEASE_VERSION#\"}
           RELEASE_VERSION=${RELEASE_VERSION%\"}
@@ -132,4 +129,4 @@ jobs:
           cd npm/celq
           yarn install # requires optional dependencies to be present in the registry
           yarn build
-          npm publish --access public --tag "$STABLE_OR_NOT"
+          npm publish --access public

@@ -46,5 +46,9 @@
       "lib/*"
     ],
     "root": true
+  },
+  "publishConfig": {
+    "access": "public",
+      "tag": node_version.contains("beta") || node_version.contains("alpha") || node_version.contains("rc") ? "prerelease" : "latest"
   }
 }

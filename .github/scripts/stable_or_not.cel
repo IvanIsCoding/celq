@@ -1,3 +1,0 @@
-(this.package.version.contains("beta") 
-    || this.package.version.contains("alpha") 
-    || this.package.version.contains("rc") ) ? "prerelease" : "latest"
