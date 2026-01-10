@@ -210,7 +210,7 @@ dependencies = [
 
 [[package]]
 name = "celq"
-version = "0.1.2-alpha.3"
+version = "0.2.0-alpha.1"
 dependencies = [
  "anyhow",
  "cel",

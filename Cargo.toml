@@ -1,7 +1,7 @@
 [package]
 name = "celq"
 description = "A CEL command-line query tool for JSON data"
-version = "0.1.2-alpha.3"
+version = "0.2.0-alpha.1"
 edition = "2024"
 rust-version = "1.90"
 authors = ["Ivan Carvalho <ivancarvalho@gatech.edu>"]
