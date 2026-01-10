@@ -22,10 +22,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
 
 To pin a specific version, change the URL to include the version. For example:
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.1.2/install.sh | bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.2.0/install.sh | bash
 ```
 
-Will always install the same version, 0.1.2.
+Will always install the same version, 0.2.0.
 
 By default, the installer always chooses Linux binaries that are the most portable (i.e. `musl`). It does not check the `glibc`. The `--target` flag can be convenient for those cases. For example:
 
