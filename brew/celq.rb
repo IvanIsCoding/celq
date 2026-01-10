@@ -15,7 +15,7 @@ class Celq < Formula
     end
   else
     # Fallback to source for Linux
-    url "https://github.com/IvanIsCoding/celq/archive/refs/tags/{{CELQ_VERSION}}.tar.gz"
+    url "https://github.com/IvanIsCoding/celq/archive/refs/tags/v{{CELQ_VERSION}}.tar.gz"
     sha256 "{{CELQ_SHA256_SOURCE}}"
     depends_on "rust" => :build
   end
