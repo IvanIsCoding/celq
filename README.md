@@ -58,6 +58,14 @@ If you are a [macOS Homebrew](https://brew.sh/) user, then you can install celq 
 brew install get-celq/tap/celq
 ```
 
+### Chocolatey (Windows)
+
+If you are a [Chocolatey](https://community.chocolatey.org/) user on Windows, you can install `celq` with:
+
+```bash
+choco install celq
+```
+
 ### Cargo
 
 #### Installing From Source 

@@ -48,7 +48,15 @@ brew install get-celq/tap/celq
 
 The formula also works for [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux), but it will install from source instead of using bottles.
 
-### cargo
+### Chocolatey (Windows)
+
+If you are a [Chocolatey](https://community.chocolatey.org/) user on Windows, you can install `celq` with:
+
+```bash
+choco install celq
+```
+
+### Cargo
 
 #### Installing From Source 
 
