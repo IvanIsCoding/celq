@@ -66,6 +66,15 @@ If you are a [Chocolatey](https://community.chocolatey.org/) user on Windows, yo
 choco install celq
 ```
 
+### Scoop (Windows)
+
+If you are a [Scoop](https://scoop.sh/) user on Windows, you can install `celq` with:
+
+```bash
+scoop bucket add get-celq https://github.com/get-celq/scoop-bucket
+scoop install get-celq/celq
+```
+
 ### Cargo
 
 #### Installing From Source 
