@@ -484,7 +484,9 @@ test!(
 );
 
 // TOML tests
+
 // TOML with nested tables
+#[cfg(feature = "from-toml")]
 test!(
     toml_nested_table,
     &[
@@ -499,6 +501,7 @@ port = 5432
     "\"localhost:5432\""
 );
 
+#[cfg(feature = "from-toml")]
 test!(
     toml_array_of_tables,
     &["--from-toml", "this.servers.map(s, s.ip)"],
@@ -513,6 +516,7 @@ name = "beta"
     "[\"192.168.1.1\",\"192.168.1.2\"]"
 );
 
+#[cfg(feature = "from-toml")]
 test!(
     toml_dotted_keys,
     &[
@@ -525,6 +529,7 @@ user.email = "alice@example.com"
     "\"Alice <alice@example.com>\""
 );
 
+#[cfg(feature = "from-toml")]
 test!(
     toml_inline_table,
     &["--from-toml", "this.point.x + this.point.y"],
