@@ -11,13 +11,18 @@ pub fn json_to_cel_variables(
     root_var: &str,
     slurp: bool,
     from_json5: bool,
+    from_toml: bool,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
-    let json_value: JsonValue = if !slurp && !from_json5 {
+    let json_value: JsonValue = if !slurp && !from_json5 && !from_toml {
         serde_json::from_str(json_str)?
     } else if from_json5 {
         json5::from_str(json_str).map_err(serde_json::Error::custom)?
-    } else {
+    } else if from_toml {
+        toml::from_str(json_str).map_err(serde_json::Error::custom)?
+    } else if slurp {
         slurp_json_lines(Some(json_str))?
+    } else {
+        return Err(serde_json::Error::custom("Invalid combination of flags"));
     };
 
     let mut variables = BTreeMap::new();

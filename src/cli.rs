@@ -60,7 +60,7 @@ impl std::str::FromStr for Argument {
     ),
     group(
         ArgGroup::new("input_format")
-            .args(&["slurp", "from_json5"])
+            .args(&["slurp", "from_json5", "from_toml"])
     )
 )]
 pub struct Cli {
@@ -87,6 +87,10 @@ pub struct Cli {
     /// Parse input as JSON5 instead of JSON
     #[arg(long = "from-json5")]
     pub from_json5: bool,
+
+    /// Parse input as JSON5 instead of JSON
+    #[arg(long = "from-toml")]
+    pub from_toml: bool,
 
     /// Parallelism level for NDJSON inputs (number of threads, -1 for all available)
     #[arg(
@@ -138,6 +142,7 @@ pub struct InputParameters {
     pub null_input: bool,
     pub slurp: bool,
     pub from_json5: bool,
+    pub from_toml: bool,
     pub parallelism: i32,
     pub sort_keys: bool,
     pub pretty_print: bool,

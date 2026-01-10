@@ -7,6 +7,7 @@ fn default_params() -> InputParameters {
         null_input: false,
         slurp: false,
         from_json5: false,
+        from_toml: false,
         parallelism: -1,
         sort_keys: false,
         pretty_print: false,

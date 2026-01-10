@@ -12,7 +12,7 @@ BIN="celq"
 NPM_DIR="npm"
 
 # Read release version from package.json using celq
-RELEASE_VERSION=$(cargo run -- "this.version" < "${NPM_DIR}/celq/package.json")
+RELEASE_VERSION=$(cargo run -- --from-toml  "this.package.version" < "${NPM_DIR}/../Cargo.toml")
 RELEASE_VERSION=${RELEASE_VERSION#\"}
 RELEASE_VERSION=${RELEASE_VERSION%\"}
 
