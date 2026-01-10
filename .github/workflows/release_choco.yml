@@ -29,7 +29,21 @@ jobs:
           echo "Release version: $RELEASE_VERSION"
         shell: pwsh
 
+      - name: Check if version is pre-release
+        id: check_prerelease
+        run: |
+          $VERSION = "${{ steps.get_version.outputs.VERSION }}"
+          if ($VERSION -match "(alpha|beta|rc)") {
+            echo "IS_PRERELEASE=true" >> $env:GITHUB_OUTPUT
+            echo "Detected pre-release version: $VERSION"
+          } else {
+            echo "IS_PRERELEASE=false" >> $env:GITHUB_OUTPUT
+            echo "Detected stable version: $VERSION"
+          }
+        shell: pwsh
+
       - name: Prepare Chocolatey package structure
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
           mkdir tools
           copy target\release\celq.exe tools\
@@ -37,6 +51,7 @@ jobs:
         shell: cmd
 
       - name: Create VERIFICATION.txt
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
           echo "VERIFICATION" > tools\VERIFICATION.txt
           echo "==========================================" >> tools\VERIFICATION.txt
@@ -48,6 +63,7 @@ jobs:
         shell: cmd
 
       - name: Template nuspec file
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
           $content = Get-Content choco\celq.nuspec -Raw
           $content = $content -replace "CELQ_VERSION_PLACEHOLDER", "${{ steps.get_version.outputs.VERSION }}"
@@ -55,8 +71,10 @@ jobs:
         shell: pwsh
 
       - name: Create Chocolatey package
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: choco pack celq.nuspec
 
       - name: Publish to Chocolatey
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: choco push celq.${{ steps.get_version.outputs.VERSION }}.nupkg -s https://push.chocolatey.org/ --api-key=${{ secrets.CHOCO_API_KEY }}
         shell: cmd
