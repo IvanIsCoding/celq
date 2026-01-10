@@ -1,21 +1,20 @@
 name: Publish to crates.io
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
   push:
     tags:
-      - "v[0-9]*"      # Trigger on version tags like v1.0.0
+      - "v[0-9]*"
 
 permissions:
-  # IMPORTANT: this permission is mandatory for Trusted Publishing
-  id-token: write
+  id-token: write   # REQUIRED
   contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: crates_io_release
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,6 +24,9 @@ jobs:
 
       - name: Run tests
         run: cargo test
+
+      - name: Authenticate with crates.io
+        uses: rust-lang/crates-io-auth-action@v1
 
       - name: Publish to crates.io
         run: cargo publish
