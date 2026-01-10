@@ -107,6 +107,14 @@ test!(
     "true"
 );
 
+// Raw output
+test!(
+    string_raw_output,
+    &["--raw-output", r#""hello" + " " + "world""#],
+    "{}",
+    r#"hello world"#
+);
+
 // Logical operations
 test!(logical_and_true, &["true && true"], "{}", "true");
 test!(logical_and_false, &["true && false"], "{}", "false");
