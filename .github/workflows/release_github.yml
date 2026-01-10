@@ -286,3 +286,93 @@ jobs:
           git push
           
           echo "✅ Homebrew formula updated to ${{ github.ref_name }}"
+
+  update-scoop-manifest:
+    name: Update Scoop manifest
+    runs-on: ubuntu-latest
+    needs: [build, build-zig]
+    environment: github_release
+    steps:
+      - name: Checkout celq repository (for template)
+        uses: actions/checkout@v4
+        with:
+          path: celq-repo
+
+      - name: Check if pre-release
+        id: check_prerelease
+        run: |
+          VERSION="${{ github.ref_name }}"
+          
+          # Check if this is a pre-release (contains hyphen followed by alpha/beta/rc/etc)
+          if [[ "$VERSION" =~ -[a-zA-Z] ]]; then
+            echo "Pre-release detected: $VERSION"
+            echo "Skipping Scoop manifest update (Scoop doesn't support pre-releases)"
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "Stable release detected: $VERSION"
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout scoop-bucket repository
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        uses: actions/checkout@v4
+        with:
+          repository: get-celq/scoop-bucket
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          path: scoop-bucket
+
+      - name: Install Rust toolchain
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Download Windows binary and calculate SHA256
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          VERSION="${{ github.ref_name }}"
+          
+          # Download the Windows binary zip
+          ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-x86_64-pc-windows-msvc.zip"
+          
+          echo "Downloading Windows binary from: $ZIP_URL"
+          curl -sL "$ZIP_URL" -o "/tmp/celq-x86_64-pc-windows-msvc.zip"
+          
+          # Calculate SHA256
+          SHA256=$(sha256sum "/tmp/celq-x86_64-pc-windows-msvc.zip" | awk '{print $1}')
+          echo "Calculated SHA256: $SHA256"
+          
+          # Export for next step
+          echo "CELQ_SHA256=$SHA256" >> $GITHUB_ENV
+
+      - name: Generate Scoop manifest using celq
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          cd celq-repo
+          
+          VERSION="${{ github.ref_name }}"
+          VERSION_WITHOUT_V="${VERSION#v}"  # Remove 'v' prefix
+          
+          echo "Generating Scoop manifest for version: $VERSION_WITHOUT_V"
+          
+          cargo run -- \
+            -n \
+            -p \
+            -S \
+            --from-file "scoop/celq.json.cel" \
+            --arg="celq_version:string=${VERSION_WITHOUT_V}" \
+            --arg="celq_sha256:string=${CELQ_SHA256}" \
+            > "../scoop-bucket/bucket/celq.json"
+          
+          echo "Scoop manifest generated successfully"
+
+      - name: Commit and push Scoop manifest
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          cd scoop-bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add bucket/celq.json
+          git commit -m "Update celq to ${{ github.ref_name }}" || echo "No changes to commit"
+          git push
+          
+          echo "✅ Scoop manifest updated to ${{ github.ref_name }}"
