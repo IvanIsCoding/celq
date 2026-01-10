@@ -163,6 +163,10 @@ While `cel-rust` provides excellent compatibility with the CEL specification, th
 
 Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
 
+### Raw Output
+
+In the future, `celq` will support the `--raw-output` like `jq` does. In the meantime, saving `celq`'s output as an environment variable is painful because the quotes need to be manually stripped.
+
 ## Non-Goals
 
 ### REPL
