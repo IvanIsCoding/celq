@@ -337,7 +337,7 @@ validation: |
 The `validation` field stores a CEL expression. We can query it when we pass the `--from-yaml` flag to `celq`:
 
 ```bash
-celq --from-yaml 'this.validation' < config.yaml
+celq --from-yaml --raw-output 'this.validation' < config.yaml
 ```
 
 After, we can chain it with arguments to evaluate the expression:

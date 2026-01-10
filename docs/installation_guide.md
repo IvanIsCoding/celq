@@ -156,3 +156,4 @@ Special thanks to the maintainers of:
 - **[just](https://github.com/casey/just)** for providing the shell script installer that was forked by us
 - **[git-cliff](https://github.com/orhun/git-cliff)** for their fantastic blueprint for the NPM release
 - **[maturin](https://github.com/PyO3/maturin)** for providing the code to help us build for the Python Package Index
+- **[vidmerger](https://github.com/tgotwig/vidmerger)** for providing details on how to package for Chocolatey ([including this blog post](https://dev.to/tgotwig/publish-a-simple-executable-from-rust-on-chocolatey-2pbl))
