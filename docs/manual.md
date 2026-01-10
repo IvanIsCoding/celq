@@ -368,6 +368,23 @@ Outputs:
 }
 ```
 
+### Raw Output
+
+By default, `celq` outputs valid JSON. This is generally the best option, but it can be cumbersome when dealing with strings. For example:
+
+```bash
+echo '["apples", "bananas", "blueberries"]' | celq 'this[0]'
+```
+
+Will always outputs `"apples"` with quotes. If you want to save it in an envrionment variable, the quotes will be included. To bypass that, the `--raw-output` option is convenient:
+
+```bash
+FRUIT=$(echo '["apples", "bananas", "blueberries"]' | celq --raw-output 'this[0]')
+grocery_list_cli --item $FRUIT --quantity 5
+```
+
+`celq`'s output will be saved to the `FRUIT` environment variable as `apples`. That variable can then be used with other commands.
+
 ## Quirks
 
 1. Do not rely on the order of the JSON output, by default it is randomized due to Rust implementation details. If you need ordering, pass `--sort-keys` as an argument
