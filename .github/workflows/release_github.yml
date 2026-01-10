@@ -257,19 +257,32 @@ jobs:
           
           echo "Updating Homebrew formula to version: $VERSION_WITHOUT_V"
           
-          # Download the source tarball to calculate SHA256
-          TARBALL_URL="https://github.com/${{ github.repository }}/archive/refs/tags/${VERSION_WITHOUT_V}.tar.gz"
+          # Download and calculate SHA256 for source tarball
+          SOURCE_URL="https://github.com/${{ github.repository }}/archive/refs/tags/${VERSION}.tar.gz"
+          echo "Downloading source tarball from: $SOURCE_URL"
+          curl -sL "$SOURCE_URL" -o "/tmp/celq-source.tar.gz"
+          SHA256_SOURCE=$(sha256sum "/tmp/celq-source.tar.gz" | awk '{print $1}')
+          echo "Source SHA256: $SHA256_SOURCE"
           
-          echo "Downloading tarball from: $TARBALL_URL"
-          curl -sL "$TARBALL_URL" -o "/tmp/celq-${VERSION_WITHOUT_V}.tar.gz"
+          # Download and calculate SHA256 for ARM64 macOS binary
+          ARM64_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-aarch64-apple-darwin.tar.gz"
+          echo "Downloading ARM64 binary from: $ARM64_URL"
+          curl -sL "$ARM64_URL" -o "/tmp/celq-arm64.tar.gz"
+          SHA256_ARM64=$(sha256sum "/tmp/celq-arm64.tar.gz" | awk '{print $1}')
+          echo "ARM64 SHA256: $SHA256_ARM64"
           
-          # Calculate SHA256
-          SHA256=$(sha256sum "/tmp/celq-${VERSION_WITHOUT_V}.tar.gz" | awk '{print $1}')
-          echo "Calculated SHA256: $SHA256"
+          # Download and calculate SHA256 for x86_64 macOS binary
+          X86_64_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-x86_64-apple-darwin.tar.gz"
+          echo "Downloading x86_64 binary from: $X86_64_URL"
+          curl -sL "$X86_64_URL" -o "/tmp/celq-x86_64.tar.gz"
+          SHA256_X86_64=$(sha256sum "/tmp/celq-x86_64.tar.gz" | awk '{print $1}')
+          echo "x86_64 SHA256: $SHA256_X86_64"
           
           # Generate formula from template using sed
           sed -e "s/{{CELQ_VERSION}}/${VERSION_WITHOUT_V}/g" \
-              -e "s/{{CELQ_SHA256}}/${SHA256}/g" \
+              -e "s/{{CELQ_SHA256_SOURCE}}/${SHA256_SOURCE}/g" \
+              -e "s/{{CELQ_SHA256_ARM64}}/${SHA256_ARM64}/g" \
+              -e "s/{{CELQ_SHA256_X86_64}}/${SHA256_X86_64}/g" \
               celq-repo/brew/celq.rb > homebrew-tap/Formula/celq.rb
           
           echo "Formula updated successfully"
