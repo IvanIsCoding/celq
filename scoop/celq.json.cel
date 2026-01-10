@@ -1,0 +1,23 @@
+{
+  "version": celq_version,
+  "description": "Common Expression Language query tool",
+  "homepage": "https://github.com/IvanIsCoding/celq",
+  "license": "MIT",
+  "architecture": {
+    "64bit": {
+      "url": "https://github.com/IvanIsCoding/celq/releases/download/" + celq_version + "/celq-x86_64-pc-windows-msvc.zip",
+      "hash": celq_sha256
+    }
+  },
+  "bin": "celq.exe",
+  "checkver": {
+    "github": "IvanIsCoding/celq"
+  },
+  "autoupdate": {
+    "architecture": {
+      "64bit": {
+        "url": "https://github.com/IvanIsCoding/celq/releases/download/v$version/celq-x86_64-pc-windows-msvc.zip"
+      }
+    }
+  }
+}
