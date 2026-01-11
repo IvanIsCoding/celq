@@ -638,6 +638,38 @@ test!(
     "30"
 );
 
+// Multi-document YAML
+#[cfg(feature = "from-yaml")]
+test!(
+    yaml_multi_document_with_separator,
+    &["--from-yaml", "this.map(doc, doc.name)"],
+    r#"name: Alice
+age: 30
+---
+name: Bob
+age: 25
+---
+name: Charlie
+age: 35
+"#,
+    "[\"Alice\",\"Bob\",\"Charlie\"]"
+);
+
+#[cfg(feature = "from-yaml")]
+test!(
+    yaml_multi_document_with_terminator,
+    &["--from-yaml", "this.map(doc, doc.value)"],
+    r#"value: first
+...
+---
+value: second
+...
+---
+value: third
+"#,
+    "[\"first\",\"second\",\"third\"]"
+);
+
 // Void test
 test!(void_mode, &["--void", "-n", "2 + 2"], "", "");
 
