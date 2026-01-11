@@ -352,6 +352,27 @@ echo '{"replicas": 5}' | celq -b --root-var "spec" "$CEL_EXPR"
 
 The output is `true` and the return code is 0. We validated that the number of replicas was between 3 and 10.
 
+### YAML with multiple documents
+
+Some YAML files contain multiple documents with separated by `---`. For example, in `multi.yaml`:
+
+```yaml
+author: "Example Author"
+title: "Example"
+---
+content: |
+  This is an example document.
+tags:
+  - a
+  - b
+```
+
+The document gets parsed as a list of documents. To access the `tags` field of the second document, the command would be:
+
+```bash
+celq --from-yaml 'this[1].tags' < multi.yaml
+```
+
 ### Pretty Printing
 
 `celq` by default uses a compact output. This is a contrast to `jq` where the compact output is an opt-in with the `-c` flag.
