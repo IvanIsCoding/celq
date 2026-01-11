@@ -150,6 +150,23 @@ If you are going to use `celq` in scripts or for multiple calls, we recommend us
     tool: celq
 ```
 
+### Nix
+
+`celq` is available for [Nix](https://github.com/NixOS/nix). To run it as a flake:
+
+```bash
+nix run github:IvanIsCoding/celq -- -n '"Hello World"'
+```
+
+We also include a `default.nix` for non-Flake users:
+
+```bash
+git clone https://github.com/IvanIsCoding/celq
+cd celq
+nix-build
+./result/bin/celq -n '"Hello World"'
+```
+
 ## Acknowledgments
 
 Special thanks to the maintainers of:
@@ -157,3 +174,5 @@ Special thanks to the maintainers of:
 - **[git-cliff](https://github.com/orhun/git-cliff)** for their fantastic blueprint for the NPM release
 - **[maturin](https://github.com/PyO3/maturin)** for providing the code to help us build for the Python Package Index
 - **[vidmerger](https://github.com/tgotwig/vidmerger)** for providing details on how to package for Chocolatey ([including this blog post](https://dev.to/tgotwig/publish-a-simple-executable-from-rust-on-chocolatey-2pbl))
+
+Thanks also go to [quentinmit@](https://github.com/quentinmit) for guidance on packaging for Nix.

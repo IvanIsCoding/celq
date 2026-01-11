@@ -145,6 +145,16 @@ If you are going to use `celq` in scripts or for multiple calls, we recommend us
     tool: celq
 ```
 
+### Nix
+
+`celq` is available for [Nix](https://github.com/NixOS/nix). To run it as a Flake:
+
+```bash
+nix run github:IvanIsCoding/celq -- -n '"Hello World"'
+```
+
+See the [installation guide](https://docs.rs/celq/latest/celq/installation_guide) for other Nix setups.
+
 ## Limitations
 
 ### Eager JSON Parsing
