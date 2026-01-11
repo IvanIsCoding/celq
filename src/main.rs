@@ -71,9 +71,11 @@ fn main() -> io::Result<()> {
 
     match handle_input(&program, &arg_variables, &input_params) {
         Ok(results) => {
-            // Print all outputs
-            for (output, _) in &results {
-                println!("{}", output);
+            // Print all outputs, unless void mode is enabled
+            if !cli.void {
+                for (output, _) in &results {
+                    println!("{}", output);
+                }
             }
 
             // If boolean mode is enabled, exit with appropriate code based on last result

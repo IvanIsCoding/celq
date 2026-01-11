@@ -45,7 +45,8 @@ Options:
   -a, --arg <name:type=value>  Define argument variables, types, and values. Format: name:type=value. Supported types: int, uint, float, bool, string
   -b, --boolean                Return a status code based on boolean output true = 0, false = 1, exception = 2
   -n, --null-input             Do not read JSON input from stdin
-  -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NLJSON
+      --void                   Do not write JSON output to stdout
+  -s, --slurp                  Treat all input as a single JSON document Default is to treat each line as separate NDJSON
       --from-json5             Parse input as JSON5 instead of JSON
       --from-toml              Parse input as TOML instead of JSON
       --from-yaml              Parse input as YAML instead of JSON
@@ -271,7 +272,7 @@ That can be chained with bash if statements. For example:
 
 FRUIT="apple"
 
-celq -n -b --arg="fruit:string=$FRUIT" 'fruit.contains("a")' > /dev/null
+celq -n -b --void --arg="fruit:string=$FRUIT" 'fruit.contains("a")'
 rc=$?
 
 if [ "$rc" -eq 0 ]; then
@@ -282,6 +283,8 @@ fi
 ```
 
 Will print: `apple contains the letter a`.
+
+Often, the `--boolean` flag plays nicely with the `--void` flag. The `--void` flag ommits all outputs to stdout, which can be handy to hide unnecessary `true` or `false` outputs for intermediary steps in bash scripts.
 
 Note that for NDJSON inputs, `celq` sets the value based on the value of the last JSON in the NDJSON input.
 

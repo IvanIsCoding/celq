@@ -79,8 +79,12 @@ pub struct Cli {
     #[arg(short = 'n', long = "null-input")]
     pub null_input: bool,
 
+    /// Do not write JSON output to stdout
+    #[arg(long = "void")]
+    pub void: bool,
+
     /// Treat all input as a single JSON document
-    /// Default is to treat each line as separate NLJSON
+    /// Default is to treat each line as separate NDJSON
     #[arg(short = 's', long = "slurp")]
     pub slurp: bool,
 

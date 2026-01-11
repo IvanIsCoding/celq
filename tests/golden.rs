@@ -638,6 +638,14 @@ test!(
     "30"
 );
 
+// Void test
+test!(
+    void_mode,
+    &["--void", "-n", "2 + 2"],
+    "",
+    ""
+);
+
 // From file tests
 #[test]
 fn from_file_simple_expression() -> io::Result<()> {
