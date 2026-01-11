@@ -27,7 +27,7 @@ FLAGS:
     -f, --force     Force overwriting an existing binary
 
 OPTIONS:
-    --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin or $HOME/.cargo/bin or $HOME/bin]
+    --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin]
     --target TARGET
 EOF
 }
