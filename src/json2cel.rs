@@ -39,9 +39,7 @@ pub fn json_to_cel_variables(
                 Err(single_err) => {
                     // Try multi-document as a fallback
                     match serde_saphyr::from_multiple::<JsonValue>(json_str) {
-                        Ok(values) => {
-                            serde_json::Value::Array(values)
-                        }
+                        Ok(values) => serde_json::Value::Array(values),
                         Err(_multi_err) => {
                             // Both attempts failed, invalid YAML input
                             return Err(serde_json::Error::custom(single_err));
