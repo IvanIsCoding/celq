@@ -639,12 +639,7 @@ test!(
 );
 
 // Void test
-test!(
-    void_mode,
-    &["--void", "-n", "2 + 2"],
-    "",
-    ""
-);
+test!(void_mode, &["--void", "-n", "2 + 2"], "", "");
 
 // From file tests
 #[test]
