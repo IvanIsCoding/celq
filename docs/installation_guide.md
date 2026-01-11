@@ -46,7 +46,7 @@ If you are a [macOS Homebrew](https://brew.sh/) user, then you can install celq 
 brew install get-celq/tap/celq
 ```
 
-The formula also works for [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux), but it will install from source instead of using bottles.
+The formula also works for [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux), but it will install from source instead of using pre-built binaries.
 
 ### Chocolatey (Windows)
 
