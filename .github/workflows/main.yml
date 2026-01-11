@@ -154,3 +154,27 @@ jobs:
       
       - name: Build with Zig
         run: cargo zigbuild --locked --target ${{ matrix.target }}
+
+  coverage:
+    name: Code Coverage (Ubuntu 24.04 x86-64)
+    needs: [build, format, clippy]
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+
+      - name: Install cargo-llvm-cov via binstall
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Run coverage
+        run: |
+          cargo llvm-cov \
+            --locked \
+            --summary-only
