@@ -98,7 +98,7 @@ uvx celq -n '"Hello World"'
 
 ### NPM (Node.js/JavaScript)
 
-Node.js users can install celq in their project with:
+`celq` is packaged for [NPM](https://www.npmjs.com/package/celq). Node.js users can install celq in their project with:
 
 ```bash
 npm install celq
