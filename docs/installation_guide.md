@@ -27,16 +27,17 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.2.0/install.s
 
 Will always install the same version, 0.2.0.
 
-By default, the installer always chooses Linux binaries that are the most portable (i.e. `musl`). It does not check the `glibc`. The `--target` flag can be convenient for those cases. For example:
-
+The `--target` option can be specified to avoid guessing the architecture. For example:
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
     bash -s -- --target x86_64-unknown-linux-gnu
 ```
 
-Will install the version that links against the glibc version.
+Will always install the binary for `x86_64-unknown-linux-gnu`.
 
-Lastly, to prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. You might also find the [GitHub Actions](#github-actions) section valuable if running in that environment.
+To prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. You might also find the [GitHub Actions](#github-actions) section valuable if running in that environment.
+
+Lastly, see [the quriks for the shell script installer](#shell-script-installer-quirks) for how it chooses what binary to install on Linux and the path it chooses.
 
 ### Homebrew (macOS)
 
@@ -166,6 +167,12 @@ cd celq
 nix-build
 ./result/bin/celq -n '"Hello World"'
 ```
+
+## Shell Script Installer Quirks
+
+By default, the installer always chooses Linux binaries that are the most portable (i.e. `musl`). It does not check the `glibc`. The `--target` flag can be convenient for those cases. Pass `--target x86_64-unknown-linux-gnu` or `aarch64-unknown-linux-gnu` if you need the glibc version.
+
+It is worth highlighting that if no `--to` flag is specified, the installer tries to write `$CARGO_HOME/bin/celq`, `$HOME/.cargo/bin/celq`, `$HOME/.local/bin/celq` in that order. If a directory does not exist, the installer moves to the next guess. `$HOME/bin` is the final destination if none of directories exist. If the directory that `celq` was installed is not in the path, the installer will warn the user.
 
 ## Acknowledgments
 
