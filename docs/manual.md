@@ -78,6 +78,9 @@ celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
 
 Closely related formats such as NDJSON and JSON5 are also supported.
 
+### Interactive Playground
+Want to try `celq` without installing anything? Visit the [celq-playground](https://celq-playground.github.io/) to try it in your browser!
+
 ## References
 
 - [CEL Language Definition](https://github.com/google/cel-spec/blob/master/doc/langdef.md)
