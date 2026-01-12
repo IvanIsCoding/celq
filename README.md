@@ -213,4 +213,4 @@ The `install.sh` published with each GitHub release and its template at the root
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for more details.
 
-Unless explicitly stated otherwise, any contribution intentionally submitted for inclusion in `celq` by you shall be dual-licensed under the [MIT License](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE). Contributions to `template_install.sh` shall be dedicated to the public domain. Any additional terms or conditions shall not apply.
+Unless explicitly stated otherwise, any contribution intentionally submitted for inclusion in `celq` by you shall be dual-licensed under the [MIT License](LICENSE-MIT) and the [Apache 2.0 license](LICENSE-APACHE). Contributions to `template_install.sh` shall be dedicated to the public domain. Any additional terms or conditions shall not apply.

@@ -1,0 +1,73 @@
+# Deploy WASM build to celq-playground
+# This workflow compiles celq to WASM and deploys it to the playground GitHub Pages
+
+name: Deploy to Playground
+
+on:
+  workflow_dispatch:  # Manual trigger
+  push:
+    tags:
+      - "v[0-9]*"      # Trigger on version tags like v1.0.0
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  deploy-wasm:
+    name: Deploy WASM to Playground
+    runs-on: ubuntu-latest
+    environment: playground_release
+    
+    steps:
+      - name: Checkout celq repository
+        uses: actions/checkout@v4
+        with:
+          path: celq-repo
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-wasip1
+
+      - name: Build WASM binary
+        run: |
+          cd celq-repo
+          cargo build \
+            --no-default-features \
+            --features "from-toml,from-yaml" \
+            --release \
+            --target wasm32-wasip1
+          
+          echo "✅ WASM build completed"
+
+      - name: Checkout playground repository
+        uses: actions/checkout@v4
+        with:
+          repository: celq-playground/celq-playground.github.io
+          token: ${{ secrets.PLAYGROUND_TOKEN }}
+          path: playground-repo
+
+      - name: Copy WASM binary to playground
+        run: |
+          cp celq-repo/target/wasm32-wasip1/release/celq.wasm playground-repo/celq.wasm
+          echo "✅ WASM binary copied to playground repository"
+
+      - name: Commit and push to playground
+        run: |
+          cd playground-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add celq.wasm
+          
+          # Include version info in commit message if triggered by tag
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            git commit -m "Update celq.wasm to ${{ github.ref_name }}" || echo "No changes to commit"
+          else
+            git commit -m "Update celq.wasm from ${{ github.sha }}" || echo "No changes to commit"
+          fi
+          
+          git push
+          
+          echo "✅ Changes pushed to playground repository"
