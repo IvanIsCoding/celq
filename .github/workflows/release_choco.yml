@@ -70,9 +70,9 @@ jobs:
       - name: Clearsign VERIFICATION.txt
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
-          gpg --clearsign --armor VERIFICATION.txt
-          move VERIFICATION.txt.asc tools\VERIFICATION.txt
-        shell: cmd
+          gpg --clearsign --armor --output VERIFICATION.txt.asc VERIFICATION.txt
+          Move-Item VERIFICATION.txt.asc tools\VERIFICATION.txt
+        shell: pwsh
 
       - name: Template nuspec file
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
