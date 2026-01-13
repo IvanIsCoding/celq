@@ -37,7 +37,9 @@ Will always install the binary for `x86_64-unknown-linux-gnu`.
 
 To prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. You might also find the [GitHub Actions](#github-actions) section valuable if running in that environment.
 
-Lastly, see [the quriks for the shell script installer](#shell-script-installer-quirks) for how it chooses what binary to install on Linux and the path it chooses.
+If you are interested in the checksums and the attestations for the pre-built binaries and the installer, [see the Integrity and Authenticity section](#integrity-and-authenticity).
+
+Lastly, see [the quirks for the shell script installer](#shell-script-installer-quirks) for how it chooses what binary to install on Linux and the path it chooses.
 
 ### Homebrew (macOS)
 
@@ -166,6 +168,23 @@ git clone https://github.com/IvanIsCoding/celq
 cd celq
 nix-build
 ./result/bin/celq -n '"Hello World"'
+```
+
+## Integrity and Authenticity
+
+`celq` publishes a `SHA256SUMS` file for each of its release in the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify integrity of the downloaded files.
+
+`celq` also generates [artifact attestations](https://github.com/IvanIsCoding/celq/attestations) for each file in the Releases page, including the installer. To verify the authenticity of a file, use the [GitHub CLI](https://cli.github.com/) with the following command:
+
+```bash
+gh attestation verify <path_to_file> --repo IvanIsCoding/celq
+```
+
+Because `install.sh` is published with each release, that means it can also be verified:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh > install.sh
+gh attestation verify intall.sh --repo IvanIsCoding/celq
 ```
 
 ## Shell Script Installer Quirks

@@ -17,7 +17,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
     bash -s -- --to DESTINATION
 ```
 
-See the the [installation guide](`crate::installation_guide`) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, and more.
+See the the [installation guide](`crate::installation_guide`) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, attestations, and more.
 
 #### Installing From Source 
 
