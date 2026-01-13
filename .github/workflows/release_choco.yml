@@ -101,3 +101,9 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: 'tools/celq.exe'
+      
+      - name: Generate attestation for Chocolatey package
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: 'celq.${{ steps.get_version.outputs.VERSION }}.nupkg'
