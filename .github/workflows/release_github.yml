@@ -19,9 +19,12 @@ env:
   NAME: celq
   VERSION: ${{ github.ref_name }}
 
-# Required for gh release upload
+# Required for gh release upload and attestations
 permissions:
   contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
 
 jobs:
   build:
@@ -92,6 +95,11 @@ jobs:
           
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
+      - name: Generate attestation for release archive
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ steps.archive.outputs.ARCHIVE_NAME }}
+
       - name: Upload release archive
         env:
           GH_TOKEN: ${{ github.token }}
@@ -142,6 +150,11 @@ jobs:
           
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
 
+      - name: Generate attestation for release archive
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: ${{ steps.archive.outputs.ARCHIVE_NAME }}
+
       - name: Upload release archive
         env:
           GH_TOKEN: ${{ github.token }}
@@ -186,6 +199,11 @@ jobs:
           
           # Copy generated script for GitHub release attachment
           cp "pages-repo/${VERSION}/install.sh" celq-repo/install.sh
+
+      - name: Generate attestation for install script
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: celq-repo/install.sh
 
       - name: Upload install.sh to GitHub release
         env:
@@ -252,6 +270,11 @@ jobs:
           
           echo "Generated checksums:"
           cat SHA256SUMS
+
+      - name: Generate attestation for checksums file
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: /tmp/release-assets/SHA256SUMS
 
       - name: Upload checksums file to release
         env:
