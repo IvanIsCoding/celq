@@ -15,10 +15,7 @@ Instructions to verify:
 
 1. Obtain the public key from GitHub and import it:
 
-   Using curl:
-   curl -L https://raw.githubusercontent.com/IvanIsCoding/celq/main/.github/keys/chocolatey-public-key.asc | gpg --import
-
-   Or download manually from:
+   Download the key manually from:
    https://github.com/IvanIsCoding/celq/blob/main/.github/keys/chocolatey-public-key.asc?raw=true
    Then run:
    gpg --import chocolatey-public-key.asc
@@ -29,6 +26,10 @@ Instructions to verify:
 
    You should see: `Good signature from "celq (For Chocolatey releases) <get-celq@proton.me>"`
    Possibly followed by `WARNING: This key is not certified with a trusted signature!`
+
+   Note: if you make any minor edit to VERIFICATION.txt the check will fail.
+   - DO NOT change from UTF-8 to UTF-16 
+   - DO NOT change newline characters
 
 3. Confirm that the provided SHA256 matches that of celq.exe:
 
