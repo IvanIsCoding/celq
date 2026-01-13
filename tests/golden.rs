@@ -277,6 +277,25 @@ test!(
     "true\nfalse\ntrue"
 );
 
+// Newline-Delimited JSON (NDJSON) + Parallelism
+test!(
+    ndjson_multi_line_parallel,
+    &["-j", "2", "this.value * 2"],
+    r#"{"value":1}
+{"value":2}
+{"value":3}"#,
+    "2\n4\n6"
+);
+
+test!(
+    ndjson_filter_parallel,
+    &["-j", "2", "this.age > 25"],
+    r#"{"name":"Alice","age":30}
+{"name":"Bob","age":20}
+{"name":"Charlie","age":35}"#,
+    "true\nfalse\ntrue"
+);
+
 // Multi-line JSON (pretty-printed)
 test!(
     multiline_json_object,

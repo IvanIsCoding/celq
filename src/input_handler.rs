@@ -100,18 +100,27 @@ fn handle_buffer<R: Read>(
                     return Ok(vec![last_output]);
                 }
 
-                let remaining_results: Result<Vec<_>> = rayon::ThreadPoolBuilder::new()
-                    .num_threads(num_threads)
-                    .build()
-                    .context("Failed to build thread pool")?
-                    .install(|| {
-                        lines[..last_idx]
-                            .par_iter()
-                            .map(|line| {
-                                handle_json(program, arg_variables, input_params, Some(line))
-                            })
-                            .collect()
-                    });
+                let remaining_results: Result<Vec<_>> = if num_threads == 1 {
+                    // Use regular iterator for single-threaded execution
+                    lines[..last_idx]
+                        .iter()
+                        .map(|line| handle_json(program, arg_variables, input_params, Some(line)))
+                        .collect()
+                } else {
+                    // Use Rayon for parallel execution
+                    rayon::ThreadPoolBuilder::new()
+                        .num_threads(num_threads)
+                        .build()
+                        .context("Failed to build thread pool")?
+                        .install(|| {
+                            lines[..last_idx]
+                                .par_iter()
+                                .map(|line| {
+                                    handle_json(program, arg_variables, input_params, Some(line))
+                                })
+                                .collect()
+                        })
+                };
 
                 let mut results = remaining_results?;
                 results.push(last_output);
