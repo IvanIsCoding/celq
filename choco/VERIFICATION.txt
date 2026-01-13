@@ -13,6 +13,9 @@ Instructions to verify:
 0. If you do not have GnuPG installed:
    choco install gnupg
 
+0. If you do not have the GitHub CLI installed:
+   choco install gh
+
 1. Obtain the public key from GitHub and import it:
 
    Download the key manually from:
@@ -30,6 +33,10 @@ Instructions to verify:
    Note: if you make any minor edit to VERIFICATION.txt the check will fail.
    - DO NOT change from UTF-8 to UTF-16 
    - DO NOT change newline characters
+
+3. Verify the attestation of celq.exe:
+   
+   gh attestation verify celq.exe --repo IvanIsCoding/celq
 
 3. Confirm that the provided SHA256 matches that of celq.exe:
 

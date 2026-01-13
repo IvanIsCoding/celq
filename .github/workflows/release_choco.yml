@@ -6,6 +6,11 @@ on:
     tags:
       - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
 jobs:
   release-chocolatey:
     runs-on: windows-2025
@@ -90,3 +95,9 @@ jobs:
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: choco push celq.${{ steps.get_version.outputs.VERSION }}.nupkg -s https://push.chocolatey.org/ --api-key=${{ secrets.CHOCO_API_KEY }}
         shell: cmd
+      
+      - name: Generate attestation for celq.exe
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: 'tools/celq.exe'
