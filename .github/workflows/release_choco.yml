@@ -50,16 +50,28 @@ jobs:
           copy LICENSE-MIT tools\LICENSE.txt
         shell: cmd
 
-      - name: Create VERIFICATION.txt
+      - name: Calculate SHA256 and template VERIFICATION.txt
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
-          echo "VERIFICATION" > tools\VERIFICATION.txt
-          echo "==========================================" >> tools\VERIFICATION.txt
-          echo "" >> tools\VERIFICATION.txt
-          echo "This package is built from source and published by the celq maintainers." >> tools\VERIFICATION.txt
-          echo "" >> tools\VERIFICATION.txt
-          echo "SHA256 hash of celq.exe:" >> tools\VERIFICATION.txt
-          CertUtil -hashfile tools\celq.exe SHA256 >> tools\VERIFICATION.txt
+          $hash = (CertUtil -hashfile tools\celq.exe SHA256 | Select-Object -Index 1).Trim()
+          $content = Get-Content choco\VERIFICATION.txt -Raw
+          $content = $content -replace "CELQ_SHA256_EXE", $hash
+          $content | Set-Content VERIFICATION.txt -Encoding UTF8 -NoNewline
+          echo "SHA256: $hash"
+        shell: pwsh
+
+      - name: Import GPG key
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.CHOCO_GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.CHOCO_GPG_PASSPHRASE }}
+
+      - name: Clearsign VERIFICATION.txt
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        run: |
+          gpg --clearsign --armor VERIFICATION.txt
+          move VERIFICATION.txt.asc tools\VERIFICATION.txt
         shell: cmd
 
       - name: Template nuspec file
