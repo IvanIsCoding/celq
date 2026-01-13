@@ -56,6 +56,14 @@ fn main() -> io::Result<()> {
         }
     };
 
+    #[cfg(target_os = "wasi")]
+    {
+        if cli.parallelism != 1 {
+            eprintln!("✗ Parallelism must be 1 when running in WASI environment");
+            process::exit(2);
+        }
+    }
+
     let input_params = InputParameters {
         root_var: cli.root_var,
         null_input: cli.null_input,
