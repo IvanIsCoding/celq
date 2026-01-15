@@ -177,6 +177,8 @@ tar xzf celq-x86_64-unknown-freebsd.tar.gz
 sudo mv celq /usr/local/bin/
 ```
 
+`celq` can be installed from source following the [Cargo](#cargo) section. We aim to compile with the Rust version provided in the ports tree.
+
 ## Limitations
 
 ### Eager JSON Parsing

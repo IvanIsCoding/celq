@@ -189,6 +189,8 @@ tar xzf celq-x86_64-unknown-freebsd.tar.gz
 sudo mv celq /usr/local/bin/
 ```
 
+`celq` can be installed from source following the [Cargo](#cargo) section. We aim to compile with the Rust version provided in the ports tree.
+
 ## Integrity and Authenticity
 
 `celq` publishes a `SHA256SUMS` file for each of its release in the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify integrity of the downloaded files.
