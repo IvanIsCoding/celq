@@ -1,0 +1,14 @@
+task:
+  name: FreeBSD Build and Test
+  allow_failures: true
+  freebsd_instance:
+    image_family: freebsd-14-3
+  install_script:
+    - pkg install -y rust
+  cargo_cache:
+    folder: ~/.cargo/registry
+    fingerprint_script: cat Cargo.lock
+  build_script:
+    - cargo build
+  test_script:
+    - cargo test
