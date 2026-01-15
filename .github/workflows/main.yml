@@ -162,6 +162,57 @@ jobs:
       
       - name: Build with Zig
         run: cargo zigbuild --locked --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
+      
+      - name: Upload celq binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: celq-${{ matrix.target }}
+          path: target/${{ matrix.target }}${{ matrix.zigtargetsuffix }}/debug/celq
+          retention-days: 1
+
+  test-debian-oldstable:
+    name: Test on Debian Oldstable
+    needs: zigbuild
+    runs-on: ubuntu-latest
+    container:
+      image: debian:oldstable
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download celq binary
+        uses: actions/download-artifact@v4
+        with:
+          name: celq-x86_64-unknown-linux-gnu
+          path: ./bin
+      
+      - name: Make binary executable
+        run: chmod +x ./bin/celq
+      
+      - name: Run smoke test
+        run: |
+          sh .github/scripts/smoke_test.sh ./bin/celq
+
+  test-freebsd:
+    name: Test on FreeBSD 14.3
+    needs: zigbuild
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download celq binary
+        uses: actions/download-artifact@v4
+        with:
+          name: celq-x86_64-unknown-freebsd
+          path: ./bin
+      
+      - name: Test on FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.3"
+          usesh: true
+          run: |
+            chmod +x ./bin/celq
+            sh .github/scripts/smoke_test.sh ./bin/celq
 
   coverage:
     name: Code Coverage (Ubuntu 24.04 x86-64)
