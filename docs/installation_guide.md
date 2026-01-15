@@ -170,6 +170,25 @@ nix-build
 ./result/bin/celq -n '"Hello World"'
 ```
 
+### FreeBSD
+
+FreeBSD builds are tested in [Cirrus CI](https://cirrus-ci.org/) and cross-compiled with [Zig](https://github.com/rust-cross/cargo-zigbuild). Although `celq` is not yet in the ports tree, it does publish pre-built binaries that can be installed manually:
+
+```bash
+# Set version
+VERSION=v0.2.0
+RELEASE_URL=https://github.com/IvanIsCoding/celq/releases/download/${VERSION}
+
+# Download and verify checksum
+curl -LO ${RELEASE_URL}/SHA256SUMS
+curl -LO ${RELEASE_URL}/celq-x86_64-unknown-freebsd.tar.gz
+sha256 -c SHA256SUMS --ignore-missing
+
+# Extract and install
+tar xzf celq-x86_64-unknown-freebsd.tar.gz
+sudo mv celq /usr/local/bin/
+```
+
 ## Integrity and Authenticity
 
 `celq` publishes a `SHA256SUMS` file for each of its release in the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify integrity of the downloaded files.
