@@ -30,7 +30,7 @@ Want to try `celq` without installing anything? Visit the [celq-playground](http
 
 There are implementations of CEL for [Go](https://github.com/google/cel-go), [Java](https://github.com/google/cel-java), [C++](https://github.com/google/cel-cpp), [JavaScript](https://github.com/marcbachmann/cel-js), [Python](https://github.com/cloud-custodian/cel-python), [C#](https://github.com/telus-oss/cel-net), [Rust](https://github.com/cel-rust/cel-rust), [Ruby](https://gitlab.com/os85/cel-ruby), and possibly more languages.
 
-`celq` brings the same CEL syntax to the command-line. `celq` is not necessarily better than jq, but perhaps it makes it easier to reuse snippets of code accross multiple places.
+`celq` brings the same CEL syntax to the command-line. `celq` is not necessarily better than jq, but perhaps it makes it easier to reuse snippets of code across multiple places.
 
 Moreover, the CEL specification is simpler than the jqlang specification. If you need something less powerful than `jq` or Python, then `celq` might be what you are looking for.
 
@@ -51,7 +51,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
     bash -s -- --to DESTINATION
 ```
 
-See the the [installation guide](https://docs.rs/celq/latest/celq/installation_guide) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, attestations, and more.
+See the [installation guide](https://docs.rs/celq/latest/celq/installation_guide) for more details on the installer such as `--force` to replace existing binaries, `--target` to specify which binary to download, versioned URLs, GitHub tokens, attestations, and more.
 
 ### Homebrew (macOS)
 
