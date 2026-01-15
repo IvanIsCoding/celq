@@ -37,12 +37,15 @@ echo "Repository ID: $REPO_ID"
 # Trigger the build using GraphQL mutation
 echo "Triggering build for branch $GITHUB_REF_NAME at commit $GITHUB_SHA..."
 
+# Generate a unique client mutation ID
+CLIENT_MUTATION_ID="github-actions-$(date +%s)-$$"
+
 BUILD_RESPONSE=$(curl -s -X POST \
   -H "Authorization: Bearer $CIRRUS_TOKEN" \
   -H "Content-Type: application/json" \
   "https://api.cirrus-ci.com/graphql" \
   -d "{
-    \"query\": \"mutation { createBuild(input: { repositoryId: \\\"$REPO_ID\\\", branch: \\\"$GITHUB_REF_NAME\\\", sha: \\\"$GITHUB_SHA\\\" }) { build { id } } }\"
+    \"query\": \"mutation { createBuild(input: { clientMutationId: \\\"$CLIENT_MUTATION_ID\\\", repositoryId: \\\"$REPO_ID\\\", branch: \\\"$GITHUB_REF_NAME\\\", sha: \\\"$GITHUB_SHA\\\" }) { build { id } } }\"
   }")
 
 BUILD_ID=$(echo "$BUILD_RESPONSE" | jq -r '.data.createBuild.build.id')
