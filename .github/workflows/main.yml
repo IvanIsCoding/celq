@@ -183,3 +183,32 @@ jobs:
           cargo llvm-cov \
             --locked \
             --summary-only
+  
+  cirrus:
+    name: FreeBSD (Cirrus CI)
+    needs: [build, format, clippy]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Trigger Cirrus CI build
+        id: trigger
+        env:
+          CIRRUS_TOKEN: ${{ secrets.CIRRUS_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
+          GITHUB_REPOSITORY_NAME: ${{ github.event.repository.name }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          chmod +x .github/scripts/trigger-cirrus.sh
+          .github/scripts/trigger-cirrus.sh
+      
+      - name: Wait for Cirrus CI build
+        env:
+          CIRRUS_TOKEN: ${{ secrets.CIRRUS_TOKEN }}
+          BUILD_ID: ${{ steps.trigger.outputs.build_id }}
+          TIMEOUT: 900
+          INTERVAL: 30
+        run: |
+          chmod +x .github/scripts/wait-cirrus.sh
+          .github/scripts/wait-cirrus.sh

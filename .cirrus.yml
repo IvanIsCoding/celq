@@ -1,6 +1,6 @@
 task:
   name: FreeBSD Build and Test
-  allow_failures: true
+  only_if: $CIRRUS_BUILD_SOURCE == "api"
   freebsd_instance:
     image_family: freebsd-14-3
   install_script:
