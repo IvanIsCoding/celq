@@ -131,13 +131,16 @@ jobs:
         include:
           - os: ubuntu-24.04
             arch: x86-64
-            target: x86_64-unknown-linux-gnu.2.28
+            target: x86_64-unknown-linux-gnu
+            zigtargetsuffix: .2.28
           - os: ubuntu-24.04-arm
             arch: ARM
-            target: aarch64-unknown-linux-gnu.2.28
+            target: aarch64-unknown-linux-gnu
+            zigtargetsuffix: .2.28
           - os: ubuntu-24.04
             arch: x86-64
             target: x86_64-unknown-freebsd
+            zigtargetsuffix: ""
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -158,7 +161,7 @@ jobs:
           tool: cargo-zigbuild@0.21.1
       
       - name: Build with Zig
-        run: cargo zigbuild --locked --target ${{ matrix.target }}
+        run: cargo zigbuild --locked --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
 
   coverage:
     name: Code Coverage (Ubuntu 24.04 x86-64)
