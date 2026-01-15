@@ -48,8 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install Rust 1.90.0
-        uses: dtolnay/rust-toolchain@1.90.0
+      - name: Install Rust 1.89.0
+        uses: dtolnay/rust-toolchain@1.89.0
         with:
           components: clippy
       
@@ -123,7 +123,7 @@ jobs:
           retention-days: 1
 
   zigbuild:
-    name: Zig Build (${{ matrix.arch }})
+    name: Zig Build (${{ matrix.target }})
     needs: [build, format, clippy]
     strategy:
       fail-fast: false
