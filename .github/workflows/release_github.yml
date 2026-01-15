@@ -119,9 +119,6 @@ jobs:
           # Linux ARM64 (zigbuild - glibc 2.28)
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, zigtargetsuffix: .2.28 }
 
-          # FreeBSD x86-64 (zigbuild)
-          - { target: x86_64-unknown-freebsd, os: ubuntu-24.04, zigtargetsuffix: "" }
-
     steps:
       - uses: actions/checkout@v4
 
