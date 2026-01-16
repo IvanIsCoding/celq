@@ -208,6 +208,16 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh > ins
 gh attestation verify intall.sh --repo IvanIsCoding/celq
 ```
 
+The installer also provides the `--verify-attestation` flag. After verifying the installer, run:
+
+```bash
+bash install.sh --verify-attestation
+```
+
+This way, you can guarantee that both the installer and the downloaded binaries are authentic.
+
+Running the installer with the `--verify-attestation` requires the GitHub CLI (`gh`). If `gh` is not found, the script will fail.
+
 ## Shell Script Installer Quirks
 
 By default, the installer always chooses Linux binaries that are the most portable (i.e. `musl`). It does not check the `glibc`. The `--target` flag can be convenient for those cases. Pass `--target x86_64-unknown-linux-gnu` or `aarch64-unknown-linux-gnu` if you need the glibc version.
