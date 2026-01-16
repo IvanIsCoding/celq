@@ -5,6 +5,7 @@ def main(ctx):
         {
             "name": "FreeBSD Build and Test",
             "only_if": "$CIRRUS_BUILD_SOURCE == 'api'",
+            "skip": "!changesInclude('.cirrus.star', '**.rs', '**Cargo.toml', '**Cargo.lock', '.github/workflows/main.yaml', '.cargo/**', 'src/**', 'tests/**')",
             "freebsd_instance": {
                 "image_family": FREEBSD_IMAGE
             },

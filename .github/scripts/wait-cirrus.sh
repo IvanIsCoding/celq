@@ -37,6 +37,10 @@ while [ $ELAPSED -lt $TIMEOUT ]; do
       echo "✓ Build completed successfully!"
       exit 0
       ;;
+    SKIPPED)
+      echo "○ Build was skipped (no relevant file changes)"
+      exit 0
+      ;;
     FAILED)
       echo "✗ Build failed"
       exit 1
