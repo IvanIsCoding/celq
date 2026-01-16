@@ -190,7 +190,7 @@ jobs:
       
       - name: Run smoke test
         run: |
-          sh .github/scripts/smoke_test.sh ./bin/celq
+          sh .github/scripts/smoke-test.sh ./bin/celq
 
   test-freebsd:
     name: Test on FreeBSD 14.3
@@ -212,7 +212,7 @@ jobs:
           usesh: true
           run: |
             chmod +x ./bin/celq
-            sh .github/scripts/smoke_test.sh ./bin/celq
+            sh .github/scripts/smoke-test.sh ./bin/celq
 
   coverage:
     name: Code Coverage (Ubuntu 24.04 x86-64)
@@ -245,9 +245,25 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@668c092af3649c4b664c54e4b704aa46782f6f7c # v2
+        id: filter
+        with:
+          filters: |
+            rust:
+              - '**/*.rs'
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+              - '.cirrus.star'
+              - '.github/workflows/main.yaml'
+              - '.cargo/**'
+              - 'src/**'
+              - 'tests/**'
+              - '.github/scripts/smoke-test.sh'
       
       - name: Trigger Cirrus CI build
         id: trigger
+        if: steps.filter.outputs.rust == 'true'
         env:
           CIRRUS_TOKEN: ${{ secrets.CIRRUS_TOKEN }}
           GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
@@ -259,6 +275,7 @@ jobs:
           .github/scripts/trigger-cirrus.sh
       
       - name: Wait for Cirrus CI build
+        if: steps.filter.outputs.rust == 'true'
         env:
           CIRRUS_TOKEN: ${{ secrets.CIRRUS_TOKEN }}
           BUILD_ID: ${{ steps.trigger.outputs.build_id }}
