@@ -168,16 +168,16 @@ VERSION=v0.2.0
 RELEASE_URL=https://github.com/IvanIsCoding/celq/releases/download/${VERSION}
 
 # Download and verify checksum
-curl -LO ${RELEASE_URL}/SHA256SUMS
-curl -LO ${RELEASE_URL}/celq-x86_64-unknown-freebsd.tar.gz
+fetch ${RELEASE_URL}/SHA256SUMS
+fetch ${RELEASE_URL}/celq-x86_64-unknown-freebsd.tar.gz
 sha256 -c SHA256SUMS --ignore-missing
 
 # Extract and install
 tar xzf celq-x86_64-unknown-freebsd.tar.gz
-sudo mv celq /usr/local/bin/
+sudo install -m 755 celq /usr/local/bin/
 ```
 
-`celq` can be installed from source following the [Cargo](#cargo) section. We aim to compile with the Rust version provided in the ports tree.
+`celq` can be installed from source following the [Cargo](#cargo) section. We strive to always compile with the Rust version provided in the ports tree.
 
 ## Limitations
 
