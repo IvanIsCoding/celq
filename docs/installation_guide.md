@@ -1,6 +1,6 @@
 ### Pre-built Binaries
 
-We publish pre-built binaries for Linux, macOS, and Windows in celq's [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). To install the current version for Linux or macOS, run:
+We publish pre-built binaries for Linux, macOS, FreeBSD, and Windows in celq's [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). To install the current version for Linux or macOS, run:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
