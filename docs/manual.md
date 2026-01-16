@@ -76,7 +76,7 @@ celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
 # Outputs: true
 ```
 
-Closely related formats such as NDJSON and JSON5 are also supported.
+Popular configuration formats such as JSON5, YAML, and TOML are supported. The closely related format NDJSON is also supported.
 
 ### Interactive Playground
 Want to try `celq` without installing anything? Visit the [celq-playground](https://celq-playground.github.io/) to try it in your browser!
