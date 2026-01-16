@@ -216,7 +216,7 @@ bash install.sh --verify-attestation
 
 This way, you can guarantee that both the installer and the downloaded binaries are authentic.
 
-Running the installer with the `--verify-attestation` requires the GitHub CLI (`gh`). If `gh` is not found, the script will fail.
+Running the installer with the `--verify-attestation` requires the GitHub CLI (`gh`). If `gh` is not found, the script will fail. If the user is not authenticated (`gh auth login`), the option will also fail. For scripts and non-interactive environments like CI, `gh auth login --with-token $GITHUB` is an option for authenticaitng when using this installer feature.
 
 ## Shell Script Installer Quirks
 
