@@ -30,7 +30,7 @@ FLAGS:
 OPTIONS:
     --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin]
     --target TARGET
-    --verify-attestation  Verify the binary's GitHub Actions attestation (requires GitHub CLI)
+    --verify-attestation  Verify the binary's GitHub Actions attestation (requires GitHub CLI with authentication)
 EOF
 }
 
@@ -162,9 +162,6 @@ if [ -z "${target-}" ]; then
   case $uname_target in
     aarch64-Linux) target=aarch64-unknown-linux-musl;;
     arm64-Darwin) target=aarch64-apple-darwin;;
-    armv6l-Linux) target=arm-unknown-linux-musleabihf;;
-    armv7l-Linux) target=armv7-unknown-linux-musleabihf;;
-    loongarch64-Linux) target=loongarch64-unknown-linux-musl;;
     x86_64-Darwin) target=x86_64-apple-darwin;;
     x86_64-Linux) target=x86_64-unknown-linux-musl;;
     x86_64-MINGW64_NT) target=x86_64-pc-windows-msvc;;
