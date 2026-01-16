@@ -17,7 +17,8 @@ Install a binary release of celq hosted on GitHub
 
 This script detects what platform you're on and fetches an appropriate archive from
 https://github.com/IvanIsCoding/celq/releases
-then unpacks the binaries and installs them to $CARGO_HOME/bin ($HOME/.cargo/bin or $HOME/bin)
+then unpacks the binaries and installs them to either
+$CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin.
 
 USAGE:
     install.sh [options]
@@ -29,6 +30,7 @@ FLAGS:
 OPTIONS:
     --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin]
     --target TARGET
+    --verify-attestation  Verify the binary's GitHub Actions attestation (requires GitHub CLI)
 EOF
 }
 
@@ -71,7 +73,22 @@ download() {
   fi
 }
 
+check_attestation() {
+  local archive_file="$1"
+  
+  say "Verifying attestation for $archive_file"
+  
+  if ! gh attestation verify "$archive_file" --repo IvanIsCoding/celq; then
+    say "error: attestation verification failed"
+    return 1
+  fi
+  
+  say "Attestation verification successful"
+  return 0
+}
+
 force=false
+verify_attestation=false
 while test $# -gt 0; do
   case $1 in
     --force | -f)
@@ -88,6 +105,9 @@ while test $# -gt 0; do
     --to)
       dest=$2
       shift
+      ;;
+    --verify-attestation)
+      verify_attestation=true
       ;;
     *)
       say "error: unrecognized argument '$1'. Usage:"
@@ -107,6 +127,10 @@ need mktemp
 
 if [ -z "${target-}" ]; then
   need cut
+fi
+
+if [ "$verify_attestation" = true ]; then
+  need gh
 fi
 
 if [ -z "${dest-}" ]; then
@@ -180,9 +204,22 @@ td=$(mktemp -d || mktemp -d -t tmp)
 
 if [ "$extension" = "zip" ]; then
   download "$archive" "$td/celq.zip"
-  unzip -d "$td" "$td/celq.zip"
+  archive_file="$td/celq.zip"
+  
+  if [ "$verify_attestation" = true ]; then
+    check_attestation "$archive_file" || err "Attestation verification failed"
+  fi
+  
+  unzip -d "$td" "$archive_file"
 else
-  download "$archive" - | tar -C "$td" -xz
+  download "$archive" "$td/celq.tar.gz"
+  archive_file="$td/celq.tar.gz"
+  
+  if [ "$verify_attestation" = true ]; then
+    check_attestation "$archive_file" || err "Attestation verification failed"
+  fi
+  
+  tar -C "$td" -xzf "$archive_file"
 fi
 
 if [ -e "$dest/celq" ] && [ "$force" = false ]; then
