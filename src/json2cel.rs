@@ -15,8 +15,9 @@ pub fn json_to_cel_variables(
     from_json5: bool,
     from_toml: bool,
     from_yaml: bool,
+    from_gron: bool,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
-    let json_value: JsonValue = if !slurp && !from_json5 && !from_toml && !from_yaml {
+    let json_value: JsonValue = if !slurp && !from_json5 && !from_toml && !from_yaml && !from_gron {
         serde_json::from_str(json_str)?
     } else if from_json5 {
         json5::from_str(json_str).map_err(serde_json::Error::custom)?
@@ -55,6 +56,18 @@ pub fn json_to_cel_variables(
         {
             return Err(serde_json::Error::custom(
                 "Binary was compiled without YAML support",
+            ));
+        }
+    } else if from_gron {
+        #[cfg(feature = "greppable")]
+        {
+            crate::gron_to_json(json_str).map_err(serde_json::Error::custom)?
+        }
+
+        #[cfg(not(feature = "greppable"))]
+        {
+            return Err(serde_json::Error::custom(
+                "Binary was compiled without greppable support",
             ));
         }
     } else if slurp {

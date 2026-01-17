@@ -65,6 +65,7 @@ fn handle_buffer<R: Read>(
         && !input_params.from_json5
         && !input_params.from_toml
         && !input_params.from_yaml
+        && !input_params.from_gron
     {
         // Determine thread pool size
         anyhow::ensure!(
@@ -190,6 +191,7 @@ fn handle_json(
             input_params.from_json5,
             input_params.from_toml,
             input_params.from_yaml,
+            input_params.from_gron,
         )
         .context("Failed to parse JSON input")?;
 
