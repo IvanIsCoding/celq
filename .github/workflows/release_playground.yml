@@ -35,7 +35,7 @@ jobs:
           cd celq-repo
           cargo build \
             --no-default-features \
-            --features "from-toml,from-yaml,greppable" \
+            --features "from-toml,from-yaml" \
             --release \
             --target wasm32-wasip1
           
