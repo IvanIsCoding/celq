@@ -27,10 +27,22 @@ jobs:
               TARGET: x86_64-unknown-linux-gnu,
             }
           - {
+              NAME: linux-x64,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-unknown-linux-musl,
+            }
+          - {
               NAME: linux-arm64,
               OS: ubuntu-24.04-arm,
               TOOLCHAIN: stable,
               TARGET: aarch64-unknown-linux-gnu,
+            }
+          - {
+              NAME: linux-arm64,
+              OS: ubuntu-24.04-arm,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-unknown-linux-musl,
             }
           - {
               NAME: win32-x64-msvc,
@@ -62,10 +74,19 @@ jobs:
       - name: Install Python 3.12
         run: uv python install 3.12
 
-      - name: Build Python wheels (Linux with cibuildwheel)
-        if: runner.os == 'Linux'
+      - name: Build Python wheels (Linux manylinux with Zig)
+        if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-gnu')
+        working-directory: pypi
         run: |
-          uvx cibuildwheel@3.3.1  --output-dir pypi/dist pypi
+          uv run --with maturin==1.15.1 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.1 \
+            maturin build --release --target ${{ matrix.build.TARGET }} --zig --compatibility manylinux_2_28 --out dist
+
+      - name: Build Python wheels (Linux musllinux with Zig)
+        if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-musl')
+        working-directory: pypi
+        run: |
+          uv run --with maturin==1.15.1 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.1 \
+            maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
 
       - name: Build Python wheels (Windows/macOS)
         if: runner.os != 'Linux'
