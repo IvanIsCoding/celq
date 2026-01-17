@@ -229,15 +229,21 @@ fn handle_json_output(result: &CelValue, input_params: &InputParameters) -> Resu
             let mut output = Vec::new();
             gron::json_to_gron(&mut output, "json", &json_value)
                 .context("Failed to convert to greppable format")?;
-            return String::from_utf8(output)
-                .context("Failed to convert greppable output to string");
+            let gron_output = String::from_utf8(output)
+                .context("Failed to convert greppable output to string")?;
+            // Add semicolons to each line.
+            // For some reason gron crate does not add semicolons, but the original gron CLI does.
+            let with_semicolons = gron_output
+                .lines()
+                .map(|line| format!("{};", line))
+                .collect::<Vec<_>>()
+                .join("\n");
+            return Ok(with_semicolons + "\n");
         }
 
         #[cfg(not(feature = "greppable"))]
         {
-            anyhow::bail!(
-                "Binary was compiled without greppable support",
-            );
+            anyhow::bail!("Binary was compiled without greppable support",);
         }
     }
 

@@ -724,6 +724,46 @@ fn from_file_multiline_expression() -> io::Result<()> {
     golden_test(&["--from-file", path], r#"{"a":1, "b":2, "c":3}"#, "9")
 }
 
+// Greppable output tests
+#[cfg(feature = "greppable")]
+test!(
+    greppable_simple,
+    &["-g", "-S", "this"],
+    r#"{"name":"Alice","age":30}"#,
+    r#"json = {};
+json.age = 30;
+json.name = "Alice";
+"#
+);
+
+#[cfg(feature = "greppable")]
+test!(
+    greppable_nested,
+    &["--greppable", "-S", "this"],
+    r#"{"person":{"name":"Bob","city":"NYC"},"id":1}"#,
+    r#"json = {};
+json.id = 1;
+json.person = {};
+json.person.city = "NYC";
+json.person.name = "Bob";
+"#
+);
+
+#[cfg(feature = "greppable")]
+test!(
+    greppable_json5,
+    &["--greppable", "-S", "--from-json5", "this"],
+    r#"{
+  // Comment
+  x: 10,
+  y: 20,
+}"#,
+    r#"json = {};
+json.x = 10;
+json.y = 20;
+"#
+);
+
 #[test]
 fn test_boolean_false_exit_code() -> io::Result<()> {
     let mut child = process::Command::new(env!("CARGO_BIN_EXE_celq"))
