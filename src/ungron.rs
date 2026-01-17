@@ -32,8 +32,6 @@ fn parse_and_apply_line(line: &str, root: &mut JsonValue) -> Result<()> {
         set_value_at_path(root, &path, value)?;
         Ok(())
     } else {
-        // gron occasionally emits 'const' or 'var' depending on flags,
-        // but standard gron is pure assignment.
         Err(anyhow!("Expected assignment (e.g., json.a = 1)"))
     }
 }
@@ -139,7 +137,7 @@ fn set_value_at_path(root: &mut JsonValue, path: &[PathSegment], value: JsonValu
         }
     }
 
-    // Logic Fix: Don't overwrite an existing object/array with an empty one.
+    // Don't overwrite an existing object/array with an empty one.
     if (value.is_object() && value.as_object().unwrap().is_empty() && cur.is_object())
         || (value.is_array() && value.as_array().unwrap().is_empty() && cur.is_array())
     {

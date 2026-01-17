@@ -150,6 +150,7 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [Pretty Printing](#pretty-printing)
   * [Raw Output](#raw-output)
   * [Grep friendly output](#grep-friendly-output)
+  * [Reverting filtered grep output](#reverting-filtered-grep-output)
 
 ### Reading Files
 
@@ -474,6 +475,40 @@ json.bin[0].path = "src/main.rs";
 ```
 
 If you need deterministic outputs, we recommend using the `-S` flag for sorting the output.
+
+### Reverting filtered grep output
+
+`celq` also has a `--from-gron` flag that parsers the output of `gron` and `celq --greppable`. It is equivalent to `gron -u`. That can be useful for converting output filtered by grep back to JSON.
+
+For example:
+
+```bash
+celq -g 'this' < yfinance.json | rg '\bregularMarket\w*' | celq --from-gron -S -p 'this'
+```
+
+Outputs:
+
+<details>
+<summary>ripgrep output back to JSON</summary>
+
+```json
+{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "regularMarketDayHigh": 277.825,
+          "regularMarketDayLow": 269.02,
+          "regularMarketPrice": 271.01,
+          "regularMarketTime": 1767387600
+        }
+      }
+    ]
+  }
+}
+```
+
+</details>
 
 ## Quirks
 
