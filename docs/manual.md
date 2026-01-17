@@ -476,6 +476,8 @@ json.bin[0].path = "src/main.rs";
 
 If you need deterministic outputs, we recommend using the `-S` flag for sorting the output.
 
+For NDJSON inputs, `--greppable` outputs only the last line. This happens to prevent redefinitions of the `json` variable. If you are dealing with NDJSON and want this feature, consider using the `--slurp` flag.
+
 ### Reverting filtered grep output
 
 `celq` also has a `--from-gron` flag that parsers the output of `gron` and `celq --greppable`. It is equivalent to `gron -u`. That can be useful for converting output filtered by grep back to JSON.
