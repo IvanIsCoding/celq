@@ -50,6 +50,7 @@ Options:
       --from-json5             Parse input as JSON5 instead of JSON
       --from-toml              Parse input as TOML instead of JSON
       --from-yaml              Parse input as YAML instead of JSON
+      --from-gron              Parse input as gron (greppable output) instead of JSON
   -j, --jobs <N>               Parallelism level for NDJSON inputs (number of threads, -1 for all available) [default: 1]
   -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
   -r, --raw-output             If the output is a JSON string, output it raw without quotes
