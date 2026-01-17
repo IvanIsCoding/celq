@@ -36,19 +36,19 @@ jobs:
       matrix:
         include:
           # macOS ARM64 (native)
-          - { target: aarch64-apple-darwin, os: macos-15 }
+          - { target: aarch64-apple-darwin, os: macos-15, pretty_target: macos-aarch64 }
 
           # macOS x86-64 (native)
-          - { target: x86_64-apple-darwin, os: macos-15-intel }
+          - { target: x86_64-apple-darwin, os: macos-15-intel, pretty_target: macos-x86_64 }
           
           # Windows x86-64 (native)
-          - { target: x86_64-pc-windows-msvc, os: windows-2025 }
+          - { target: x86_64-pc-windows-msvc, os: windows-2025, pretty_target: windows-x86_64 }
           
           # Linux x86-64 (native - musl static binary)
-          - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04 }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04, pretty_target: linux-x86_64-musl }
 
           # Linux ARM64 (native - musl static binary)
-          - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm, pretty_target: linux-aarch64-musl }
 
     steps:
       - uses: actions/checkout@v4
@@ -81,14 +81,14 @@ jobs:
           # Determine archive format based on platform
           case ${{ matrix.target }} in
             *-pc-windows-*)
-              # Windows: create .zip archive with just the binary name
-              ARCHIVE_NAME="${NAME}-${{ matrix.target }}.zip"
+              # Windows: create .zip archive with pretty name
+              ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.zip"
               7z a "${ARCHIVE_NAME}" "./${BIN_PATH}"
               7z rn "${ARCHIVE_NAME}" "target/${{ matrix.target }}/release/${BIN_NAME}" "${BIN_NAME}"
               ;;
             *)
-              # Linux/macOS: create .tar.gz archive
-              ARCHIVE_NAME="${NAME}-${{ matrix.target }}.tar.gz"
+              # Linux/macOS: create .tar.gz archive with pretty name
+              ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.tar.gz"
               tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}/release" "${BIN_NAME}"
               ;;
           esac
@@ -114,13 +114,13 @@ jobs:
       matrix:
         include:
           # Linux x86-64 (zigbuild - glibc 2.28)
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04, zigtargetsuffix: .2.28 }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04, zigtargetsuffix: .2.28, pretty_target: linux-x86_64-gnu }
           
           # Linux ARM64 (zigbuild - glibc 2.28)
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, zigtargetsuffix: .2.28 }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, zigtargetsuffix: .2.28, pretty_target: linux-aarch64-gnu }
 
           # FreeBSD x86-64 (zigbuild)
-          - { target: x86_64-unknown-freebsd, os: ubuntu-24.04, zigtargetsuffix: "" }
+          - { target: x86_64-unknown-freebsd, os: ubuntu-24.04, zigtargetsuffix: "", pretty_target: freebsd-x86_64 }
 
     steps:
       - uses: actions/checkout@v4
@@ -149,8 +149,8 @@ jobs:
           BIN_PATH="target/${{ matrix.target }}/release/${NAME}"
           BIN_NAME="${NAME}"
           
-          # Archive name uses base target without libc version
-          ARCHIVE_NAME="${NAME}-${{ matrix.target }}.tar.gz"
+          # Archive name uses pretty target name
+          ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.tar.gz"
           tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}/release" "${BIN_NAME}"
           
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
@@ -339,15 +339,15 @@ jobs:
           SHA256_SOURCE=$(sha256sum "/tmp/celq-source.tar.gz" | awk '{print $1}')
           echo "Source SHA256: $SHA256_SOURCE"
           
-          # Download and calculate SHA256 for ARM64 macOS binary
-          ARM64_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-aarch64-apple-darwin.tar.gz"
+          # Download and calculate SHA256 for ARM64 macOS binary (using pretty name)
+          ARM64_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-macos-aarch64.tar.gz"
           echo "Downloading ARM64 binary from: $ARM64_URL"
           curl -sL "$ARM64_URL" -o "/tmp/celq-arm64.tar.gz"
           SHA256_ARM64=$(sha256sum "/tmp/celq-arm64.tar.gz" | awk '{print $1}')
           echo "ARM64 SHA256: $SHA256_ARM64"
           
-          # Download and calculate SHA256 for x86_64 macOS binary
-          X86_64_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-x86_64-apple-darwin.tar.gz"
+          # Download and calculate SHA256 for x86_64 macOS binary (using pretty name)
+          X86_64_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-macos-x86_64.tar.gz"
           echo "Downloading x86_64 binary from: $X86_64_URL"
           curl -sL "$X86_64_URL" -o "/tmp/celq-x86_64.tar.gz"
           SHA256_X86_64=$(sha256sum "/tmp/celq-x86_64.tar.gz" | awk '{print $1}')
@@ -418,14 +418,14 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           
-          # Download the Windows binary zip
-          ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-x86_64-pc-windows-msvc.zip"
+          # Download the Windows binary zip (using pretty name)
+          ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-x86_64.zip"
           
           echo "Downloading Windows binary from: $ZIP_URL"
-          curl -sL "$ZIP_URL" -o "/tmp/celq-x86_64-pc-windows-msvc.zip"
+          curl -sL "$ZIP_URL" -o "/tmp/celq-windows-x86_64.zip"
           
           # Calculate SHA256
-          SHA256=$(sha256sum "/tmp/celq-x86_64-pc-windows-msvc.zip" | awk '{print $1}')
+          SHA256=$(sha256sum "/tmp/celq-windows-x86_64.zip" | awk '{print $1}')
           echo "Calculated SHA256: $SHA256"
           
           # Export for next step

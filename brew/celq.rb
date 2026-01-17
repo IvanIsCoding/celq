@@ -6,11 +6,11 @@ class Celq < Formula
 
   if OS.mac?
     if Hardware::CPU.arm?
-      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-aarch64-apple-darwin.tar.gz"
+      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-macos-aarch64.tar.gz"
       sha256 "{{CELQ_SHA256_ARM64}}"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-x86_64-apple-darwin.tar.gz"
+      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-macos-x86_64.tar.gz"
       sha256 "{{CELQ_SHA256_X86_64}}"
     end
   else

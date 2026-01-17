@@ -5,7 +5,7 @@
   "license": "MIT",
   "architecture": {
     "64bit": {
-      "url": "https://github.com/IvanIsCoding/celq/releases/download/v" + celq_version + "/celq-x86_64-pc-windows-msvc.zip",
+      "url": "https://github.com/IvanIsCoding/celq/releases/download/v" + celq_version + "/celq-windows-x86_64.zip",
       "hash": celq_sha256
     }
   },
@@ -16,7 +16,7 @@
   "autoupdate": {
     "architecture": {
       "64bit": {
-        "url": "https://github.com/IvanIsCoding/celq/releases/download/v$version/celq-x86_64-pc-windows-msvc.zip"
+        "url": "https://github.com/IvanIsCoding/celq/releases/download/v$version/celq-windows-x86_64.zip"
       }
     }
   }
