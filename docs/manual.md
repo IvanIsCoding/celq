@@ -98,6 +98,9 @@ Want to try `celq` without installing anything? Visit the [celq-playground](http
 
 We provide recipes with concrete examples for `celq`. During the recipes, we might refer to `yfinance.json`:
 
+<details>
+<summary>yfinance.json</summary>
+
 ```json
 {
   "chart": {
@@ -123,7 +126,29 @@ We provide recipes with concrete examples for `celq`. During the recipes, we mig
 }
 ```
 
+</details>
+
 This file contains the simplified response from the Yahoo Finance Unofficial JSON API.
+
+### Table of Contents
+
+  * [Reading Files](#reading-files)
+  * [Writing Files](#writing-files)
+  * [Output JSON](#output-json)
+  * [Reading CEL from a file](#reading-cel-from-a-file)
+  * [Dealing with NDJSON](#dealing-with-ndjson)
+  * [Slurping](#slurping)
+  * [Logical Calculator](#logical-calculator)
+  * [Renaming the root variable](#renaming-the-root-variable)
+  * [Boolean output](#boolean-output)
+  * [Chaining](#chaining)
+  * [JSON5 Support](#json5-support)
+  * [TOML Support](#toml-support)
+  * [YAML Support](#yaml-support)
+  * [YAML with multiple documents](#yaml-with-multiple-documents)
+  * [Pretty Printing](#pretty-printing)
+  * [Raw Output](#raw-output)
+  * [Grep friendly output](#grep-friendly-output)
 
 ### Reading Files
 
