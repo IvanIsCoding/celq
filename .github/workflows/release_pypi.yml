@@ -56,6 +56,12 @@ jobs:
               TOOLCHAIN: stable,
               TARGET: aarch64-apple-darwin,
             }
+          - {
+              NAME: darwin-x64,
+              OS: macos-15-intel,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-apple-darwin,
+            }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
