@@ -169,7 +169,7 @@ RELEASE_URL=https://github.com/IvanIsCoding/celq/releases/download/${VERSION}
 fetch ${RELEASE_URL}/celq-x86_64-unknown-freebsd.tar.gz
 
 tar xzf celq-x86_64-unknown-freebsd.tar.gz
-sudo install -m 755 celq /usr/local/bin/
+su root -c 'install -m 755 celq /usr/local/bin/'
 ```
 
 `celq` can also be installed from source following the [Cargo](#cargo) section. We strive to always compile with the Rust version provided in the ports tree.
