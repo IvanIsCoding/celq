@@ -72,7 +72,7 @@ impl std::str::FromStr for Argument {
     ),
     group(
         ArgGroup::new("input_format")
-            .args(&["slurp", "from_json5", "from_toml", "from_yaml"])
+            .args(&["slurp", "from_json5", "from_toml", "from_yaml", "from_gron"])
     ),
     group(
         ArgGroup::new("output_style")
@@ -119,6 +119,10 @@ pub struct Cli {
     /// Parse input as YAML instead of JSON
     #[arg(long = "from-yaml")]
     pub from_yaml: bool,
+
+    /// Parse input as gron (greppable output) instead of JSON
+    #[arg(long = "from-gron")]
+    pub from_gron: bool,
 
     /// Parallelism level for NDJSON inputs (number of threads, -1 for all available)
     #[arg(
@@ -180,6 +184,7 @@ pub struct InputParameters {
     pub from_json5: bool,
     pub from_toml: bool,
     pub from_yaml: bool,
+    pub from_gron: bool,
     pub parallelism: i32,
     pub sort_keys: bool,
     pub pretty_print: bool,

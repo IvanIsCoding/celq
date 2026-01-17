@@ -9,6 +9,7 @@ fn default_params() -> InputParameters {
         from_json5: false,
         from_toml: false,
         from_yaml: false,
+        from_gron: false,
         parallelism: -1,
         sort_keys: false,
         pretty_print: false,

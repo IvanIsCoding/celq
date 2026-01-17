@@ -22,6 +22,11 @@ pub use cli::InputParameters;
 use input_handler::handle_input;
 pub use json2cel::json_to_cel_variables;
 
+#[cfg(feature = "greppable")]
+mod ungron;
+#[cfg(feature = "greppable")]
+pub use ungron::gron_to_json;
+
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
@@ -74,6 +79,7 @@ fn main() -> io::Result<()> {
         from_json5: cli.from_json5,
         from_toml: cli.from_toml,
         from_yaml: cli.from_yaml,
+        from_gron: cli.from_gron,
         parallelism: cli.parallelism,
         sort_keys: cli.sort_keys,
         pretty_print: cli.pretty_print,
