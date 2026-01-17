@@ -64,5 +64,27 @@ bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "tgz"
 disabled-strategies = ["quick-install", "compile"]
 
+[package.metadata.binstall.overrides.aarch64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-macos-aarch64{ archive-suffix }"
+
+[package.metadata.binstall.overrides.x86_64-apple-darwin]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-macos-x86_64{ archive-suffix }"
+
 [package.metadata.binstall.overrides.x86_64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-windows-x86_64{ archive-suffix }"
 pkg-fmt = "zip"
+
+[package.metadata.binstall.overrides.x86_64-unknown-linux-musl]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-x86_64-musl{ archive-suffix }"
+
+[package.metadata.binstall.overrides.aarch64-unknown-linux-musl]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-aarch64-musl{ archive-suffix }"
+
+[package.metadata.binstall.overrides.x86_64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-x86_64-gnu{ archive-suffix }"
+
+[package.metadata.binstall.overrides.aarch64-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-aarch64-gnu{ archive-suffix }"
+
+[package.metadata.binstall.overrides.x86_64-unknown-freebsd]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-freebsd-x86_64{ archive-suffix }"

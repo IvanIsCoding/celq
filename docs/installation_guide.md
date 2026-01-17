@@ -33,7 +33,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
     bash -s -- --target x86_64-unknown-linux-gnu
 ```
 
-Will always install the binary for `x86_64-unknown-linux-gnu`.
+Will always install the binary for `x86_64-unknown-linux-gnu`. See [Rust's target triples](https://doc.rust-lang.org/beta/rustc/platform-support.html) for a list of possible options.
 
 To prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. You might also find the [GitHub Actions](#github-actions) section valuable if running in that environment.
 
