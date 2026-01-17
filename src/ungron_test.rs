@@ -51,13 +51,13 @@ json.user.age = 30;"#;
 fn test_numbers() {
     let input = r#"json = {};
 json.integer = 42;
-json.float = 3.14;
+json.float = 17.38;
 json.negative = -5;"#;
 
     let result = gron_to_json(input).unwrap();
     let expected: JsonValue = serde_json::json!({
         "integer": 42,
-        "float": 3.14,
+        "float": 17.38,
         "negative": -5
     });
 
