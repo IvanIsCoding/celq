@@ -67,10 +67,10 @@ fn extract_path(left: &AssignLeft) -> Result<Vec<PathSegment>> {
     }
 
     // Root must be 'json'
-    if let Expr::Ident(ident) = current_expr {
-        if ident.name != "json" {
-            return Err(anyhow!("Path root must be 'json', found '{}'", ident.name));
-        }
+    if let Expr::Ident(ident) = current_expr
+        && ident.name != "json"
+    {
+        return Err(anyhow!("Path root must be 'json', found '{}'", ident.name));
     }
 
     segments.reverse();
