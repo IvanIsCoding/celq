@@ -305,7 +305,7 @@ Also works as a way to output `"AAPL"` in the command, just like in the first ex
 
 ### JSON5 Support
 
-`celq` also supports [JSON5](https://json5.org/), a popular JSON extension among config files. It also indirectly supports [JSONC](https://jsonc.org/), because JSON5 is a superset of JSONC but don't quote me on that.
+`celq` supports [JSON5](https://json5.org/), a popular JSON extension among config files. It also indirectly supports [JSONC](https://jsonc.org/), because JSON5 is a superset of JSONC but don't quote me on that.
 
 To enable the JSON5 parser, pass the `--from-json5` flag. For example:
 
@@ -319,7 +319,7 @@ Notice that passing the `--from-json5` clashes with the `--slurp` flag and with 
 
 ### TOML Support
 
-`celq` also supports [TOML](https://toml.io/en/), another popular configuration format. For example, `celq` can query it's own manifest file:
+`celq` supports [TOML](https://toml.io/en/), another popular configuration format. For example, `celq` can query it's own manifest file:
 
 ```bash
 celq --from-toml 'this.package.version' < Cargo.toml
@@ -329,7 +329,7 @@ The output is `celq`'s development version.
 
 ### YAML Support
 
-`celq` also supports [YAML](https://yaml.org/), another popular configuration format. For example, `celq` can query [CEL expressions commonly defined in YAML files](https://web.archive.org/web/20251108093453/https://blog.howardjohn.info/posts/cel-is-good/) and evaluate them!
+`celq` supports [YAML](https://yaml.org/), another popular configuration format. For example, `celq` can query [CEL expressions commonly defined in YAML files](https://web.archive.org/web/20251108093453/https://blog.howardjohn.info/posts/cel-is-good/) and evaluate them!
 
 Take for example `config.yaml` with:
 

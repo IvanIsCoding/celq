@@ -219,6 +219,8 @@ By default, the installer always chooses Linux binaries that are the most portab
 
 It is worth highlighting that if no `--to` flag is specified, the installer tries to write `$CARGO_HOME/bin/celq`, `$HOME/.cargo/bin/celq`, `$HOME/.local/bin/celq` in that order. If a directory does not exist, the installer moves to the next guess. `$HOME/bin` is the final destination if none of directories exist. If the directory that `celq` was installed is not in the path, the installer will warn the user.
 
+Although unusual, the installer probably works for Windows in Git Bash (MSYS2) and Cygwin. It will detect the platform correctly and download the binaries. As of today, we do not have a Power Shell installer yet, so this option could be interesting for Windows users that do not have Chocolatey/Scoop available.
+
 ## Acknowledgments
 
 Special thanks to the maintainers of:
