@@ -29,7 +29,7 @@ FLAGS:
 
 OPTIONS:
     --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin]
-    --target TARGET
+    --target TARGET Following Rust target triple conventions (e.g. x86_64-unknown-linux-gnu).
     --verify-attestation  Verify the binary's GitHub Actions attestation (requires GitHub CLI with authentication)
 EOF
 }
@@ -85,6 +85,24 @@ check_attestation() {
   
   say "Attestation verification successful"
   return 0
+}
+
+# Map Rust target triple to pretty download name
+target_to_pretty_name() {
+  local rust_target="$1"
+  
+  case "$rust_target" in
+    aarch64-apple-darwin) echo "macos-aarch64";;
+    x86_64-apple-darwin) echo "macos-x86_64";;
+    x86_64-pc-windows-msvc) echo "windows-x86_64";;
+    x86_64-unknown-linux-musl) echo "linux-x86_64-musl";;
+    aarch64-unknown-linux-musl) echo "linux-aarch64-musl";;
+    x86_64-unknown-linux-gnu) echo "linux-x86_64-gnu";;
+    aarch64-unknown-linux-gnu) echo "linux-aarch64-gnu";;
+    *)
+      err "Unsupported target: $rust_target"
+      ;;
+  esac
 }
 
 force=false
@@ -173,12 +191,15 @@ if [ -z "${target-}" ]; then
   esac
 fi
 
+# Convert target to pretty name for download URL
+pretty_target=$(target_to_pretty_name "$target")
+
 case $target in
   x86_64-pc-windows-msvc) extension=zip; need unzip;;
   *) extension=tar.gz; need tar;;
 esac
 
-archive="$releases/download/{{CELQ_VERSION}}/$crate-$target.$extension"
+archive="$releases/download/{{CELQ_VERSION}}/$crate-$pretty_target.$extension"
 
 say "Repository:  $url"
 say "Crate:       $crate"
