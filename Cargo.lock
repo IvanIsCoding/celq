@@ -215,6 +215,7 @@ dependencies = [
  "anyhow",
  "cel",
  "clap",
+ "gron",
  "json5",
  "mimalloc",
  "rayon",
@@ -419,6 +420,16 @@ dependencies = [
  "libc",
  "r-efi",
  "wasip2",
+]
+
+[[package]]
+name = "gron"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "996e72f65a76f945873be67476d9b8239a00fd4d3b8ae76425f4c5d08a0bc479"
+dependencies = [
+ "rustc-serialize",
+ "serde_json",
 ]
 
 [[package]]
@@ -751,6 +762,12 @@ name = "regex-syntax"
 version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
+
+[[package]]
+name = "rustc-serialize"
+version = "0.3.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe834bc780604f4674073badbad26d7219cadfb4a2275802db12cbae17498401"
 
 [[package]]
 name = "rustix"

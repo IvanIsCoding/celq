@@ -73,6 +73,14 @@ impl std::str::FromStr for Argument {
     group(
         ArgGroup::new("input_format")
             .args(&["slurp", "from_json5", "from_toml", "from_yaml"])
+    ),
+    group(
+        ArgGroup::new("output_style")
+            .args(&["pretty_print", "greppable"])
+    ),
+    group(
+        ArgGroup::new("output_options")
+            .args(&["raw_output", "greppable"])
     )
 )]
 pub struct Cli {
@@ -141,6 +149,10 @@ pub struct Cli {
     #[arg(short = 'p', long = "pretty-print")]
     pub pretty_print: bool,
 
+    /// Output in a greppable format (gron style)
+    #[arg(short = 'g', long = "greppable")]
+    pub greppable: bool,
+
     /// CEL expression to evaluate
     #[arg(value_name = "expr")]
     pub expression: Option<String>,
@@ -172,4 +184,5 @@ pub struct InputParameters {
     pub sort_keys: bool,
     pub pretty_print: bool,
     pub raw_output: bool,
+    pub greppable: bool,
 }

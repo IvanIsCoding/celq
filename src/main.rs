@@ -78,6 +78,7 @@ fn main() -> io::Result<()> {
         sort_keys: cli.sort_keys,
         pretty_print: cli.pretty_print,
         raw_output: cli.raw_output,
+        greppable: cli.greppable,
     };
 
     match handle_input(&program, &arg_variables, &input_params) {

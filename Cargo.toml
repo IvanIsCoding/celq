@@ -47,6 +47,7 @@ mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = 
 json5 = "0.4"
 toml = { version = "=0.9.8", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
 serde-saphyr = { version = "=0.0.14", default-features = false, optional = true }
+gron = "=0.4.0"
 
 [dev-dependencies]
 tempfile = "3"
