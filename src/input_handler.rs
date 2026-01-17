@@ -210,12 +210,38 @@ fn handle_json(
     let is_truthy = is_cel_value_truthy(&result);
 
     // Convert result to JSON string
-    let mut json_value = cel_value_to_json_value(&result);
+    let output_string = handle_json_output(&result, input_params)?;
+
+    Ok((output_string, is_truthy))
+}
+
+fn handle_json_output(result: &CelValue, input_params: &InputParameters) -> Result<String> {
+    let mut json_value = cel_value_to_json_value(result);
 
     if input_params.sort_keys {
         sort_keys_recursive(&mut json_value);
     }
 
+    // Handle greppable output
+    if input_params.greppable {
+        #[cfg(feature = "greppable")]
+        {
+            let mut output = Vec::new();
+            gron::json_to_gron(&mut output, "json", &json_value)
+                .context("Failed to convert to greppable format")?;
+            return String::from_utf8(output)
+                .context("Failed to convert greppable output to string");
+        }
+
+        #[cfg(not(feature = "greppable"))]
+        {
+            anyhow::bail!(
+                "Binary was compiled without greppable support",
+            );
+        }
+    }
+
+    // Handle regular output
     let output_string = if let serde_json::Value::String(s) = &json_value {
         if input_params.raw_output {
             s.clone()
@@ -228,7 +254,7 @@ fn handle_json(
         serde_json::to_string(&json_value).context("Failed to serialize result to JSON")?
     };
 
-    Ok((output_string, is_truthy))
+    Ok(output_string)
 }
 
 /// Determine if a CEL value is truthy
