@@ -1,4 +1,5 @@
-use cel::objects::{Key, Value as CelValue};
+use cel::objects::Key;
+use cel::objects::Value as CelValue;
 use serde_json::Value as JsonValue;
 
 /// Convert a CEL value to a serde_json::Value

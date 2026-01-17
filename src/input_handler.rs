@@ -1,10 +1,16 @@
-use anyhow::{Context as AnyhowContext, Result};
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
+use cel::Context;
+use cel::Program;
 use cel::objects::Value as CelValue;
-use cel::{Context, Program};
 use rayon::prelude::*;
 use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
-use std::io::{self, BufRead, BufReader, Cursor, Read};
+use std::io::BufRead;
+use std::io::BufReader;
+use std::io::Cursor;
+use std::io::Read;
+use std::io::{self};
 
 use crate::InputParameters;
 use crate::cel_value_to_json_value;

@@ -1,4 +1,6 @@
-use anyhow::{Context, Result, bail};
+use anyhow::Context;
+use anyhow::Result;
+use anyhow::bail;
 use cel::objects::Value as CelValue;
 use std::collections::BTreeMap;
 use std::sync::Arc;

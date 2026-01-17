@@ -1,9 +1,12 @@
-use anyhow::{Context, Result};
+use anyhow::Context;
+use anyhow::Result;
 use cel::Program;
 use cel::parser::ParseErrors;
 use clap::Parser;
+use std::fs;
+use std::io;
 use std::path::PathBuf;
-use std::{fs, io, process};
+use std::process;
 
 mod args2cel;
 mod cel2json;

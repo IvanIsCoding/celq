@@ -1,7 +1,9 @@
-use cel::objects::{Key, Value as CelValue};
+use cel::objects::Key;
+use cel::objects::Value as CelValue;
 use serde::de::Error as _;
 use serde_json::Value as JsonValue;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Convert a JSON string into a BTreeMap of CEL values.

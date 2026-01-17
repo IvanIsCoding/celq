@@ -20,8 +20,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+use std::env;
 use std::fs;
-use std::{env, io, process, str};
+use std::io;
+use std::process;
+use std::str;
 use tempfile::NamedTempFile;
 
 fn golden_test(args: &[&str], input: &str, out_ex: &str) -> io::Result<()> {
