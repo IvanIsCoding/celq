@@ -56,6 +56,7 @@ Options:
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
   -p, --pretty-print
+  -g, --greppable              Output in a greppable format (gron style)
   -h, --help                   Print help
   -V, --version                Print version
 ```
@@ -411,6 +412,42 @@ grocery_list_cli --item $FRUIT --quantity 5
 ```
 
 `celq`'s output will be saved to the `FRUIT` environment variable as `apples`. That variable can then be used with other commands.
+
+### Grep friendly output
+
+`celq` has a `--greppable` flag that is inspired by [gron](https://github.com/tomnomnom/gron). If you pass `-g` or `--greppable`, the usual JSON output is converted to a format that can be more easily queried by grep or [ripgrep](https://github.com/BurntSushi/ripgrep).
+
+For example, to chain `celq` with ripgrep to find all fields containing `regularMarket`:
+```bash
+celq -g 'this' < yfinance.json | rg '\bregularMarket\w*'
+```
+
+Outputs:
+```none
+json.chart.result[0].meta.regularMarketDayHigh = 277.825;
+json.chart.result[0].meta.regularMarketDayLow = 269.02;
+json.chart.result[0].meta.regularMarketPrice = 271.01;
+json.chart.result[0].meta.regularMarketTime = 1767387600;
+```
+
+One interesting property about `--greppable` is that the output is valid JavaScript code. This unlocks use cases such as embedding TOML, YAML, and JSON5 configs as JavaScript source code. For example:
+
+```bash
+celq --from-toml -g -S 'this' < Cargo.toml > cargo_toml.js
+```
+
+Writes the following to `cargo_toml.js`:
+
+```javacript
+json = {};
+json.bin = [];
+json.bin[0] = {};
+json.bin[0].name = "celq";
+json.bin[0].path = "src/main.rs";
+/* Many lines follow */
+```
+
+If you need deterministic outputs, we recommend using the `-S` flag for sorting the output.
 
 ## Quirks
 
