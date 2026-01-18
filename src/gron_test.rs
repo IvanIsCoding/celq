@@ -69,14 +69,14 @@ fn test_primitives() {
         "null_val": null,
         "bool_val": true,
         "num_val": 42,
-        "float_val": 3.14
+        "float_val": 17.38
     });
 
     let result = json_to_gron(&value);
     assert!(result.contains(r#"json.null_val = null;"#));
     assert!(result.contains(r#"json.bool_val = true;"#));
     assert!(result.contains(r#"json.num_val = 42;"#));
-    assert!(result.contains(r#"json.float_val = 3.14;"#));
+    assert!(result.contains(r#"json.float_val = 17.38;"#));
 }
 
 #[test]
