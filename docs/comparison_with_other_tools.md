@@ -14,6 +14,7 @@
 
 * [yq](https://github.com/mikefarah/yq/) supports formats like XML and HCL that celq does not.
 * yq's syntax is inspired by jqlang. 
+* yq can output YAML while celq is focused on JSON.
 * [yqlib](https://pkg.go.dev/github.com/mikefarah/yq/v4/pkg/yqlib) can be reused in Golang only.
 * yq is less hermetic than celq by default. That can be mitigated with the `--security-disable-env-ops ` and `--security-disable-file-ops` flags
 
@@ -22,6 +23,7 @@
 * [jaq](https://github.com/01mf02/jaq) uses jqlang, as it is a Rust clone of `jq`
 * jqlang can be reused in Rust with [jaq-std](https://crates.io/crates/jaq-std). CEL can be reused in Rust with [cel-rust](https://crates.io/crates/cel/0.12.0).
 * jaq supports formats like XML and CBOR that celq does not support.
+* jaq can output formats like XML and YAML, while celq is focused on JSON.
 * jaq did not support JSON5 when `celq` was originally written (but this could trivially be added to jaq)
 * Until benchmarks come out, assume that jaq is faster than celq
 * celq can process JSON Lines in parallel, while jaq cannot (but this could trivially be added to jaq)
@@ -41,6 +43,7 @@
 * celq can use the `--from-gron` flag to achieve the same behavior as ungron
 * gron has been rewritten in C++, see [fastgron](https://github.com/adamritter/fastgron).
 * gron did not support JSON5 when celq was originally written.
+* gron sorts the output by default while celq does not.
 
 ## jsonnet vs celq
 
