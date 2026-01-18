@@ -857,6 +857,42 @@ json.a.b.c.d[0].e = "deep";
     r#"{"a":{"b":{"c":{"d":[{"e":"deep"}]}}}}"#
 );
 
+// Slice extension tests
+test!(
+    slice_basic,
+    &["this.items.slice(1, 3)"],
+    r#"{"items":[1,2,3,4,5]}"#,
+    "[2,3]"
+);
+
+test!(
+    slice_negative_indices,
+    &["this.items.slice(-3, -1)"],
+    r#"{"items":[10,20,30,40,50]}"#,
+    "[30,40]"
+);
+
+test!(
+    slice_from_start,
+    &["this.items.slice(0, 2)"],
+    r#"{"items":["a","b","c","d"]}"#,
+    r#"["a","b"]"#
+);
+
+test!(
+    slice_beyond_bounds,
+    &["this.items.slice(2, 100)"],
+    r#"{"items":[1,2,3]}"#,
+    "[3]"
+);
+
+test!(
+    slice_negative_to_positive,
+    &["this.items.slice(-5, 4)"],
+    r#"{"items":[5,10,15,20,25,30]}"#,
+    "[10,15,20]"
+);
+
 #[test]
 fn test_boolean_false_exit_code() -> io::Result<()> {
     let mut child = process::Command::new(env!("CARGO_BIN_EXE_celq"))

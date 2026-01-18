@@ -15,6 +15,7 @@ use std::io::{self};
 use crate::InputParameters;
 use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
+use crate::slice_extension;
 
 /// Process input from stdin and execute the CEL program
 ///
@@ -174,6 +175,7 @@ fn handle_json(
 ) -> Result<(String, bool)> {
     // Create context with default values
     let mut context = Context::default();
+    context.add_function("slice", slice_extension::slice);
 
     // Add argument variables to context
     for (name, value) in arg_variables {

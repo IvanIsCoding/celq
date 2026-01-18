@@ -13,6 +13,7 @@ mod cel2json;
 mod cli;
 mod input_handler;
 mod json2cel;
+pub mod slice_extension;
 
 use args2cel::args_to_cel_variables;
 pub use cel2json::cel_value_to_json_value;
