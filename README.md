@@ -34,6 +34,8 @@ There are implementations of CEL for [Go](https://github.com/google/cel-go), [Ja
 
 Moreover, the CEL specification is simpler than the jqlang specification. If you need something less powerful than `jq` or Python, then `celq` might be what you are looking for.
 
+Check our [comparison with other tools](https://docs.rs/celq/latest/celq/comparison_with_other_tools) for more details.
+
 ## Installation
 
 ### Pre-built Binaries
