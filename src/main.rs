@@ -27,6 +27,11 @@ mod ungron;
 #[cfg(feature = "greppable")]
 pub use ungron::gron_to_json;
 
+#[cfg(feature = "greppable")]
+mod gron;
+#[cfg(feature = "greppable")]
+pub use gron::json_to_gron;
+
 #[cfg(feature = "mimalloc")]
 #[global_allocator]
 static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
