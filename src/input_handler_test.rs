@@ -15,6 +15,7 @@ fn default_params() -> InputParameters {
         pretty_print: false,
         raw_output: false,
         greppable: false,
+        no_extensions: false,
     }
 }
 

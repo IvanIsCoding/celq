@@ -91,6 +91,7 @@ fn main() -> io::Result<()> {
         pretty_print: cli.pretty_print,
         raw_output: cli.raw_output,
         greppable: cli.greppable,
+        no_extensions: cli.no_extensions,
     };
 
     match handle_input(&program, &arg_variables, &input_params) {

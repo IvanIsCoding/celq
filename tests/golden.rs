@@ -917,3 +917,29 @@ fn test_boolean_false_exit_code() -> io::Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn test_slice_fails_without_extensions() -> io::Result<()> {
+    let mut child = process::Command::new(env!("CARGO_BIN_EXE_celq"))
+        .args(["--no-extensions", "this.items.slice(0, 2)"])
+        .stdin(process::Stdio::piped())
+        .stdout(process::Stdio::piped())
+        .stderr(process::Stdio::piped())
+        .spawn()?;
+
+    // Write test input
+    if let Some(mut stdin) = child.stdin.take() {
+        use std::io::Write;
+        stdin.write_all(br#"{"items":[1,2,3,4,5]}"#)?;
+    }
+
+    let output = child.wait_with_output()?;
+
+    // Check that the command failed (non-zero exit code)
+    assert!(
+        !output.status.success(),
+        "Expected command to fail without extensions, but it succeeded"
+    );
+
+    Ok(())
+}

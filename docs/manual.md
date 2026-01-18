@@ -33,6 +33,9 @@ See the [installation guide](`crate::installation_guide`) for installation instr
 
 ## Overview
 
+<details>
+<summary>celq command line options</summary>
+
 ```none
 A CEL command-line query tool for JSON data
 
@@ -56,11 +59,14 @@ Options:
   -r, --raw-output             If the output is a JSON string, output it raw without quotes
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
-  -p, --pretty-print
+  -p, --pretty-print           Output JSON with identation and line breaks for human readability
   -g, --greppable              Output in a greppable format (gron style)
+      --no-extensions          Disable extensions and use only standard CEL functions
   -h, --help                   Print help
   -V, --version                Print version
 ```
+
+</details>
 
 ## Quick Start
 
@@ -137,6 +143,7 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [Reading Files](#reading-files)
   * [Writing Files](#writing-files)
   * [Output JSON](#output-json)
+  * [Slicing lists](#slicing-lists)
   * [Reading CEL from a file](#reading-cel-from-a-file)
   * [Dealing with NDJSON](#dealing-with-ndjson)
   * [Slurping](#slurping)
@@ -196,6 +203,19 @@ Notice that by default `celq` does not guarantee the key order of the output. If
 ```bash
 cat yfinance.json | celq --sort-keys '{"symbol": this.chart.result[0].meta.longName, "price": this.chart.result[0].meta.regularMarketPrice}'
 ```
+
+### Slicing lists
+
+`celq` implements the popular slice extension for CEL. For example:
+
+```bash
+echo '["apples", "bananas", "blueberry"]' | celq 'this.slice(1, 3)'
+# Outputs: ["bananas", "blueberry"]
+```
+
+Slicing follows Python conventions: it is 0-indexed and works with negative indices. The `.slice()` calls always requires two arguments. If you need to slice until the end of the list, do `this.slice(pos, size(this.slice))`. Similarly, do `this.slice(0, pos)` to start from the beginning.
+
+If you want to keep your CEL code portable, pass the `--no-extensions` arguments to disable slicing and all other extensions.
 
 ### Reading CEL from a file
 

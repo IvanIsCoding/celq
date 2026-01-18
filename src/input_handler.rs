@@ -175,7 +175,10 @@ fn handle_json(
 ) -> Result<(String, bool)> {
     // Create context with default values
     let mut context = Context::default();
-    context.add_function("slice", slice_extension::slice);
+
+    if !input_params.no_extensions {
+        context.add_function("slice", slice_extension::slice);
+    }
 
     // Add argument variables to context
     for (name, value) in arg_variables {

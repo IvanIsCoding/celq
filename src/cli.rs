@@ -150,12 +150,17 @@ pub struct Cli {
     #[arg(short = 'f', long = "from-file", value_name = "FILE")]
     pub from_file: Option<std::path::PathBuf>,
 
+    /// Output JSON with identation and line breaks for human readability
     #[arg(short = 'p', long = "pretty-print")]
     pub pretty_print: bool,
 
     /// Output in a greppable format (gron style)
     #[arg(short = 'g', long = "greppable")]
     pub greppable: bool,
+
+    /// Disable extensions and use only standard CEL functions
+    #[arg(long = "no-extensions")]
+    pub no_extensions: bool,
 
     /// CEL expression to evaluate
     #[arg(value_name = "expr")]
@@ -190,4 +195,5 @@ pub struct InputParameters {
     pub pretty_print: bool,
     pub raw_output: bool,
     pub greppable: bool,
+    pub no_extensions: bool,
 }
