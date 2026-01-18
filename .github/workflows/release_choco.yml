@@ -28,8 +28,7 @@ jobs:
         id: get_version
         run: |
           cargo build --release
-          $RELEASE_VERSION = target\release\celq.exe --from-toml "this.package.version" | Select-Object -First 1
-          $RELEASE_VERSION = $RELEASE_VERSION.Trim('"')
+          $RELEASE_VERSION = Get-Content cargo.toml -Raw | target\release\celq.exe --from-toml --raw-output "this.package.version" | Select-Object -First 1
           echo "VERSION=$RELEASE_VERSION" >> $env:GITHUB_OUTPUT
           echo "Release version: $RELEASE_VERSION"
         shell: pwsh
