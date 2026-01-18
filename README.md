@@ -212,6 +212,7 @@ Special thanks to the maintainers of:
 - **[cel-rust](https://github.com/cel-rust/cel-rust)** for providing the CEL evaluation engine that powers `celq`
 - **[cel-python](https://github.com/cloud-custodian/cel-python)** for publishing their CLI. `celq` has heavily drawn from their interface
 - **[jaq](https://github.com/01mf02/jaq)** for giving an excellent blueprint on how to test a Rust CLI
+- **[gron](https://github.com/tomnomnom/gron)** for greppable JSON
 
 ## Large Language Models Disclosure
 
