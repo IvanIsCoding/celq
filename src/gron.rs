@@ -28,11 +28,12 @@ use std::fmt::Write;
 /// Convert a JSON value to gron format
 pub fn json_to_gron(value: &JsonValue) -> String {
     let mut output = String::new();
-    gron_recursive(value, "json", &mut output);
+    let mut path = String::from("json");
+    gron_recursive(value, &mut path, &mut output);
     output
 }
 
-fn gron_recursive(value: &JsonValue, path: &str, output: &mut String) {
+fn gron_recursive(value: &JsonValue, path: &mut String, output: &mut String) {
     match value {
         JsonValue::Null => {
             writeln!(output, "{} = null;", path).unwrap();
@@ -49,15 +50,19 @@ fn gron_recursive(value: &JsonValue, path: &str, output: &mut String) {
         JsonValue::Array(arr) => {
             writeln!(output, "{} = [];", path).unwrap();
             for (i, item) in arr.iter().enumerate() {
-                let new_path = format!("{}[{}]", path, i);
-                gron_recursive(item, &new_path, output);
+                let prefix_len = path.len();
+                write!(path, "[{}]", i).unwrap();
+                gron_recursive(item, path, output);
+                path.truncate(prefix_len);
             }
         }
         JsonValue::Object(obj) => {
             writeln!(output, "{} = {{}};", path).unwrap();
             for (key, val) in obj.iter() {
-                let new_path = format_path_segment(path, key);
-                gron_recursive(val, &new_path, output);
+                let prefix_len = path.len();
+                append_path_segment(path, key);
+                gron_recursive(val, path, output);
+                path.truncate(prefix_len);
             }
         }
     }
@@ -88,13 +93,13 @@ fn is_valid_identifier(s: &str) -> bool {
     false
 }
 
-/// Format a path segment, using dot notation for valid identifiers,
+/// Append a path segment to the existing path buffer, using dot notation for valid identifiers,
 /// bracket notation with quotes for everything else
-fn format_path_segment(current_path: &str, key: &str) -> String {
+fn append_path_segment(path: &mut String, key: &str) {
     if is_valid_identifier(key) {
-        format!("{}.{}", current_path, key)
+        write!(path, ".{}", key).unwrap();
     } else {
-        format!("{}[{}]", current_path, escape_string(key))
+        write!(path, "[{}]", escape_string(key)).unwrap();
     }
 }
 
