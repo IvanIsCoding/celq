@@ -8,39 +8,23 @@ CELQ_SHA256_EXE
 
 ---
 
-Instructions to verify:
+To verify the binary, confirm that celq.exe's SHA256 matches
+the SHA256 reported on the attestation URL:
+CELQ_ATTESTATION_URL
 
-0. If you do not have GnuPG installed:
-   choco install gnupg
+
+Alternatively, this can be done via the command line:
 
 0. If you do not have the GitHub CLI installed:
    choco install gh
 
-1. Obtain the public key from GitHub and import it:
+1. Authenticate the GitHub CLI, if you haven't done so:
+   gh auth login
 
-   Download the key manually from:
-   https://github.com/IvanIsCoding/celq/blob/main/.github/keys/chocolatey-public-key.asc?raw=true
-   Then run:
-   gpg --import chocolatey-public-key.asc
-
-2. Validate that this VERIFICATION.txt file has not been tampered with:
-
-   gpg --verify VERIFICATION.txt
-
-   You should see: `Good signature from "celq (For Chocolatey releases) <get-celq@proton.me>"`
-   Possibly followed by `WARNING: This key is not certified with a trusted signature!`
-
-   Note: if you make any minor edit to VERIFICATION.txt the check will fail.
-   - DO NOT change from UTF-8 to UTF-16 
-   - DO NOT change newline characters
-
-3. Verify the attestation of celq.exe:
+2. Verify the attestation of celq.exe:
    
    gh attestation verify celq.exe --repo IvanIsCoding/celq
 
-3. Confirm that the provided SHA256 matches that of celq.exe:
-
-   CertUtil -hashfile celq.exe SHA256
-
-   Compare the output hash with the SHA256 listed in VERIFICATION.txt.
-   They must match exactly.
+This message has been signed with celq's private key. To verify it has not been tampered,
+you can use the following publick key shared in the repository:
+https://github.com/IvanIsCoding/celq/blob/main/.github/keys/chocolatey-public-key.asc?raw=true
