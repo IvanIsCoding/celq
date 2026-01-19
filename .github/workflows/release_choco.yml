@@ -39,8 +39,10 @@ jobs:
           $VERSION = "${{ steps.get_version.outputs.VERSION }}"
           if ($VERSION -match "(alpha|beta|rc)") {
             echo "IS_PRERELEASE=true" >> $env:GITHUB_OUTPUT
+            echo "Detected pre-release version: $VERSION"
           } else {
             echo "IS_PRERELEASE=false" >> $env:GITHUB_OUTPUT
+            echo "Detected stable version: $VERSION"
           }
         shell: pwsh
 
@@ -63,7 +65,7 @@ jobs:
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
           # Calculate SHA
-          $hash = (Get-FileHash tools\celq.exe -Algorithm SHA256).Hash.ToLower()
+          $hash = (CertUtil -hashfile tools\celq.exe SHA256 | Select-Object -Index 1).Trim()
           
           # Get the specific attestation URL from the previous step's output
           $attestationUrl = "${{ steps.attest_exe.outputs.attestation-url }}"
