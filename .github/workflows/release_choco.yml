@@ -1,10 +1,10 @@
 name: Release to Chocolatey
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch:
   push:
     tags:
-      - "v[0-9]*"      # Trigger on version tags like v1.0.0
+      - "v[0-9]*"
 
 permissions:
   contents: read
@@ -39,29 +39,43 @@ jobs:
           $VERSION = "${{ steps.get_version.outputs.VERSION }}"
           if ($VERSION -match "(alpha|beta|rc)") {
             echo "IS_PRERELEASE=true" >> $env:GITHUB_OUTPUT
-            echo "Detected pre-release version: $VERSION"
           } else {
             echo "IS_PRERELEASE=false" >> $env:GITHUB_OUTPUT
-            echo "Detected stable version: $VERSION"
           }
         shell: pwsh
 
       - name: Prepare Chocolatey package structure
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
-          mkdir tools
-          copy target\release\celq.exe tools\
-          copy LICENSE-MIT tools\LICENSE.txt
-        shell: cmd
+          New-Item -ItemType Directory -Force -Path tools
+          Copy-Item target\release\celq.exe -Destination tools\
+          Copy-Item LICENSE-MIT -Destination tools\LICENSE.txt
+        shell: pwsh
 
-      - name: Calculate SHA256 and template VERIFICATION.txt
+      - name: Generate attestation for celq.exe
+        id: attest_exe
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: 'tools/celq.exe'
+
+      - name: Template VERIFICATION.txt
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
-          $hash = (CertUtil -hashfile tools\celq.exe SHA256 | Select-Object -Index 1).Trim()
+          # Calculate SHA
+          $hash = (Get-FileHash tools\celq.exe -Algorithm SHA256).Hash.ToLower()
+          
+          # Get the specific attestation URL from the previous step's output
+          $attestationUrl = "${{ steps.attest_exe.outputs.attestation-url }}"
+
           $content = Get-Content choco\VERIFICATION.txt -Raw
           $content = $content -replace "CELQ_SHA256_EXE", $hash
+          $content = $content -replace "CELQ_ATTESTATION_URL", $attestationUrl
+          
           $content | Set-Content VERIFICATION.txt -Encoding UTF8 -NoNewline
+          
           echo "SHA256: $hash"
+          echo "Attestation URL: $attestationUrl"
         shell: pwsh
 
       - name: Import GPG key
@@ -75,7 +89,7 @@ jobs:
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
           gpg --clearsign --armor --output VERIFICATION.txt.asc VERIFICATION.txt
-          Move-Item VERIFICATION.txt.asc tools\VERIFICATION.txt
+          Move-Item VERIFICATION.txt.asc tools\VERIFICATION.txt -Force
         shell: pwsh
 
       - name: Template nuspec file
@@ -94,12 +108,6 @@ jobs:
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: choco push celq.${{ steps.get_version.outputs.VERSION }}.nupkg -s https://push.chocolatey.org/ --api-key=${{ secrets.CHOCO_API_KEY }}
         shell: cmd
-      
-      - name: Generate attestation for celq.exe
-        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: 'tools/celq.exe'
       
       - name: Generate attestation for Chocolatey package
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
