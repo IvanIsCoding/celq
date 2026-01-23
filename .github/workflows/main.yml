@@ -169,6 +169,35 @@ jobs:
           name: celq-${{ matrix.target }}
           path: target/${{ matrix.target }}/debug/celq
           retention-days: 1
+  
+  zigbuild-unstable:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Rust nightly
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        toolchain: nightly-2025-08-01
+        components: rust-src
+    
+    - name: Install Zig
+      uses: mlugg/setup-zig@v2
+      with:
+        version: 0.15.2
+      
+    - name: Install cargo-zigbuild via cargo-binstall
+      uses: taiki-e/install-action@v2
+      with:
+        tool: cargo-zigbuild@0.21.1
+    
+    - name: Build for FreeBSD aarch64
+      run: |
+        cargo +nightly zigbuild \
+          --target aarch64-unknown-freebsd \
+          --release \
+          -Zbuild-std=std,panic_abort
 
   test-debian-oldstable:
     name: Test on Debian Oldstable
