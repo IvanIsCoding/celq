@@ -171,6 +171,7 @@ jobs:
           retention-days: 1
   
   zigbuild-unstable:
+    needs: [build, format, clippy]
     runs-on: ubuntu-latest
     
     steps:
@@ -194,6 +195,7 @@ jobs:
     
     - name: Build for FreeBSD aarch64
       run: |
+        rustup default nightly-2025-08-01
         cargo +nightly zigbuild \
           --target aarch64-unknown-freebsd \
           --release \
