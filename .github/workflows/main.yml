@@ -196,6 +196,7 @@ jobs:
     - name: Build for FreeBSD aarch64
       run: |
         rustup default nightly-2025-08-01
+        rustup component add rust-src --toolchain nightly-aarch64-unknown-freebsd
         cargo +nightly zigbuild \
           --target aarch64-unknown-freebsd \
           --release \
@@ -286,7 +287,7 @@ jobs:
               - '**/Cargo.toml'
               - '**/Cargo.lock'
               - '.cirrus.star'
-              - '.github/workflows/main.yaml'
+              - '.github/workflows/main.yml'
               - '.cargo/**'
               - 'src/**'
               - 'tests/**'
