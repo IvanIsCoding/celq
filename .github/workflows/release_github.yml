@@ -122,9 +122,6 @@ jobs:
           # FreeBSD x86-64 (zigbuild)
           - { target: x86_64-unknown-freebsd, os: ubuntu-24.04, zigtargetsuffix: "", pretty_target: freebsd-x86_64 }
 
-          # FreeBSD ARM64 (zigbuild)
-          - { target: aarch64-unknown-freebsd, os: ubuntu-24.04, zigtargetsuffix: "", pretty_target: freebsd-aarch64 }
-
     steps:
       - uses: actions/checkout@v4
 

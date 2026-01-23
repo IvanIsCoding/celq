@@ -141,10 +141,6 @@ jobs:
             arch: x86-64
             target: x86_64-unknown-freebsd
             zigtargetsuffix: ""
-          - os: ubuntu-24.04-arm
-            arch: ARM
-            target: aarch64-unknown-freebsd
-            zigtargetsuffix: ""
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

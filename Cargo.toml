@@ -91,6 +91,3 @@ pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-aarch64-gnu{ a
 
 [package.metadata.binstall.overrides.x86_64-unknown-freebsd]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-freebsd-x86_64{ archive-suffix }"
-
-[package.metadata.binstall.overrides.aarch64-unknown-freebsd]
-pkg-url = "{ repo }/releases/download/v{ version }/{ name }-freebsd-aarch64{ archive-suffix }"
