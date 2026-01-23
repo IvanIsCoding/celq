@@ -196,11 +196,13 @@ jobs:
     - name: Build for FreeBSD aarch64
       run: |
         rustup default nightly-2025-08-01
-        rustup component add rust-src --toolchain nightly-aarch64-unknown-freebsd
-        cargo +nightly zigbuild \
+        rustup component add rust-src --toolchain nightly-2025-08-01
+        rustup target add aarch64-unknown-freebsd --toolchain nightly-2025-08-01
+        cargo +nightly-2025-08-01 zigbuild \
           --target aarch64-unknown-freebsd \
           --release \
-          -Zbuild-std=std,panic_abort
+          -Zbuild-std=std,panic_abort \
+          -Zbuild-std-features=panic_immediate_abort
 
   test-debian-oldstable:
     name: Test on Debian Oldstable
