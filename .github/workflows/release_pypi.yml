@@ -84,7 +84,7 @@ jobs:
         if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-gnu')
         working-directory: pypi
         run: |
-          uvx --from maturin==1.11.5 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.1 \
+          uvx --from maturin==1.11.5 --with ziglang==0.15.2 --with cargo-zigbuild==0.21.1 \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --compatibility manylinux_2_28 --out dist
 
       - name: Build Python wheels (Linux musllinux with Zig)
@@ -93,7 +93,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-          uvx --from maturin==1.11.5 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.1 \
+          uvx --from maturin==1.11.5 --with ziglang==0.15.2 --with cargo-zigbuild==0.21.1 \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
 
       - name: Build Python wheels (Windows/macOS)
