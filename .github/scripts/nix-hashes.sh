@@ -25,42 +25,42 @@ echo "Calculating hashes for celq v$NEW_VERSION"
 echo "================================================"
 echo
 
-# Create temporary file
-TMP_FILE="$NIX_FILE.tmp"
-cp "$NIX_FILE" "$TMP_FILE"
-
-# Update version in temporary file
-sed -i.bak "s/version = \"[^\"]*\";/version = \"$NEW_VERSION\";/" "$TMP_FILE"
-echo "Step 1: Updated version to $NEW_VERSION in temporary file"
-echo
-
-# Replace main file temporarily
+# Backup the original file first
 BACKUP_FILE="$NIX_FILE.backup"
-mv "$NIX_FILE" "$BACKUP_FILE"
-mv "$TMP_FILE" "$NIX_FILE"
+cp "$NIX_FILE" "$BACKUP_FILE"
 
 # Function to restore original file on exit
 cleanup() {
     if [ -f "$BACKUP_FILE" ]; then
-        mv "$BACKUP_FILE" "$NIX_FILE"
-        rm -f "$NIX_FILE.bak" "$TMP_FILE.bak" 2>/dev/null || true
+        cp "$BACKUP_FILE" "$NIX_FILE"
+        rm -f "$BACKUP_FILE"
+        rm -f "$NIX_FILE.bak" 2>/dev/null || true
         echo
         echo "✓ Original file restored"
     fi
 }
 trap cleanup EXIT
 
+# Step 1: Update version
+echo "Step 1: Updating version to $NEW_VERSION"
+sed -i.bak "s/version = \"[^\"]*\";/version = \"$NEW_VERSION\";/" "$NIX_FILE"
+rm -f "$NIX_FILE.bak"
+echo
+
 # Step 2: Calculate fetchCrate hash
 echo "Step 2: Calculating fetchCrate hash..."
 echo "(This may take a moment...)"
 
 set +e
-BUILD_OUTPUT=$(nix build .#celq 2>&1)
-FETCH_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | head -1)
+BUILD_OUTPUT=$(nix build . 2>&1)
+BUILD_EXIT=$?
 set -e
 
+# Extract hash from build output
+FETCH_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | head -1)
+
 if [ -z "$FETCH_HASH" ]; then
-    # If the build didn't fail, extract current hash
+    # If the build didn't fail with hash error, extract current hash
     FETCH_HASH=$(grep -oP 'sha256 = "sha256-\K[^"]+' "$NIX_FILE" | head -1)
 fi
 
@@ -75,20 +75,25 @@ FETCH_HASH_FORMATTED="sha256-$FETCH_HASH"
 echo "✓ fetchCrate hash: $FETCH_HASH_FORMATTED"
 echo
 
-# Update the temporary file with the correct fetchCrate hash
+# Update the file with the correct fetchCrate hash
 sed -i.bak "s|sha256 = \"sha256-[^\"]*\";|sha256 = \"$FETCH_HASH_FORMATTED\";|" "$NIX_FILE"
+rm -f "$NIX_FILE.bak"
 
 # Step 3: Calculate cargoHash
 echo "Step 3: Calculating cargoHash..."
 echo "(This will trigger a build error to extract the correct hash...)"
 
-# Set dummy hash
+# Set dummy hash to force error
 sed -i.bak 's/cargoHash = "sha256-[^"]*";/cargoHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";/' "$NIX_FILE"
+rm -f "$NIX_FILE.bak"
 
 set +e
-BUILD_OUTPUT=$(nix build .#celq 2>&1)
-CARGO_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | tail -1)
+BUILD_OUTPUT=$(nix build . 2>&1)
+BUILD_EXIT=$?
 set -e
+
+# Extract cargoHash from error message
+CARGO_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | tail -1)
 
 if [ -z "$CARGO_HASH" ]; then
     echo "❌ Failed to extract cargoHash"
