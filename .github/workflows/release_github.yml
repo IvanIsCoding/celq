@@ -135,7 +135,7 @@ jobs:
           targets: ${{ matrix.target }}
       
       - name: Install Rust toolchain (FreeBSD aarch64 special case)
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.93
         if: matrix.target == 'aarch64-unknown-freebsd'
         with:
           components: rust-src

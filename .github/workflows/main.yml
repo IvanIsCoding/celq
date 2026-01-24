@@ -156,8 +156,8 @@ jobs:
           targets: ${{ matrix.target }}
           components: rust-src
       
-      - name: Install Rust Stable (FreeBSD aarch64 special case)
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust 1.93 (FreeBSD aarch64 special case)
+        uses: dtolnay/rust-toolchain@1.93
         if: matrix.target == 'aarch64-unknown-freebsd'
         with:
           components: rust-src
@@ -181,7 +181,6 @@ jobs:
         run: |
           RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo zigbuild \
           --target aarch64-unknown-freebsd \
-          --release \
           -Z build-std=std,panic_abort
       
       - name: Upload celq binary
