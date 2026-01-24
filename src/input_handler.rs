@@ -74,7 +74,7 @@ fn handle_buffer<R: Read>(
             "Parallelism level cannot be 0"
         );
 
-        let num_threads = if input_params.parallelism == -1 {
+        let num_threads = if input_params.parallelism <= -1 {
             std::thread::available_parallelism()
                 .map(|n| n.get())
                 .unwrap_or(1)
@@ -142,6 +142,10 @@ fn handle_buffer<R: Read>(
             }
         }
     } else {
+        anyhow::ensure!(
+            input_params.parallelism != 0,
+            "Parallelism level cannot be 0"
+        );
         // Read all input as a single document
         let mut buffer = String::new();
         for line in reader.lines() {
@@ -197,6 +201,7 @@ fn handle_json(
             input_params.from_toml,
             input_params.from_yaml,
             input_params.from_gron,
+            input_params.parallelism,
         )
         .context("Failed to parse JSON input")?;
 

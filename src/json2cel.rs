@@ -1,5 +1,6 @@
 use cel::objects::Key;
 use cel::objects::Value as CelValue;
+use rayon::prelude::*;
 use serde::de::Error as _;
 use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
@@ -8,6 +9,7 @@ use std::sync::Arc;
 
 /// Convert a JSON string into a BTreeMap of CEL values.
 /// The top-level JSON object is placed under the "this" key.
+#[allow(clippy::too_many_arguments)]
 pub fn json_to_cel_variables(
     json_str: &str,
     root_var: &str,
@@ -16,6 +18,7 @@ pub fn json_to_cel_variables(
     from_toml: bool,
     from_yaml: bool,
     from_gron: bool,
+    parallelism: i32,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
     let json_value: JsonValue = if !slurp && !from_json5 && !from_toml && !from_yaml && !from_gron {
         serde_json::from_str(json_str)?
@@ -71,7 +74,7 @@ pub fn json_to_cel_variables(
             ));
         }
     } else if slurp {
-        slurp_json_lines(Some(json_str))?
+        slurp_json_lines(Some(json_str), parallelism)?
     } else {
         return Err(serde_json::Error::custom("Invalid combination of flags"));
     };
@@ -124,21 +127,42 @@ fn json_value_to_cel_value(value: &JsonValue) -> CelValue {
     }
 }
 
-fn slurp_json_lines(json_str: Option<&str>) -> Result<JsonValue, serde_json::Error> {
-    let mut values = Vec::new();
-
+fn slurp_json_lines(
+    json_str: Option<&str>,
+    parallelism: i32,
+) -> Result<JsonValue, serde_json::Error> {
     if let Some(s) = json_str {
-        for line in s.lines() {
-            if line.trim().is_empty() {
-                continue;
-            }
+        let lines: Vec<&str> = s.lines().filter(|line| !line.trim().is_empty()).collect();
 
-            let v: JsonValue = serde_json::from_str(line)?;
-            values.push(v);
-        }
+        let values: Result<Vec<JsonValue>, serde_json::Error> = if parallelism == 1 {
+            lines
+                .iter()
+                .map(|line| serde_json::from_str(line))
+                .collect()
+        } else {
+            let num_threads = if parallelism <= -1 {
+                std::thread::available_parallelism()
+                    .map(|n| n.get())
+                    .unwrap_or(1)
+            } else {
+                parallelism as usize
+            };
+            rayon::ThreadPoolBuilder::new()
+                .num_threads(num_threads)
+                .build()
+                .map_err(|e| serde_json::Error::custom(e.to_string()))?
+                .install(|| {
+                    lines
+                        .par_iter()
+                        .map(|line| serde_json::from_str(line))
+                        .collect()
+                })
+        };
+
+        values.map(JsonValue::Array)
+    } else {
+        Ok(JsonValue::Array(Vec::new()))
     }
-
-    Ok(JsonValue::Array(values))
 }
 
 #[cfg(test)]

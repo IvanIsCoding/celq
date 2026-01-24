@@ -6,11 +6,19 @@ const NO_JSON5: bool = false;
 const NO_TOML: bool = false;
 const NO_YAML: bool = false;
 const NO_GRON: bool = false;
+const DEFAULT_PARALLELISM: i32 = 1;
 
 #[test]
 fn test_null() {
     let vars = json_to_cel_variables(
-        "null", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML, NO_GRON,
+        "null",
+        ROOT_VAR,
+        NO_SLURP,
+        NO_JSON5,
+        NO_TOML,
+        NO_YAML,
+        NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Null));
@@ -19,7 +27,14 @@ fn test_null() {
 #[test]
 fn test_number() {
     let vars = json_to_cel_variables(
-        "42", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML, NO_GRON,
+        "42",
+        ROOT_VAR,
+        NO_SLURP,
+        NO_JSON5,
+        NO_TOML,
+        NO_YAML,
+        NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Int(42)));
@@ -35,6 +50,7 @@ fn test_string() {
         NO_TOML,
         NO_YAML,
         NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
     if let CelValue::String(s) = vars.get("this").unwrap() {
@@ -47,7 +63,14 @@ fn test_string() {
 #[test]
 fn test_bool() {
     let vars = json_to_cel_variables(
-        "true", ROOT_VAR, NO_SLURP, NO_JSON5, NO_TOML, NO_YAML, NO_GRON,
+        "true",
+        ROOT_VAR,
+        NO_SLURP,
+        NO_JSON5,
+        NO_TOML,
+        NO_YAML,
+        NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
     assert!(matches!(vars.get("this").unwrap(), CelValue::Bool(true)));
@@ -63,6 +86,7 @@ fn test_array() {
         NO_TOML,
         NO_YAML,
         NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
     if let CelValue::List(list) = vars.get("this").unwrap() {
@@ -82,6 +106,7 @@ fn test_object() {
         NO_TOML,
         NO_YAML,
         NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
 
@@ -102,6 +127,7 @@ fn test_nested_object() {
         NO_TOML,
         NO_YAML,
         NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
 
@@ -141,6 +167,7 @@ fn test_json5_with_comment() {
         NO_TOML,
         NO_YAML,
         NO_GRON,
+        DEFAULT_PARALLELISM,
     )
     .unwrap();
 
@@ -149,5 +176,43 @@ fn test_json5_with_comment() {
         assert!(matches!(map.get(&x_key).unwrap(), CelValue::Int(42)));
     } else {
         panic!("Expected map");
+    }
+}
+
+#[test]
+fn test_slurp_single_threaded() {
+    let json_lines = r#"{"x": 1}
+{"x": 2}
+{"x": 3}"#;
+
+    let vars = json_to_cel_variables(
+        json_lines, ROOT_VAR, true, // slurp = true
+        NO_JSON5, NO_TOML, NO_YAML, NO_GRON, 1, // parallelism = 1
+    )
+    .unwrap();
+
+    if let CelValue::List(list) = vars.get("this").unwrap() {
+        assert_eq!(list.len(), 3);
+    } else {
+        panic!("Expected list");
+    }
+}
+
+#[test]
+fn test_slurp_parallel() {
+    let json_lines = r#"{"x": 1}
+{"x": 2}
+{"x": 3}"#;
+
+    let vars = json_to_cel_variables(
+        json_lines, ROOT_VAR, true, // slurp = true
+        NO_JSON5, NO_TOML, NO_YAML, NO_GRON, 2, // parallelism = 2
+    )
+    .unwrap();
+
+    if let CelValue::List(list) = vars.get("this").unwrap() {
+        assert_eq!(list.len(), 3);
+    } else {
+        panic!("Expected list");
     }
 }
