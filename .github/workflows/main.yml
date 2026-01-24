@@ -141,6 +141,10 @@ jobs:
             arch: x86-64
             target: x86_64-unknown-freebsd
             zigtargetsuffix: ""
+          - os: ubuntu-24.04-arm
+            arch: ARM
+            target: aarch64-unknown-freebsd
+            zigtargetsuffix: ""
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -149,6 +153,7 @@ jobs:
         uses: dtolnay/rust-toolchain@1.89.0
         with:
           targets: ${{ matrix.target }}
+          components: rust-src
       
       - name: Install Zig
         uses: mlugg/setup-zig@v2
@@ -161,7 +166,16 @@ jobs:
           tool: cargo-zigbuild@0.21.1
       
       - name: Build with Zig
+        if: matrix.target != 'aarch64-unknown-freebsd'
         run: cargo zigbuild --locked --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
+      
+      - name: Build with Zig (FreeBSD aarch64 special case)
+        if: matrix.target == 'aarch64-unknown-freebsd'
+        run: |
+          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo zigbuild \
+          --target aarch64-unknown-freebsd \
+          --release \
+          -Z build-std=std,panic_abort
       
       - name: Upload celq binary
         uses: actions/upload-artifact@v4
@@ -169,35 +183,6 @@ jobs:
           name: celq-${{ matrix.target }}
           path: target/${{ matrix.target }}/debug/celq
           retention-days: 1
-  
-  zigbuild-unstable:
-    needs: [build, format, clippy]
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Install Rust 1.93.0
-      uses: dtolnay/rust-toolchain@1.93.0
-      with:
-        components: rust-src
-    
-    - name: Install Zig
-      uses: mlugg/setup-zig@v2
-      with:
-        version: 0.15.2
-      
-    - name: Install cargo-zigbuild via cargo-binstall
-      uses: taiki-e/install-action@v2
-      with:
-        tool: cargo-zigbuild@0.21.1
-    
-    - name: Build for FreeBSD aarch64
-      run: |
-        RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo zigbuild \
-        --target aarch64-unknown-freebsd \
-        --release \
-        -Z build-std=std,panic_abort
 
   test-debian-oldstable:
     name: Test on Debian Oldstable
