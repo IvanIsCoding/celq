@@ -149,8 +149,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install Rust 1.89.0
-        uses: dtolnay/rust-toolchain@1.89.0
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
           components: rust-src
