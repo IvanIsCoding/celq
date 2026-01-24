@@ -177,10 +177,11 @@ FreeBSD builds are tested in [Cirrus CI](https://cirrus-ci.org/) and cross-compi
 ```bash
 VERSION=v0.2.0
 RELEASE_URL=https://github.com/IvanIsCoding/celq/releases/download/${VERSION}
+PLATFORM=x86_64 # or aarch64
 
-fetch ${RELEASE_URL}/celq-freebsd-x86_64.tar.gz
+fetch ${RELEASE_URL}/celq-freebsd-${PLATFORM}.tar.gz
 
-tar xzf celq-freebsd-x86_64.tar.gz
+tar xzf celq-freebsd-${PLATFORM}.tar.gz
 su root -c 'install -m 755 celq /usr/local/bin/'
 ```
 
