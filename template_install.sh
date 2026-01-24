@@ -195,8 +195,16 @@ fi
 pretty_target=$(target_to_pretty_name "$target")
 
 case $target in
-  x86_64-pc-windows-msvc) extension=zip; need unzip;;
-  *) extension=tar.gz; need tar;;
+  x86_64-pc-windows-msvc) 
+    extension=zip
+    need unzip
+    celq_suffix=".exe"
+    ;;
+  *) 
+    extension=tar.gz
+    need tar
+    celq_suffix=""
+    ;;
 esac
 
 archive="$releases/download/{{CELQ_VERSION}}/$crate-$pretty_target.$extension"
@@ -240,12 +248,12 @@ else
   tar -C "$td" -xzf "$archive_file"
 fi
 
-if [ -e "$dest/celq" ] && [ "$force" = false ]; then
-  err "\`$dest/celq\` already exists"
+if [ -e "$dest/celq${celq_suffix}" ] && [ "$force" = false ]; then
+  err "\`$dest/celq${celq_suffix}\` already exists"
 else
   mkdir -p "$dest"
-  cp "$td/celq" "$dest/celq"
-  chmod 755 "$dest/celq"
+  cp "$td/celq${celq_suffix}" "$dest/celq${celq_suffix}"
+  chmod 755 "$dest/celq${celq_suffix}"
 fi
 
 rm -rf "$td"
