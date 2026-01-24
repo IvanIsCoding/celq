@@ -428,10 +428,6 @@ jobs:
           token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
           path: scoop-bucket
 
-      - name: Install Rust toolchain
-        if: steps.check_prerelease.outputs.is_prerelease == 'false'
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Download Windows binary and calculate SHA256
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
         run: |
@@ -460,7 +456,7 @@ jobs:
           
           echo "Generating Scoop manifest for version: $VERSION_WITHOUT_V"
           
-          cargo run -- \
+          npx -y celq@0.2.0 \
             -n \
             -p \
             -S \
