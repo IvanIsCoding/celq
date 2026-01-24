@@ -122,6 +122,9 @@ jobs:
           # FreeBSD x86-64 (zigbuild)
           - { target: x86_64-unknown-freebsd, os: ubuntu-24.04, zigtargetsuffix: "", pretty_target: freebsd-x86_64 }
 
+          # FreeBSD ARM64 (zigbuild)
+          - { target: aarch64-unknown-freebsd, os: ubuntu-24.04-arm, zigtargetsuffix: "", pretty_target: freebsd-aarch64 }
+
     steps:
       - uses: actions/checkout@v4
 
@@ -141,7 +144,16 @@ jobs:
           tool: cargo-zigbuild@0.21.1
 
       - name: Build with Zig
+        if: matrix.target != 'aarch64-unknown-freebsd'
         run: cargo zigbuild --locked --release --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
+      
+      - name: Build with Zig (FreeBSD aarch64 special case)
+        if: matrix.target == 'aarch64-unknown-freebsd'
+        run: |
+          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo zigbuild \
+          --target aarch64-unknown-freebsd \
+          --release \
+          -Z build-std=std,panic_abort
 
       - name: Create release archive
         id: archive
