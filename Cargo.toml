@@ -1,9 +1,9 @@
 [package]
 name = "celq"
 description = "A CEL command-line query tool for JSON data"
-version = "0.2.0"
+version = "0.3.0-alpha.1"
 edition = "2024"
-rust-version = "1.89"
+rust-version = "1.91"
 authors = ["Ivan Carvalho <ivancarvalho@gatech.edu>"]
 repository = "https://github.com/IvanIsCoding/celq"
 license = "MIT OR Apache-2.0"
@@ -45,9 +45,9 @@ serde = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.11"
 mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = true }
-json5 = "0.4"
+json5 = "1.3.0"
 toml = { version = "=0.9.8", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
-serde-saphyr = { version = "=0.0.14", default-features = false, optional = true }
+serde-saphyr = { version = "=0.0.16", default-features = false, optional = true }
 ressa = { version = "=0.8.2", optional = true}
 resast = { version = "=0.5.0", optional = true }
 

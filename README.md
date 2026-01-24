@@ -1,5 +1,5 @@
 # celq
- [![Crates.io](https://img.shields.io/crates/v/celq.svg)](https://crates.io/crates/celq) [![Documentation](https://docs.rs/celq/badge.svg)](https://docs.rs/celq) [![Playground](https://img.shields.io/badge/playground-live-brightgreen)](https://celq-playground.github.io/) [![Minimum rustc 1.89](https://img.shields.io/badge/rustc-1.89+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html) 
+ [![Crates.io](https://img.shields.io/crates/v/celq.svg)](https://crates.io/crates/celq) [![Documentation](https://docs.rs/celq/badge.svg)](https://docs.rs/celq) [![Playground](https://img.shields.io/badge/playground-live-brightgreen)](https://celq-playground.github.io/) [![Minimum rustc 1.91](https://img.shields.io/badge/rustc-1.91+-blue.svg)](https://rust-lang.github.io/rfcs/2495-min-rust-version.html) 
 
 **celq** is a command-line tool for evaluating [Common Expression Language (CEL)](https://cel.dev/) expressions. It processes JSON input, performs computations, and outputs results. Think of it as if [jq](https://jqlang.org/) supported CEL.
 
