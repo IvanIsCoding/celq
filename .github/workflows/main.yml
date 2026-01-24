@@ -177,10 +177,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install Rust nightly
-      uses: dtolnay/rust-toolchain@nightly
+    - name: Install Rust 1.89.0
+      uses: dtolnay/rust-toolchain@1.89.0
       with:
-        toolchain: nightly-2025-08-01
         components: rust-src
     
     - name: Install Zig
@@ -195,14 +194,10 @@ jobs:
     
     - name: Build for FreeBSD aarch64
       run: |
-        rustup default nightly-2025-08-01
-        rustup component add rust-src --toolchain nightly-2025-08-01
-        rustup target add aarch64-unknown-freebsd --toolchain nightly-2025-08-01
-        cargo +nightly-2025-08-01 zigbuild \
-          --target aarch64-unknown-freebsd \
-          --release \
-          -Zbuild-std=std,panic_abort \
-          -Zbuild-std-features=panic_immediate_abort
+        RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo zigbuild \
+        --target aarch64-unknown-freebsd \
+        --release \
+        -Z build-std=std,panic_abort
 
   test-debian-oldstable:
     name: Test on Debian Oldstable
