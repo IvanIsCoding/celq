@@ -196,7 +196,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-slim
+          - os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
           - os: ubuntu-24.04-arm
             target: aarch64-unknown-linux-gnu
