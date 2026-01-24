@@ -1,0 +1,31 @@
+name: Calculate celq nixpkg hashes
+
+on:
+  workflow_dispatch:
+    inputs:
+      new_version:
+        description: 'New version to calculate hashes for (e.g., 0.3.0)'
+        required: true
+        type: string
+
+jobs:
+  calculate-hashes:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+      
+      - name: Make script executable
+        run: chmod +x .github/scripts/nix-hashes.sh
+      
+      - name: Calculate hashes
+        id: hashes
+        run: .github/scripts/nix-hashes.sh "${{ inputs.new_version }}"
