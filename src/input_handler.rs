@@ -12,6 +12,7 @@ use std::io::Cursor;
 use std::io::Read;
 use std::io::{self};
 
+use crate::InputFormat;
 use crate::InputParameters;
 use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
@@ -62,12 +63,8 @@ fn handle_buffer<R: Read>(
     input_params: &InputParameters,
     reader: BufReader<R>,
 ) -> Result<Vec<(String, bool)>> {
-    if !input_params.slurp
-        && !input_params.from_json5
-        && !input_params.from_toml
-        && !input_params.from_yaml
-        && !input_params.from_gron
-    {
+    // Check if we're processing JSON or NDJSON that is not slurped
+    if input_params.input_format == InputFormat::Json {
         // Determine thread pool size
         anyhow::ensure!(
             input_params.parallelism != 0,
@@ -146,6 +143,7 @@ fn handle_buffer<R: Read>(
             input_params.parallelism != 0,
             "Parallelism level cannot be 0"
         );
+
         // Read all input as a single document
         let mut buffer = String::new();
         for line in reader.lines() {
@@ -154,7 +152,7 @@ fn handle_buffer<R: Read>(
             buffer.push('\n');
         }
 
-        // Process the entire buffer as one JSON document
+        // Process the entire buffer as one document
         let result = handle_json(program, arg_variables, input_params, Some(&buffer))?;
         Ok(vec![result])
     }
@@ -191,25 +189,21 @@ fn handle_json(
             .with_context(|| format!("Failed to add variable '{}'", name))?;
     }
 
-    // If we have input, parse it as JSON and add to context
+    // If we have input, parse it and add to context
     if let Some(json) = json_str {
         let json_variables = json_to_cel_variables(
             json,
             &input_params.root_var,
-            input_params.slurp,
-            input_params.from_json5,
-            input_params.from_toml,
-            input_params.from_yaml,
-            input_params.from_gron,
+            input_params.input_format,
             input_params.parallelism,
         )
-        .context("Failed to parse JSON input")?;
+        .context("Failed to parse input")?;
 
         // Add JSON variables to context
         for (name, value) in json_variables {
             context
                 .add_variable(name.clone(), value)
-                .with_context(|| format!("Failed to add JSON variable '{}'", name))?;
+                .with_context(|| format!("Failed to add input variable '{}'", name))?;
         }
     }
 

@@ -5,11 +5,7 @@ fn default_params() -> InputParameters {
     InputParameters {
         root_var: "this".to_string(),
         null_input: false,
-        slurp: false,
-        from_json5: false,
-        from_toml: false,
-        from_yaml: false,
-        from_gron: false,
+        input_format: InputFormat::Json,
         parallelism: -1,
         sort_keys: false,
         pretty_print: false,
@@ -185,7 +181,7 @@ fn test_handle_buffer_slurp() {
     let cursor = Cursor::new(input.as_bytes());
     let reader = BufReader::new(cursor);
     let mut params = default_params();
-    params.slurp = true;
+    params.input_format = InputFormat::SlurpJson;
 
     let results = handle_buffer(&program, &args, &params, reader).unwrap();
 

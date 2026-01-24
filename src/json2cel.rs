@@ -1,3 +1,4 @@
+use crate::InputFormat;
 use cel::objects::Key;
 use cel::objects::Value as CelValue;
 use rayon::prelude::*;
@@ -8,80 +9,77 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 /// Convert a JSON string into a BTreeMap of CEL values.
-/// The top-level JSON object is placed under the "this" key.
-#[allow(clippy::too_many_arguments)]
+/// The top-level JSON object is placed under the root variable key.
 pub fn json_to_cel_variables(
     json_str: &str,
     root_var: &str,
-    slurp: bool,
-    from_json5: bool,
-    from_toml: bool,
-    from_yaml: bool,
-    from_gron: bool,
+    input_format: InputFormat,
     parallelism: i32,
 ) -> Result<BTreeMap<String, CelValue>, serde_json::Error> {
-    let json_value: JsonValue = if !slurp && !from_json5 && !from_toml && !from_yaml && !from_gron {
-        serde_json::from_str(json_str)?
-    } else if from_json5 {
-        json5::from_str(json_str).map_err(serde_json::Error::custom)?
-    } else if from_toml {
-        #[cfg(feature = "from-toml")]
-        {
-            toml::from_str(json_str).map_err(serde_json::Error::custom)?
+    let json_value: JsonValue = match input_format {
+        InputFormat::Json => {
+            // Regular JSON parsing (NDJSON is handled line-by-line in input_handler)
+            serde_json::from_str(json_str)?
         }
+        InputFormat::SlurpJson => slurp_json_lines(Some(json_str), parallelism)?,
+        InputFormat::Json5 => json5::from_str(json_str).map_err(serde_json::Error::custom)?,
+        InputFormat::Toml => {
+            #[cfg(feature = "from-toml")]
+            {
+                toml::from_str(json_str).map_err(serde_json::Error::custom)?
+            }
 
-        #[cfg(not(feature = "from-toml"))]
-        {
-            return Err(serde_json::Error::custom(
-                "Binary was compiled without TOML support",
-            ));
+            #[cfg(not(feature = "from-toml"))]
+            {
+                return Err(serde_json::Error::custom(
+                    "Binary was compiled without TOML support",
+                ));
+            }
         }
-    } else if from_yaml {
-        #[cfg(feature = "from-yaml")]
-        {
-            // Try parsing as a single YAML document first
-            match serde_saphyr::from_str::<JsonValue>(json_str) {
-                Ok(value) => value,
-                Err(single_err) => {
-                    // Try multi-document as a fallback
-                    match serde_saphyr::from_multiple::<JsonValue>(json_str) {
-                        Ok(values) => serde_json::Value::Array(values),
-                        Err(_multi_err) => {
-                            // Both attempts failed, invalid YAML input
-                            return Err(serde_json::Error::custom(single_err));
+        InputFormat::Yaml => {
+            #[cfg(feature = "from-yaml")]
+            {
+                // Try parsing as a single YAML document first
+                match serde_saphyr::from_str::<JsonValue>(json_str) {
+                    Ok(value) => value,
+                    Err(single_err) => {
+                        // Try multi-document as a fallback
+                        match serde_saphyr::from_multiple::<JsonValue>(json_str) {
+                            Ok(values) => serde_json::Value::Array(values),
+                            Err(_multi_err) => {
+                                // Both attempts failed, invalid YAML input
+                                return Err(serde_json::Error::custom(single_err));
+                            }
                         }
                     }
                 }
             }
-        }
 
-        #[cfg(not(feature = "from-yaml"))]
-        {
-            return Err(serde_json::Error::custom(
-                "Binary was compiled without YAML support",
-            ));
+            #[cfg(not(feature = "from-yaml"))]
+            {
+                return Err(serde_json::Error::custom(
+                    "Binary was compiled without YAML support",
+                ));
+            }
         }
-    } else if from_gron {
-        #[cfg(feature = "greppable")]
-        {
-            crate::gron_to_json(json_str).map_err(serde_json::Error::custom)?
-        }
+        InputFormat::Gron => {
+            #[cfg(feature = "greppable")]
+            {
+                crate::gron_to_json(json_str).map_err(serde_json::Error::custom)?
+            }
 
-        #[cfg(not(feature = "greppable"))]
-        {
-            return Err(serde_json::Error::custom(
-                "Binary was compiled without greppable support",
-            ));
+            #[cfg(not(feature = "greppable"))]
+            {
+                return Err(serde_json::Error::custom(
+                    "Binary was compiled without greppable support",
+                ));
+            }
         }
-    } else if slurp {
-        slurp_json_lines(Some(json_str), parallelism)?
-    } else {
-        return Err(serde_json::Error::custom("Invalid combination of flags"));
     };
 
     let mut variables = BTreeMap::new();
 
-    // Convert the entire JSON value and place it under "this"
+    // Convert the entire JSON value and place it under the root variable
     let cel_value = json_value_to_cel_value(&json_value);
     variables.insert(root_var.to_string(), cel_value);
 

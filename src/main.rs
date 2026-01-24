@@ -19,6 +19,7 @@ use args2cel::args_to_cel_variables;
 pub use cel2json::cel_value_to_json_value;
 pub use cli::Argument;
 use cli::Cli;
+pub use cli::InputFormat;
 pub use cli::InputParameters;
 use input_handler::handle_input;
 pub use json2cel::json_to_cel_variables;
@@ -78,14 +79,12 @@ fn main() -> io::Result<()> {
         }
     }
 
+    let input_format = cli.input_format();
+
     let input_params = InputParameters {
         root_var: cli.root_var,
         null_input: cli.null_input,
-        slurp: cli.slurp,
-        from_json5: cli.from_json5,
-        from_toml: cli.from_toml,
-        from_yaml: cli.from_yaml,
-        from_gron: cli.from_gron,
+        input_format,
         parallelism: cli.parallelism,
         sort_keys: cli.sort_keys,
         pretty_print: cli.pretty_print,

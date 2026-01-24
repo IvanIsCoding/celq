@@ -17,6 +17,16 @@
 use clap::ArgGroup;
 use clap::Parser;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputFormat {
+    Json,
+    SlurpJson,
+    Json5,
+    Toml,
+    Yaml,
+    Gron,
+}
+
 #[derive(Debug, Clone)]
 pub struct Argument {
     pub name: String,
@@ -167,6 +177,24 @@ pub struct Cli {
     pub expression: Option<String>,
 }
 
+impl Cli {
+    pub fn input_format(&self) -> InputFormat {
+        if self.from_gron {
+            InputFormat::Gron
+        } else if self.from_yaml {
+            InputFormat::Yaml
+        } else if self.from_toml {
+            InputFormat::Toml
+        } else if self.from_json5 {
+            InputFormat::Json5
+        } else if self.slurp {
+            InputFormat::SlurpJson
+        } else {
+            InputFormat::Json
+        }
+    }
+}
+
 fn parse_parallelism(s: &str) -> Result<i32, String> {
     let value: i32 = s
         .parse()
@@ -185,11 +213,7 @@ fn parse_parallelism(s: &str) -> Result<i32, String> {
 pub struct InputParameters {
     pub root_var: String,
     pub null_input: bool,
-    pub slurp: bool,
-    pub from_json5: bool,
-    pub from_toml: bool,
-    pub from_yaml: bool,
-    pub from_gron: bool,
+    pub input_format: InputFormat,
     pub parallelism: i32,
     pub sort_keys: bool,
     pub pretty_print: bool,
