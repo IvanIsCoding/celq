@@ -151,8 +151,15 @@ jobs:
       
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
+        if: matrix.target != 'aarch64-unknown-freebsd'
         with:
           targets: ${{ matrix.target }}
+          components: rust-src
+      
+      - name: Install Rust Stable (FreeBSD aarch64 special case)
+        uses: dtolnay/rust-toolchain@stable
+        if: matrix.target == 'aarch64-unknown-freebsd'
+        with:
           components: rust-src
       
       - name: Install Zig
