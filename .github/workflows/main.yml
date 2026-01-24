@@ -191,9 +191,15 @@ jobs:
           retention-days: 1
 
   test-debian-oldstable:
-    name: Test on Debian Oldstable
+    name: Test on Debian Oldstable for (${{ matrix.target }})
     needs: zigbuild
-    runs-on: ubuntu-latest
+    matrix:
+        include:
+          - os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+    runs-on: ${{ matrix.os }}
     container:
       image: debian:oldstable
     steps:
@@ -202,7 +208,7 @@ jobs:
       - name: Download celq binary
         uses: actions/download-artifact@v4
         with:
-          name: celq-x86_64-unknown-linux-gnu
+          name: celq-${{ matrix.target }}
           path: ./bin
       
       - name: Make binary executable
