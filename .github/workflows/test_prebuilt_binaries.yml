@@ -189,6 +189,9 @@ jobs:
       
       - name: Show flake outputs (without building)
         run: nix flake show github:IvanIsCoding/celq
+      
+      - name: Fetch all inputs (validates hashes)
+        run: nix flake archive github:IvanIsCoding/celq
 
   test-freebsd-install:
     name: Test FreeBSD 14.3 (x86_64)
