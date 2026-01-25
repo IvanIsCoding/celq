@@ -14,15 +14,11 @@ jobs:
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
       
-      - name: Add celq to PATH
-        run: |
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-      
       - name: Print celq version
-        run: celq --version
+        run: ~/.cargo/bin/celq --version
       
       - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh celq
+        run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
   test-npm-install:
     name: Test npm install (global) on ubuntu-24.04
@@ -42,7 +38,7 @@ jobs:
         run: celq --version
       
       - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh celq
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-pip-install:
     name: Test pip install (global) on ubuntu-24.04
@@ -62,7 +58,7 @@ jobs:
         run: celq --version
       
       - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh celq
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-brew-install:
     name: Test brew install on macOS (arm)
@@ -77,7 +73,7 @@ jobs:
         run: celq --version
       
       - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh celq
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-cargo-binstall:
     name: Test cargo-binstall on ubuntu-24.04
@@ -95,7 +91,7 @@ jobs:
         run: celq --version
       
       - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh celq
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-scoop-install:
     name: Test scoop install on Windows (Git Bash)
@@ -119,10 +115,10 @@ jobs:
           scoop install get-celq/celq
       
       - name: Print celq version
-        run: celq --version
+        run: ~/scoop/shims/celq --version
       
       - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh celq
+        run: sh .github/scripts/smoke-test.sh ~/scoop/shims/celq
 
   test-results-summary:
     name: Installation Tests Summary
