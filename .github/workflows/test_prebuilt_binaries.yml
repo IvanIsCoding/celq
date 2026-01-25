@@ -121,6 +121,48 @@ jobs:
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh ~/scoop/shims/celq
 
+  test-freebsd-install:
+    name: Test FreeBSD 14.3 (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Get latest release version
+        id: get_version
+        run: |
+          VERSION=$(curl -s https://api.github.com/repos/IvanIsCoding/celq/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Latest version: $VERSION"
+      
+      - name: Test on FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: '14.3'
+          usesh: true
+          prepare: |
+            pkg install -y curl
+          run: |
+            # Set variables
+            VERSION=${{ steps.get_version.outputs.version }}
+            RELEASE_URL=https://github.com/IvanIsCoding/celq/releases/download/${VERSION}
+            PLATFORM=x86_64
+            
+            echo "Installing celq ${VERSION} for FreeBSD ${PLATFORM}..."
+            
+            # Download and extract
+            fetch ${RELEASE_URL}/celq-freebsd-${PLATFORM}.tar.gz
+            tar xzf celq-freebsd-${PLATFORM}.tar.gz
+            
+            # Make executable and move to PATH
+            chmod +x celq
+            mv celq /usr/local/bin/
+            
+            # Print version
+            celq --version
+            
+            # Run smoke test
+            sh .github/scripts/smoke-test.sh "$(which celq)"
+
   test-results-summary:
     name: Installation Tests Summary
     needs:
@@ -130,6 +172,7 @@ jobs:
       - test-brew-install
       - test-cargo-binstall
       - test-scoop-install
+      - test-freebsd-install
     runs-on: ubuntu-24.04
     if: always()
     steps:
@@ -142,6 +185,7 @@ jobs:
           echo "- brew install: ${{ needs.test-brew-install.result }}"
           echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
           echo "- scoop install: ${{ needs.test-scoop-install.result }}"
+          echo "- freebsd install: ${{ needs.test-freebsd-install.result }}"
           
           # Fail if any job failed
           if [ "${{ needs.test-curl-install.result }}" != "success" ] || \
@@ -149,7 +193,8 @@ jobs:
              [ "${{ needs.test-pip-install.result }}" != "success" ] || \
              [ "${{ needs.test-brew-install.result }}" != "success" ] || \
              [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
-             [ "${{ needs.test-scoop-install.result }}" != "success" ]; then
+             [ "${{ needs.test-scoop-install.result }}" != "success" ] || \
+             [ "${{ needs.test-freebsd-install.result }}" != "success" ]; then
             echo "One or more installation methods failed!"
             exit 1
           fi
