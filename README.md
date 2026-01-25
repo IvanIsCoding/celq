@@ -98,19 +98,6 @@ If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) insta
 cargo binstall celq
 ```
 
-### Python
-
-celq is packaged for [PyPI](https://pypi.org/project/celq/). Python users can install it with `pip`:
-
-```bash
-pip install celq
-```
-
-If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used as a tool:
-```bash
-uvx celq -n '"Hello World"'
-```
-
 ### NPM (Node.js/JavaScript)
 
 `celq` is packaged for [NPM](https://www.npmjs.com/package/celq). Node.js users can install celq in their project with:
@@ -123,6 +110,19 @@ This adds celq to `package.json` and makes it available for scripts. It's also p
 
 ```bash
 npx celq -n '"Hello World"'
+```
+
+### Python
+
+celq is packaged for [PyPI](https://pypi.org/project/celq/). Python users can install it with `pip`:
+
+```bash
+pip install celq
+```
+
+If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used as a tool:
+```bash
+uvx celq -n '"Hello World"'
 ```
 
 ### GitHub Actions
