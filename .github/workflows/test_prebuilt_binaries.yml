@@ -201,21 +201,16 @@ jobs:
         with:
           pixi-version: v0.62.2
           cache: false
-
-      - name: Install celq globally via Pixi (conda-forge)
-        run: |
-          pixi global install -c conda-forge celq
-
-      - name: Resolve celq path from Pixi
-        run: |
-          echo "CELQ_PATH=$(pixi global which celq)" >> $GITHUB_ENV
+          run-install: false
+          global-environments: |
+            celq
 
       - name: Print celq version
         run: |
-          "$CELQ_PATH" --version
+          celq --version
 
       - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh "$CELQ_PATH"
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-nix-flake:
     name: Test Nix flake validity and run
