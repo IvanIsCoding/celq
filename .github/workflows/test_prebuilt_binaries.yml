@@ -1,0 +1,160 @@
+name: Smoke Test for Prebuilt Binaries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-curl-install:
+    name: Test curl installer on ubuntu-24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install celq via curl
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
+      
+      - name: Add celq to PATH
+        run: |
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+      
+      - name: Print celq version
+        run: celq --version
+      
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh celq
+
+  test-npm-install:
+    name: Test npm install (global) on ubuntu-24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install celq globally via npm
+        run: npm install -g celq
+      
+      - name: Print celq version
+        run: celq --version
+      
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh celq
+
+  test-pip-install:
+    name: Test pip install (global) on ubuntu-24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install celq globally via pip
+        run: pip install celq
+      
+      - name: Print celq version
+        run: celq --version
+      
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh celq
+
+  test-brew-install:
+    name: Test brew install on macOS (arm)
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install celq via Homebrew
+        run: brew install get-celq/tap/celq
+      
+      - name: Print celq version
+        run: celq --version
+      
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh celq
+
+  test-cargo-binstall:
+    name: Test cargo-binstall on ubuntu-24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+      
+      - name: Install celq via cargo-binstall
+        run: cargo binstall celq -y
+      
+      - name: Print celq version
+        run: celq --version
+      
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh celq
+
+  test-scoop-install:
+    name: Test scoop install on Windows (Git Bash)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Scoop
+        shell: pwsh
+        run: |
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+          Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+      
+      - name: Install celq via Scoop
+        shell: pwsh
+        run: |
+          scoop bucket add get-celq https://github.com/get-celq/scoop-bucket
+          scoop install get-celq/celq
+      
+      - name: Print celq version
+        run: celq --version
+      
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh celq
+
+  test-results-summary:
+    name: Installation Tests Summary
+    needs:
+      - test-curl-install
+      - test-npm-install
+      - test-pip-install
+      - test-brew-install
+      - test-cargo-binstall
+      - test-scoop-install
+    runs-on: ubuntu-24.04
+    if: always()
+    steps:
+      - name: Check all installation methods
+        run: |
+          echo "Installation test results:"
+          echo "- curl installer: ${{ needs.test-curl-install.result }}"
+          echo "- npm install: ${{ needs.test-npm-install.result }}"
+          echo "- pip install: ${{ needs.test-pip-install.result }}"
+          echo "- brew install: ${{ needs.test-brew-install.result }}"
+          echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
+          echo "- scoop install: ${{ needs.test-scoop-install.result }}"
+          
+          # Fail if any job failed
+          if [ "${{ needs.test-curl-install.result }}" != "success" ] || \
+             [ "${{ needs.test-npm-install.result }}" != "success" ] || \
+             [ "${{ needs.test-pip-install.result }}" != "success" ] || \
+             [ "${{ needs.test-brew-install.result }}" != "success" ] || \
+             [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
+             [ "${{ needs.test-scoop-install.result }}" != "success" ]; then
+            echo "One or more installation methods failed!"
+            exit 1
+          fi
+          
+          echo "All installation methods passed!"
