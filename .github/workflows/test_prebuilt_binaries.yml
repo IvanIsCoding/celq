@@ -107,6 +107,7 @@ jobs:
         run: |
           Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
           Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+          echo "$env:USERPROFILE\scoop\shims" >> $env:GITHUB_PATH
       
       - name: Install celq via Scoop
         shell: pwsh
