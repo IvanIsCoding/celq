@@ -190,6 +190,26 @@ jobs:
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
+  test-winget-install:
+    name: Test WinGet install on Windows (Git Bash)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install celq via WinGet
+        shell: pwsh
+        run: |
+          winget install IvanIsCoding.celq --disable-interactivity --accept-source-agreements
+
+      - name: Print celq version
+        run: celq --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
+
   test-pixi-install:
     name: Test Pixi (conda-forge global) on ubuntu-24.04
     runs-on: ubuntu-24.04
@@ -284,6 +304,7 @@ jobs:
       - test-cargo-binstall
       - test-scoop-install
       - test-choco-install
+      - test-winget-install
       - test-pixi-install
       - test-nix-flake
       - test-freebsd-install
@@ -302,6 +323,7 @@ jobs:
           echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
           echo "- scoop install: ${{ needs.test-scoop-install.result }}"
           echo "- chocolatey install: ${{ needs.test-choco-install.result }}"
+          echo "- winget install: ${{ needs.test-winget-install.result }}"
           echo "- pixi (conda-forge): ${{ needs.test-pixi-install.result }}"
           echo "- nix flake: ${{ needs.test-nix-flake.result }}"
           echo "- freebsd install: ${{ needs.test-freebsd-install.result }}"
@@ -315,6 +337,7 @@ jobs:
              [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
              [ "${{ needs.test-scoop-install.result }}" != "success" ] || \
              [ "${{ needs.test-choco-install.result }}" != "success" ] || \
+             [ "${{ needs.test-winget-install.result }}" != "success" ] || \
              [ "${{ needs.test-pixi-install.result }}" != "success" ] || \
              [ "${{ needs.test-nix-flake.result }}" != "success" ] || \
              [ "${{ needs.test-freebsd-install.result }}" != "success" ]; then
