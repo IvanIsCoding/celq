@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install celq via curl
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
-      
+
       - name: Print celq version
         run: ~/.cargo/bin/celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
@@ -25,28 +25,28 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install GitHub CLI
         run: |
           sudo apt-get update
           sudo apt-get install -y gh
-      
+
       - name: Download and verify installer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh > install.sh
           gh attestation verify install.sh --repo IvanIsCoding/celq
-      
+
       - name: Install celq with attestation verification
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           bash install.sh --verify-attestation
-      
+
       - name: Print celq version
         run: ~/.cargo/bin/celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
@@ -58,14 +58,14 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install celq via curl
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
-      
+
       - name: Print celq version
         run: ~/.cargo/bin/celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
@@ -74,18 +74,18 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install celq globally via npm
         run: npm install -g celq
-      
+
       - name: Print celq version
         run: celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
@@ -94,18 +94,18 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install celq globally via pip
         run: pip install celq
-      
+
       - name: Print celq version
         run: celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
@@ -114,13 +114,13 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install celq via Homebrew
         run: brew install get-celq/tap/celq
-      
+
       - name: Print celq version
         run: celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
@@ -129,16 +129,16 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
-      
+
       - name: Install celq via cargo-binstall
         run: cargo binstall celq -y
-      
+
       - name: Print celq version
         run: celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
@@ -150,25 +150,72 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Scoop
         shell: pwsh
         run: |
           Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
           Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
           echo "$env:USERPROFILE\scoop\shims" >> $env:GITHUB_PATH
-      
+
       - name: Install celq via Scoop
         shell: pwsh
         run: |
           scoop bucket add get-celq https://github.com/get-celq/scoop-bucket
           scoop install get-celq/celq
-      
+
       - name: Print celq version
         run: ~/scoop/shims/celq --version
-      
+
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh ~/scoop/shims/celq
+
+  test-choco-install:
+    name: Test Chocolatey install on Windows (Git Bash)
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install celq via Chocolatey
+        shell: pwsh
+        run: |
+          choco install celq -y
+
+      - name: Print celq version
+        run: celq --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
+
+  test-pixi-install:
+    name: Test Pixi (conda-forge global) on ubuntu-24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pixi
+        uses: prefix-dev/setup-pixi@v0.9.3
+        with:
+          pixi-version: v0.62.2
+          cache: false
+
+      - name: Install celq globally via Pixi (conda-forge)
+        run: |
+          pixi global install -c conda-forge celq
+
+      - name: Resolve celq path from Pixi
+        run: |
+          echo "CELQ_PATH=$(pixi global which celq)" >> $GITHUB_ENV
+
+      - name: Print celq version
+        run: |
+          "$CELQ_PATH" --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh "$CELQ_PATH"
 
   test-nix-flake:
     name: Test Nix flake validity and run
@@ -180,16 +227,16 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
             experimental-features = nix-command flakes
-      
+
       - name: Check flake
         run: nix flake check --no-build github:IvanIsCoding/celq
-      
+
       - name: Show flake metadata
         run: nix flake metadata github:IvanIsCoding/celq
-      
+
       - name: Show flake outputs (without building)
         run: nix flake show github:IvanIsCoding/celq
-      
+
       - name: Build Flake and show celq version
         run: nix run github:IvanIsCoding/celq -- --version
 
@@ -198,14 +245,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Get latest release version
         id: get_version
         run: |
           VERSION=$(curl -s https://api.github.com/repos/IvanIsCoding/celq/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Latest version: $VERSION"
-      
+
       - name: Test on FreeBSD
         uses: vmactions/freebsd-vm@v1
         with:
@@ -214,25 +261,20 @@ jobs:
           prepare: |
             pkg install -y curl
           run: |
-            # Set variables
             VERSION=${{ steps.get_version.outputs.version }}
             RELEASE_URL=https://github.com/IvanIsCoding/celq/releases/download/${VERSION}
             PLATFORM=x86_64
-            
+
             echo "Installing celq ${VERSION} for FreeBSD ${PLATFORM}..."
-            
-            # Download and extract
+
             fetch ${RELEASE_URL}/celq-freebsd-${PLATFORM}.tar.gz
             tar xzf celq-freebsd-${PLATFORM}.tar.gz
-            
-            # Make executable and move to PATH
+
             chmod +x celq
             mv celq /usr/local/bin/
-            
-            # Print version
+
             celq --version
-            
-            # Run smoke test
+
             sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-results-summary:
@@ -246,6 +288,8 @@ jobs:
       - test-brew-install
       - test-cargo-binstall
       - test-scoop-install
+      - test-choco-install
+      - test-pixi-install
       - test-nix-flake
       - test-freebsd-install
     runs-on: ubuntu-24.04
@@ -262,10 +306,11 @@ jobs:
           echo "- brew install: ${{ needs.test-brew-install.result }}"
           echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
           echo "- scoop install: ${{ needs.test-scoop-install.result }}"
+          echo "- chocolatey install: ${{ needs.test-choco-install.result }}"
+          echo "- pixi (conda-forge): ${{ needs.test-pixi-install.result }}"
           echo "- nix flake: ${{ needs.test-nix-flake.result }}"
           echo "- freebsd install: ${{ needs.test-freebsd-install.result }}"
-          
-          # Fail if any job failed
+
           if [ "${{ needs.test-curl-install.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-with-attestation.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-windows.result }}" != "success" ] || \
@@ -274,10 +319,12 @@ jobs:
              [ "${{ needs.test-brew-install.result }}" != "success" ] || \
              [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
              [ "${{ needs.test-scoop-install.result }}" != "success" ] || \
+             [ "${{ needs.test-choco-install.result }}" != "success" ] || \
+             [ "${{ needs.test-pixi-install.result }}" != "success" ] || \
              [ "${{ needs.test-nix-flake.result }}" != "success" ] || \
              [ "${{ needs.test-freebsd-install.result }}" != "success" ]; then
             echo "One or more installation methods failed!"
             exit 1
           fi
-          
+
           echo "All installation methods passed!"
