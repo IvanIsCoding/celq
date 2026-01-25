@@ -26,13 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Authenticate GitHub CLI
+      - name: Download and verify installer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$GITHUB_TOKEN" | gh auth login --with-token
-      
-      - name: Download and verify installer
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh > install.sh
           gh attestation verify install.sh --repo IvanIsCoding/celq
