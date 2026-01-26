@@ -86,33 +86,6 @@ If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) insta
 cargo binstall celq
 ```
 
-### NPM (Node.js/JavaScript)
-
-`celq` is packaged for [NPM](https://www.npmjs.com/package/celq). Node.js users can install celq in their project with:
-
-```bash
-npm install celq
-```
-
-This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
-
-```bash
-npx celq -n '"Hello World"'
-```
-
-### Python
-
-celq is packaged for [PyPI](https://pypi.org/project/celq/). Python users can install it with `pip`:
-
-```bash
-pip install celq
-```
-
-If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used as a tool:
-```bash
-uvx celq -n '"Hello World"'
-```
-
 ### GitHub Actions
 
 `celq` can be used in GitHub actions. For one-off commands, the [get-celq/celq-action](https://github.com/get-celq/celq-action) is the quickest way:
@@ -186,6 +159,33 @@ su root -c 'install -m 755 celq /usr/local/bin/'
 ```
 
 `celq` can also be installed from source following the [Cargo](#cargo) section. We strive to always compile with the Rust version provided in the ports tree.
+
+### NPM (Node.js/JavaScript)
+
+`celq` is packaged for [NPM](https://www.npmjs.com/package/celq). Node.js users can install celq in their project with:
+
+```bash
+npm install celq
+```
+
+This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
+
+```bash
+npx celq -n '"Hello World"'
+```
+
+### Python
+
+celq is packaged for [PyPI](https://pypi.org/project/celq/). Python users can install it with `pip`:
+
+```bash
+pip install celq
+```
+
+If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used as a tool:
+```bash
+uvx celq -n '"Hello World"'
+```
 
 ## Integrity and Authenticity
 
