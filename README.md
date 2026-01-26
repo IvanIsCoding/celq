@@ -183,7 +183,7 @@ su root -c 'install -m 755 celq /usr/local/bin/'
 
 `celq` eagerly parses all JSON input into memory before evaluation. This design was made to simplify the code implementation, at the cost of memory and performance.
 
-Currently, there are no benchmarks for `celq`. I believe the tool is "good enough" for my personal use. That might be revisited in the future. In the meantime, expect `celq` to be slower than `jq`.
+Currently, there are no benchmarks for `celq`. I believe the tool is "good enough" for my personal use. That might be revisited in the future. In the meantime, expect `celq` to be slower than `jq`. With that being said, `celq` feels snappy in practice. `celq` glues together Rust parsers that are performant with a CEL engine that strives to be fast.
 
 ### CEL Implementation Differences
 
@@ -219,7 +219,7 @@ Special thanks to the maintainers of:
 
 ## Large Language Models Disclosure
 
-Many commits in this repository were co-authored by LLMs. All commits were guided and reviewed by a human. The original author has significantly refactored the AI output to conform to his opinionated view.
+Many commits in this repository were co-authored by LLMs. All commits were guided and reviewed by a human. I tried my best to keep things simple and auditable.
 
 All the documentation in the manual has been hand-crafted. That was done to keep the tone of the original author. If you find a typo or a grammar mistake, please send a pull request.
 
