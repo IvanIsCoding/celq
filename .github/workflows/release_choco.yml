@@ -23,7 +23,6 @@ jobs:
         id: get_version
         run: |
           $RELEASE_VERSION = Get-Content Cargo.toml -Raw | npx -y celq@0.2.0 --from-toml --raw-output "this.package.version" | Select-Object -First 1
-          $RELEASE_VERSION = "0.2.0" # temporary hard-code for re-release
           $TAG_NAME = "v$RELEASE_VERSION"
           echo "VERSION=$RELEASE_VERSION" >> $env:GITHUB_OUTPUT
           echo "TAG=$TAG_NAME" >> $env:GITHUB_OUTPUT
