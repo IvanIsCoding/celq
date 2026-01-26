@@ -19,18 +19,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
-
       - name: Get version from Cargo.toml
         id: get_version
         run: |
-          cargo build --release
-          $RELEASE_VERSION = Get-Content cargo.toml -Raw | target\release\celq.exe --from-toml --raw-output "this.package.version" | Select-Object -First 1
+          $RELEASE_VERSION = Get-Content Cargo.toml -Raw | npx -y celq@0.2.0 --from-toml --raw-output "this.package.version" | Select-Object -First 1
+          $RELEASE_VERSION = 0.2.0 # temporary hard-code for re-release
+          $TAG_NAME = "v$RELEASE_VERSION"
           echo "VERSION=$RELEASE_VERSION" >> $env:GITHUB_OUTPUT
+          echo "TAG=$TAG_NAME" >> $env:GITHUB_OUTPUT
           echo "Release version: $RELEASE_VERSION"
+          echo "Tag: $TAG_NAME"
         shell: pwsh
 
       - name: Check if version is pre-release
@@ -46,11 +44,56 @@ jobs:
           }
         shell: pwsh
 
-      - name: Prepare Chocolatey package structure
+      - name: Download release artifact
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
+          $TAG = "${{ steps.get_version.outputs.TAG }}"
+          $URL = "https://github.com/IvanIsCoding/celq/releases/download/$TAG/celq-windows-x86_64.zip"
+          echo "Downloading from: $URL"
+          Invoke-WebRequest -Uri $URL -OutFile celq-windows-x86_64.zip
+        shell: pwsh
+
+      - name: Download SHA256SUMS
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        run: |
+          $TAG = "${{ steps.get_version.outputs.TAG }}"
+          $URL = "https://github.com/IvanIsCoding/celq/releases/download/$TAG/SHA256SUMS"
+          echo "Downloading SHA256SUMS from: $URL"
+          Invoke-WebRequest -Uri $URL -OutFile SHA256SUMS
+        shell: pwsh
+
+      - name: Verify SHA256 checksum
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        run: |
+          # Get expected hash from SHA256SUMS
+          $EXPECTED_HASH = (Get-Content SHA256SUMS | Select-String "celq-windows-x86_64.zip").Line.Split()[0]
+          echo "Expected hash: $EXPECTED_HASH"
+          
+          # Calculate actual hash
+          $ACTUAL_HASH = (CertUtil -hashfile celq-windows-x86_64.zip SHA256 | Select-Object -Index 1).Trim().ToLower()
+          echo "Actual hash: $ACTUAL_HASH"
+          
+          # Compare
+          if ($ACTUAL_HASH -ne $EXPECTED_HASH.ToLower()) {
+            echo "ERROR: Hash mismatch!"
+            echo "Expected: $EXPECTED_HASH"
+            echo "Got: $ACTUAL_HASH"
+            exit 1
+          }
+          echo "✓ Hash verification passed"
+        shell: pwsh
+
+      - name: Extract and prepare Chocolatey package structure
+        if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
+        run: |
+          # Extract the zip
+          Expand-Archive -Path celq-windows-x86_64.zip -DestinationPath extracted -Force
+          
+          # Create tools directory
           New-Item -ItemType Directory -Force -Path tools
-          Copy-Item target\release\celq.exe -Destination tools\
+          
+          # Copy files
+          Copy-Item extracted\celq.exe -Destination tools\
           Copy-Item LICENSE-MIT -Destination tools\LICENSE.txt
         shell: pwsh
 
@@ -64,7 +107,7 @@ jobs:
       - name: Template VERIFICATION.txt
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: |
-          # Calculate SHA
+          # Calculate SHA256 of celq.exe
           $hash = (CertUtil -hashfile tools\celq.exe SHA256 | Select-Object -Index 1).Trim()
           
           # Get the specific attestation URL from the previous step's output
