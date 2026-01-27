@@ -255,7 +255,7 @@ jobs:
       - name: Build Flake and show celq version
         run: nix run github:IvanIsCoding/celq -- --version
   
-    test-nix-flake-latest:
+  test-nix-flake-latest:
     name: Test Nix flake (latest) validity and run
     runs-on: ubuntu-24.04
     steps:
