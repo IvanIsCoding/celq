@@ -134,6 +134,12 @@ If you are going to use `celq` in scripts or for multiple calls, we recommend us
 nix run github:IvanIsCoding/celq -- -n '"Hello World"'
 ```
 
+By default, Nix fetches the stable version from crates.io. If you want to run the code from HEAD, use the `dev` derivation:
+
+```bash
+nix run github:IvanIsCoding/celq#dev -- -n '"Hello World"'
+```
+
 We also include a `default.nix` for non-Flake users:
 
 ```bash

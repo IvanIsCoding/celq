@@ -255,8 +255,8 @@ jobs:
       - name: Build Flake and show celq version
         run: nix run github:IvanIsCoding/celq -- --version
   
-  test-nix-flake-latest:
-    name: Test Nix flake (latest) validity and run
+  test-nix-flake-dev:
+    name: Test Nix flake (dev) validity and run
     runs-on: ubuntu-24.04
     steps:
       - name: Install Nix
@@ -266,8 +266,8 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
-      - name: Build Flake with latest version and show celq version
-        run: nix run github:IvanIsCoding/celq#latest -- --version
+      - name: Build Flake with dev version and show celq version
+        run: nix run github:IvanIsCoding/celq#dev -- --version
 
   test-freebsd-install:
     name: Test FreeBSD 14.3 (x86_64)
@@ -321,6 +321,7 @@ jobs:
       - test-winget-install
       - test-pixi-install
       - test-nix-flake
+      - test-nix-flake-dev
       - test-freebsd-install
     runs-on: ubuntu-24.04
     if: always()
@@ -340,6 +341,7 @@ jobs:
           echo "- winget install: ${{ needs.test-winget-install.result }}"
           echo "- pixi (conda-forge): ${{ needs.test-pixi-install.result }}"
           echo "- nix flake: ${{ needs.test-nix-flake.result }}"
+          echo "- nix flake (latest): ${{ needs.test-nix-flake-dev.result }}"
           echo "- freebsd install: ${{ needs.test-freebsd-install.result }}"
 
           if [ "${{ needs.test-curl-install.result }}" != "success" ] || \
@@ -354,6 +356,7 @@ jobs:
              [ "${{ needs.test-winget-install.result }}" != "success" ] || \
              [ "${{ needs.test-pixi-install.result }}" != "success" ] || \
              [ "${{ needs.test-nix-flake.result }}" != "success" ] || \
+              [ "${{ needs.test-nix-flake-dev.result }}" != "success" ] || \
              [ "${{ needs.test-freebsd-install.result }}" != "success" ]; then
             echo "One or more installation methods failed!"
             exit 1
