@@ -22,6 +22,8 @@
         {
           # Compiles from source with Cargo and installs celq. That part I understood!
           default = pkgs.callPackage ./nix/celq.nix { };
+          # Latest version from HEAD
+          latest = pkgs.callPackage ./nix/celq_latest.nix { };
         });
     };
 }

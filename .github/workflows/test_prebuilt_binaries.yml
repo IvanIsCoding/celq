@@ -254,6 +254,20 @@ jobs:
 
       - name: Build Flake and show celq version
         run: nix run github:IvanIsCoding/celq -- --version
+  
+    test-nix-flake-latest:
+    name: Test Nix flake (latest) validity and run
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Install Nix
+        uses: cachix/install-nix-action@v26
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build Flake with latest version and show celq version
+        run: nix run github:IvanIsCoding/celq#latest -- --version
 
   test-freebsd-install:
     name: Test FreeBSD 14.3 (x86_64)
