@@ -14,7 +14,6 @@ use std::io::{self};
 
 use crate::InputFormat;
 use crate::InputParameters;
-use crate::cel_value_to_json_value;
 use crate::json_to_cel_variables;
 use crate::slice_extension;
 
@@ -222,7 +221,7 @@ fn handle_json(
 }
 
 fn handle_json_output(result: &CelValue, input_params: &InputParameters) -> Result<String> {
-    let mut json_value = cel_value_to_json_value(result);
+    let mut json_value = result.json().map_err(|e| anyhow::anyhow!(e.to_string()))?;
 
     if input_params.sort_keys {
         sort_keys_recursive(&mut json_value);
