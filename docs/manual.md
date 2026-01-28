@@ -141,6 +141,7 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
 ### Table of Contents
 
   * [Reading Files](#reading-files)
+  * [this keyword](#this-keyword)
   * [Writing Files](#writing-files)
   * [Output JSON](#output-json)
   * [Slicing lists](#slicing-lists)
@@ -175,6 +176,24 @@ cat yfinance.json | celq "this.chart.result[0].meta.symbol"
 
 Both command outputs: `"AAPL"`.
 
+### this keyword
+
+`celq` can access the input in CEL expressions with the `this` keyword. For example:
+
+```bash
+echo '["apples", "bananas", "blueberry"]' | celq 'this[1]'
+# Outputs: "bananas"
+```
+
+If we take the array of fruits is the input, `this[1]` refers to the element in index 1 of the input. In this case, `"bananas"`.
+
+If no CEL expression is provided, `celq` outputs the input:
+
+```bash
+echo '["apples", "bananas", "blueberry"]' | celq
+# Outputs: ["apples", "bananas", "blueberry"]
+```
+
 ### Writing Files
 
 `celq` writes by default to the standard output. That output can be piped to a file.
@@ -204,19 +223,6 @@ Notice that by default `celq` does not guarantee the key order of the output. If
 cat yfinance.json | celq --sort-keys '{"symbol": this.chart.result[0].meta.longName, "price": this.chart.result[0].meta.regularMarketPrice}'
 ```
 
-### Slicing lists
-
-`celq` implements the popular slice extension for CEL. For example:
-
-```bash
-echo '["apples", "bananas", "blueberry"]' | celq 'this.slice(1, 3)'
-# Outputs: ["bananas", "blueberry"]
-```
-
-Slicing follows Python conventions: it is 0-indexed and works with negative indices. The `.slice()` calls always requires two arguments. If you need to slice until the end of the list, do `this.slice(pos, size(this.slice))`. Similarly, do `this.slice(0, pos)` to start from the beginning.
-
-If you want to keep your CEL code portable, pass the `--no-extensions` arguments to disable slicing and all other extensions.
-
 ### Reading CEL from a file
 
 In the previous example, the CEL expression for the JSON became long. Let's say we saved the expression in `stock.cel` with the following contents:
@@ -233,6 +239,19 @@ If we pass the `--from-file` argument, we can load the expression and keep the c
 ```bash
 cat yfinance.json | celq --from-file stock.cel
 ```
+
+### Slicing lists
+
+`celq` implements the popular slice extension for CEL. For example:
+
+```bash
+echo '["apples", "bananas", "blueberry"]' | celq 'this.slice(1, 3)'
+# Outputs: ["bananas", "blueberry"]
+```
+
+Slicing follows Python conventions: it is 0-indexed and works with negative indices. The `.slice()` calls always requires two arguments. If you need to slice until the end of the list, do `this.slice(pos, size(this.slice))`. Similarly, do `this.slice(0, pos)` to start from the beginning.
+
+If you want to keep your CEL code portable, pass the `--no-extensions` arguments to disable slicing and all other extensions.
 
 ### Dealing with NDJSON
 
