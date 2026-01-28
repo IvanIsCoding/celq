@@ -30,6 +30,7 @@ FLAGS:
 OPTIONS:
     --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin]
     --target TARGET Following Rust target triple conventions (e.g. x86_64-unknown-linux-gnu).
+    --verify-checksum    Verify the downloaded archive's SHA256 checksum
     --verify-attestation  Verify the binary's GitHub Actions attestation (requires GitHub CLI with authentication)
 EOF
 }
@@ -87,6 +88,71 @@ check_attestation() {
   return 0
 }
 
+# Get expected SHA256 checksum for a target
+get_expected_checksum() {
+  local rust_target="$1"
+  
+  case "$rust_target" in
+    aarch64-apple-darwin)
+      echo "{{CHECKSUM_MACOS_AARCH64}}"
+      ;;
+    x86_64-apple-darwin)
+      echo "{{CHECKSUM_MACOS_X86_64}}"
+      ;;
+    x86_64-pc-windows-msvc)
+      echo "{{CHECKSUM_WINDOWS_X86_64}}"
+      ;;
+    x86_64-unknown-linux-musl)
+      echo "{{CHECKSUM_LINUX_X86_64_MUSL}}"
+      ;;
+    aarch64-unknown-linux-musl)
+      echo "{{CHECKSUM_LINUX_AARCH64_MUSL}}"
+      ;;
+    x86_64-unknown-linux-gnu)
+      echo "{{CHECKSUM_LINUX_X86_64_GNU}}"
+      ;;
+    aarch64-unknown-linux-gnu)
+      echo "{{CHECKSUM_LINUX_AARCH64_GNU}}"
+      ;;
+    *)
+      err "No checksum available for target: $rust_target"
+      ;;
+  esac
+}
+
+verify_checksum() {
+  local file="$1"
+  local target="$2"
+  
+  say "Verifying checksum for $file"
+  
+  local expected_checksum
+  expected_checksum=$(get_expected_checksum "$target")
+  
+  if [ -z "$expected_checksum" ] || [ "$expected_checksum" = "{{CHECKSUM_"* ]; then
+    err "Checksum template not populated for target: $target"
+  fi
+  
+  local actual_checksum
+  if command -v sha256sum > /dev/null 2>&1; then
+    actual_checksum=$(sha256sum "$file" | cut -d' ' -f1)
+  elif command -v shasum > /dev/null 2>&1; then
+    actual_checksum=$(shasum -a 256 "$file" | cut -d' ' -f1)
+  else
+    err "need sha256sum or shasum (command not found)"
+  fi
+  
+  if [ "$actual_checksum" != "$expected_checksum" ]; then
+    say "error: checksum mismatch"
+    say "  expected: $expected_checksum"
+    say "  actual:   $actual_checksum"
+    return 1
+  fi
+  
+  say "Checksum verification successful"
+  return 0
+}
+
 # Map Rust target triple to pretty download name
 target_to_pretty_name() {
   local rust_target="$1"
@@ -107,6 +173,7 @@ target_to_pretty_name() {
 
 force=false
 verify_attestation=false
+verify_checksums=false
 while test $# -gt 0; do
   case $1 in
     --force | -f)
@@ -126,6 +193,9 @@ while test $# -gt 0; do
       ;;
     --verify-attestation)
       verify_attestation=true
+      ;;
+    --verify-checksum)
+      verify_checksums=true
       ;;
     *)
       say "error: unrecognized argument '$1'. Usage:"
@@ -149,6 +219,12 @@ fi
 
 if [ "$verify_attestation" = true ]; then
   need gh
+fi
+
+if [ "$verify_checksums" = true ]; then
+  command -v sha256sum > /dev/null 2>&1 ||
+    command -v shasum > /dev/null 2>&1 ||
+    err "need sha256sum or shasum (command not found)"
 fi
 
 if [ -z "${dest-}" ]; then
@@ -232,6 +308,10 @@ if [ "$extension" = "zip" ]; then
   download "$archive" "$td/celq.zip"
   archive_file="$td/celq.zip"
   
+  if [ "$verify_checksums" = true ]; then
+    verify_checksum "$archive_file" "$target" || err "Checksum verification failed"
+  fi
+  
   if [ "$verify_attestation" = true ]; then
     check_attestation "$archive_file" || err "Attestation verification failed"
   fi
@@ -240,6 +320,10 @@ if [ "$extension" = "zip" ]; then
 else
   download "$archive" "$td/celq.tar.gz"
   archive_file="$td/celq.tar.gz"
+  
+  if [ "$verify_checksums" = true ]; then
+    verify_checksum "$archive_file" "$target" || err "Checksum verification failed"
+  fi
   
   if [ "$verify_attestation" = true ]; then
     check_attestation "$archive_file" || err "Attestation verification failed"

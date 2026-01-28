@@ -183,14 +183,14 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload ${VERSION} ${{ steps.archive.outputs.ARCHIVE_NAME }}
-  
+
   update-install-script:
     name: Update install script on GitHub Pages
     runs-on: ubuntu-latest
     needs: [build, build-zig]
     environment: github_release
     steps:
-      - name: Checkout celq repository (for template)
+      - name: Checkout celq repository
         uses: actions/checkout@v4
         with:
           path: celq-repo
@@ -202,27 +202,28 @@ jobs:
           token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
           path: pages-repo
 
-      - name: Generate install scripts
+      - name: Generate install script with checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          cd celq-repo
           VERSION="${{ github.ref_name }}"
           
+          # Run the generation script
+          bash .github/scripts/generate-install-script.sh "$VERSION"
+          
           # Generate versioned install script (e.g., v0.1.1/install.sh or v0.2.0-beta.1/install.sh)
-          mkdir -p "pages-repo/${VERSION}"
-          sed "s/{{CELQ_VERSION}}/${VERSION}/g" celq-repo/template_install.sh > "pages-repo/${VERSION}/install.sh"
-          chmod +x "pages-repo/${VERSION}/install.sh"
+          mkdir -p "../pages-repo/${VERSION}"
+          cp install.sh "../pages-repo/${VERSION}/install.sh"
           
           # Only update root install.sh if this is NOT a pre-release
           # Pre-releases have a hyphen (e.g., v0.2.0-beta.1, v1.0.0-rc.1)
           if [[ ! "$VERSION" =~ -[a-zA-Z] ]]; then
             echo "Stable release detected, updating root install.sh"
-            sed "s/{{CELQ_VERSION}}/${VERSION}/g" celq-repo/template_install.sh > pages-repo/install.sh
-            chmod +x pages-repo/install.sh
+            cp install.sh ../pages-repo/install.sh
           else
             echo "Pre-release detected, skipping root install.sh update"
           fi
-          
-          # Copy generated script for GitHub release attachment
-          cp "pages-repo/${VERSION}/install.sh" celq-repo/install.sh
 
       - name: Generate attestation for install script
         uses: actions/attest-build-provenance@v3
