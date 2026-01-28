@@ -316,8 +316,6 @@ jobs:
         run: nix flake show github:IvanIsCoding/celq
 
       - name: Build Flake and show celq version
-        env:
-          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 16
         run: nix run github:IvanIsCoding/celq -- --version
   
   test-nix-flake-dev:
@@ -332,8 +330,6 @@ jobs:
             experimental-features = nix-command flakes
 
       - name: Build Flake with dev version and show celq version
-        env:
-          CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 16
         run: nix run github:IvanIsCoding/celq#dev -- --version
 
   test-freebsd-install:
