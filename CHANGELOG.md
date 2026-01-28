@@ -1,6 +1,14 @@
 Changelog
 =========
 
+[v0.3.1](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.1) - 2026-01-27
+
+### Added
+
+* Added the `--verify-checksum` flag to `install.sh`
+* `celq` now returns the input if no expression is passed
+
+
 [v0.3.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.0) - 2026-01-24
 ------------------------------------------------------------------------
 
