@@ -5,8 +5,8 @@ on:
 
 jobs:
   test-curl-install:
-    name: Test curl installer on ubuntu-24.04
-    runs-on: ubuntu-24.04
+    name: Test curl installer on ubuntu-slim
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
 
@@ -21,8 +21,8 @@ jobs:
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
   test-curl-install-with-checksum:
-    name: Test curl installer with checksum verification on ubuntu-24.04
-    runs-on: ubuntu-24.04
+    name: Test curl installer with checksum verification on ubuntu-slim
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
 
@@ -47,8 +47,8 @@ jobs:
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
   test-curl-install-with-attestation:
-    name: Test curl installer with attestation verification on ubuntu-24.04
-    runs-on: ubuntu-24.04
+    name: Test curl installer with attestation verification on ubuntu-slim
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
 
@@ -96,8 +96,8 @@ jobs:
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
   test-npm-install:
-    name: Test npm install (global) on ubuntu-24.04
-    runs-on: ubuntu-24.04
+    name: Test npm install (global) on ubuntu-slim
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
 
@@ -116,8 +116,8 @@ jobs:
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-pip-install:
-    name: Test pip install (global) on ubuntu-24.04
-    runs-on: ubuntu-24.04
+    name: Test pip install (global) on ubuntu-slim
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
 
@@ -152,7 +152,7 @@ jobs:
   
   test-linuxbrew-install:
     name: Test brew install on Linux (x86_64)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
 
@@ -170,8 +170,8 @@ jobs:
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-cargo-binstall:
-    name: Test cargo-binstall on ubuntu-24.04
-    runs-on: ubuntu-24.04
+    name: Test cargo-binstall on ubuntu-slim
+    runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
 
@@ -180,6 +180,22 @@ jobs:
 
       - name: Install celq via cargo-binstall
         run: cargo binstall celq -y
+
+      - name: Print celq version
+        run: celq --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
+  
+  test-gha-install-action:
+    name: Test taiki-e/install-action on ubuntu-slim
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: celq
 
       - name: Print celq version
         run: celq --version
@@ -365,6 +381,7 @@ jobs:
       - test-brew-install
       - test-linuxbrew-install
       - test-cargo-binstall
+      - test-gha-install-action
       - test-scoop-install
       - test-choco-install
       - test-winget-install
@@ -387,6 +404,7 @@ jobs:
           echo "- brew install: ${{ needs.test-brew-install.result }}"
           echo "- linuxbrew install: ${{ needs.test-linuxbrew-install.result }}"
           echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
+          echo "- GitHub Actions install action: ${{ needs.test-gha-install-action.result }}"
           echo "- scoop install: ${{ needs.test-scoop-install.result }}"
           echo "- chocolatey install: ${{ needs.test-choco-install.result }}"
           echo "- winget install: ${{ needs.test-winget-install.result }}"
@@ -404,6 +422,7 @@ jobs:
              [ "${{ needs.test-brew-install.result }}" != "success" ] || \
               [ "${{ needs.test-linuxbrew-install.result }}" != "success" ] || \
              [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
+              [ "${{ needs.test-gha-install-action.result }}" != "success" ] || \
              [ "${{ needs.test-scoop-install.result }}" != "success" ] || \
              [ "${{ needs.test-choco-install.result }}" != "success" ] || \
              [ "${{ needs.test-winget-install.result }}" != "success" ] || \
