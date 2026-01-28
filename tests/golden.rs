@@ -893,6 +893,14 @@ test!(
     "[10,15,20]"
 );
 
+// Default expr test
+test!(
+    default_expression,
+    &[],
+    r#"{"value":100}"#,
+    r#"{"value":100}"#
+);
+
 #[test]
 fn test_boolean_false_exit_code() -> io::Result<()> {
     let mut child = process::Command::new(env!("CARGO_BIN_EXE_celq"))

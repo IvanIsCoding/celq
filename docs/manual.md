@@ -432,7 +432,7 @@ celq --from-yaml 'this[1].tags' < multi.yaml
 With that being said, `celq` can pretty-print JSON via the `-p` flag:
 
 ```bash
-echo '{"a": 1, "b": 2}' | celq -p 'this'
+echo '{"a": 1, "b": 2}' | celq -p
 ```
 
 Outputs:
@@ -467,7 +467,7 @@ grocery_list_cli --item $FRUIT --quantity 5
 
 For example, to chain `celq` with ripgrep to find all fields containing `regularMarket`:
 ```bash
-celq -g 'this' < yfinance.json | rg '\bregularMarket\w*'
+celq -g  < yfinance.json | rg '\bregularMarket\w*'
 ```
 
 Outputs:
@@ -481,7 +481,7 @@ json.chart.result[0].meta.regularMarketTime = 1767387600;
 One interesting property about `--greppable` is that the output is valid JavaScript code. This unlocks use cases such as embedding TOML, YAML, and JSON5 configs as JavaScript source code. For example:
 
 ```bash
-celq --from-toml -g -S 'this' < Cargo.toml > cargo_toml.js
+celq --from-toml -g -S  < Cargo.toml > cargo_toml.js
 ```
 
 Writes the following to `cargo_toml.js`:
@@ -506,7 +506,7 @@ For NDJSON inputs, `--greppable` outputs only the last line. This happens to pre
 For example:
 
 ```bash
-celq -g 'this' < yfinance.json | rg '\bregularMarket\w*' | celq --from-gron -S -p 'this'
+celq -g  < yfinance.json | rg '\bregularMarket\w*' | celq --from-gron -S -p 
 ```
 
 Outputs:

@@ -77,7 +77,6 @@ impl std::str::FromStr for Argument {
     long_about = None,
     group(
         ArgGroup::new("program")
-            .required(true)
             .args(&["expression", "from_file"])
     ),
     group(
@@ -173,7 +172,7 @@ pub struct Cli {
     pub no_extensions: bool,
 
     /// CEL expression to evaluate
-    #[arg(value_name = "expr")]
+    #[arg(value_name = "expr", default_value = "this")]
     pub expression: Option<String>,
 }
 
