@@ -197,6 +197,13 @@ uvx celq -n '"Hello World"'
 
 `celq` publishes a `SHA256SUMS` file for each of its release in the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify integrity of the downloaded files.
 
+The `celq` installer supports the `--verify-checksum` flag to ensure the integrity of the pre-built binaries:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
+    bash -s -- --verify-checksum
+```
+
 `celq` also generates [artifact attestations](https://github.com/IvanIsCoding/celq/attestations) for each file in the Releases page, including the installer. To verify the authenticity of a file, use the [GitHub CLI](https://cli.github.com/) with the following command:
 
 ```bash
@@ -217,6 +224,8 @@ bash install.sh --verify-attestation
 ```
 
 This way, you can guarantee that both the installer and the downloaded binaries are authentic.
+
+Running the installer with the `--verify-checksum` requires either `sha256sum` or `shasum` to be available. If none of these tools is available, the installer will fail. 
 
 Running the installer with the `--verify-attestation` requires the GitHub CLI (`gh`). If `gh` is not found, the script will fail. If the user is not authenticated (`gh auth login`), the option will also fail. For scripts and non-interactive environments like CI, `gh auth login --with-token $GITHUB` is an option for authenticaitng when using this installer feature.
 
