@@ -12,7 +12,7 @@ jobs:
 
       - name: Install celq via curl
         run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
+          curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash -s -- --to ~/.cargo/bin
 
       - name: Print celq version
         run: ~/.cargo/bin/celq --version
@@ -38,7 +38,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          bash install.sh --verify-checksum
+          bash install.sh --verify-checksum --to ~/.cargo/bin
 
       - name: Print celq version
         run: ~/.cargo/bin/celq --version
@@ -68,7 +68,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          bash install.sh --verify-attestation
+          bash install.sh --verify-attestation --to ~/.cargo/bin
 
       - name: Print celq version
         run: ~/.cargo/bin/celq --version
@@ -170,8 +170,8 @@ jobs:
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-cargo-binstall:
-    name: Test cargo-binstall on ubuntu-slim
-    runs-on: ubuntu-slim
+    name: Test cargo-binstall on ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
