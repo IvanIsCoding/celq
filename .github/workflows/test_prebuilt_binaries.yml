@@ -20,6 +20,32 @@ jobs:
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
+  test-curl-install-with-checksum:
+    name: Test curl installer with checksum verification on ubuntu-24.04
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      - name: Download and verify checksum
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh > install.sh
+      - name: Install celq with checksum verification
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bash install.sh --verify-checksum
+
+      - name: Print celq version
+        run: ~/.cargo/bin/celq --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
+
   test-curl-install-with-attestation:
     name: Test curl installer with attestation verification on ubuntu-24.04
     runs-on: ubuntu-24.04
@@ -311,6 +337,7 @@ jobs:
     needs:
       - test-curl-install
       - test-curl-install-with-attestation
+      - test-curl-install-with-checksum
       - test-curl-install-windows
       - test-npm-install
       - test-pip-install
@@ -331,6 +358,7 @@ jobs:
           echo "Installation test results:"
           echo "- curl installer: ${{ needs.test-curl-install.result }}"
           echo "- curl installer (attestation): ${{ needs.test-curl-install-with-attestation.result }}"
+          echo "- curl installer (checksum): ${{ needs.test-curl-install-with-checksum.result }}"
           echo "- curl installer (Windows): ${{ needs.test-curl-install-windows.result }}"
           echo "- npm install: ${{ needs.test-npm-install.result }}"
           echo "- pip install: ${{ needs.test-pip-install.result }}"
@@ -346,6 +374,7 @@ jobs:
 
           if [ "${{ needs.test-curl-install.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-with-attestation.result }}" != "success" ] || \
+              [ "${{ needs.test-curl-install-with-checksum.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-windows.result }}" != "success" ] || \
              [ "${{ needs.test-npm-install.result }}" != "success" ] || \
              [ "${{ needs.test-pip-install.result }}" != "success" ] || \
