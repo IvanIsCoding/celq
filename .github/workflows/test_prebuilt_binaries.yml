@@ -149,6 +149,25 @@ jobs:
 
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
+  
+  test-linuxbrew-install:
+    name: Test brew install on Linux (x86_64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@master
+
+      - name: Install celq via Homebrew
+        run: brew install get-celq/tap/celq
+
+      - name: Print celq version
+        run: celq --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-cargo-binstall:
     name: Test cargo-binstall on ubuntu-24.04
@@ -342,6 +361,7 @@ jobs:
       - test-npm-install
       - test-pip-install
       - test-brew-install
+      - test-linuxbrew-install
       - test-cargo-binstall
       - test-scoop-install
       - test-choco-install
@@ -363,6 +383,7 @@ jobs:
           echo "- npm install: ${{ needs.test-npm-install.result }}"
           echo "- pip install: ${{ needs.test-pip-install.result }}"
           echo "- brew install: ${{ needs.test-brew-install.result }}"
+          echo "- linuxbrew install: ${{ needs.test-linuxbrew-install.result }}"
           echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
           echo "- scoop install: ${{ needs.test-scoop-install.result }}"
           echo "- chocolatey install: ${{ needs.test-choco-install.result }}"
@@ -379,6 +400,7 @@ jobs:
              [ "${{ needs.test-npm-install.result }}" != "success" ] || \
              [ "${{ needs.test-pip-install.result }}" != "success" ] || \
              [ "${{ needs.test-brew-install.result }}" != "success" ] || \
+              [ "${{ needs.test-linuxbrew-install.result }}" != "success" ] || \
              [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
              [ "${{ needs.test-scoop-install.result }}" != "success" ] || \
              [ "${{ needs.test-choco-install.result }}" != "success" ] || \
