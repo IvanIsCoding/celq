@@ -7,27 +7,27 @@ class Celq < Formula
   if OS.mac?
     if Hardware::CPU.arm?
       url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-macos-aarch64.tar.gz"
-      sha256 "{{CELQ_SHA256_ARM64}}"
+      sha256 "{{CELQ_SHA256_MACOS_ARM64}}"
     end
     if Hardware::CPU.intel?
       url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-macos-x86_64.tar.gz"
-      sha256 "{{CELQ_SHA256_X86_64}}"
+      sha256 "{{CELQ_SHA256_MACOS_X86_64}}"
     end
-  else
-    # Fallback to source for Linux
-    url "https://github.com/IvanIsCoding/celq/archive/refs/tags/v{{CELQ_VERSION}}.tar.gz"
-    sha256 "{{CELQ_SHA256_SOURCE}}"
-    depends_on "rust" => :build
+  end
+  
+  if OS.linux?
+    if Hardware::CPU.arm?
+      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-linux-aarch64-gnu.tar.gz"
+      sha256 "{{CELQ_SHA256_LINUX_ARM64}}"
+    end
+    if Hardware::CPU.intel?
+      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-linux-x86_64-gnu.tar.gz"
+      sha256 "{{CELQ_SHA256_LINUX_X86_64}}"
+    end
   end
 
   def install
-    if OS.mac?
-      # Install pre-built binary
-      bin.install "celq"
-    else
-      # Build from source
-      system "cargo", "install", "--locked", "--root", prefix, "--path", "."
-    end
+    bin.install "celq"
   end
 
   test do
