@@ -252,25 +252,28 @@ jobs:
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-winget-install:
-    name: Test WinGet install on Windows (Git Bash)
-    runs-on: windows-latest
-    if: true # disable until WinGet package is available
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install celq via WinGet
-        shell: pwsh
-        run: |
-          winget install IvanIsCoding.celq --scope machine --disable-interactivity --accept-source-agreements
-
-      - name: Print celq version
-        run: celq --version
-
-      - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh "$(which celq)"
+  name: Test WinGet install on Windows (Git Bash)
+  runs-on: windows-latest
+  steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install celq via WinGet
+      shell: pwsh
+      run: |
+        winget install IvanIsCoding.celq --scope machine --disable-interactivity --accept-source-agreements
+        
+    - name: Print celq version
+      shell: pwsh
+      run: |
+        refreshenv
+        celq --version
+    
+    - name: Run smoke test
+      shell: bash
+      run: |
+        # Find celq executable
+        CELQ_PATH=$(powershell.exe -Command '(Get-Command celq).Source' | tr -d '\r')
+        sh .github/scripts/smoke-test.sh "$CELQ_PATH"
 
   test-pixi-install:
     name: Test Pixi (conda-forge global) on ubuntu-24.04
