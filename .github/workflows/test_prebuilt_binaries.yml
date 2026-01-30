@@ -254,7 +254,7 @@ jobs:
   test-winget-install:
     name: Test WinGet install on Windows (Git Bash)
     runs-on: windows-latest
-    if: false # disable until WinGet package is available
+    if: true # disable until WinGet package is available
     defaults:
       run:
         shell: bash
