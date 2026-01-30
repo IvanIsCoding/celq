@@ -264,7 +264,7 @@ jobs:
       - name: Install celq via WinGet
         shell: pwsh
         run: |
-          winget install IvanIsCoding.celq --disable-interactivity --accept-source-agreements
+          winget install IvanIsCoding.celq --scope machine --disable-interactivity --accept-source-agreements
 
       - name: Print celq version
         run: celq --version
