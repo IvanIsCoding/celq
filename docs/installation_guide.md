@@ -166,6 +166,10 @@ su root -c 'install -m 755 celq /usr/local/bin/'
 
 `celq` can also be installed from source following the [Cargo](#cargo) section. We strive to always compile with the Rust version provided in the ports tree.
 
+### OpenBSD
+
+OpenBSD builds are tested in CI using the latest stable release. `celq` strives to always compile with the Rust version provided in the ports tree. Refer to the [Cargo](#cargo) section for instructions.
+
 ### NPM (Node.js/JavaScript)
 
 `celq` is packaged for [NPM](https://www.npmjs.com/package/celq). Node.js users can install celq in their project with:

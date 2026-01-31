@@ -50,12 +50,13 @@ Packaging `celq` for Linux, macOS, and Windows is a welcome contribution. If you
 
 ## MSRV
 
-The Minimum Supported Rust Version (MSRV) of `celq` trys to align with the MSRV of Debian testing and FreeBSD ports.
+The Minimum Supported Rust Version (MSRV) of `celq` trys to align with the MSRV of Debian testing, FreeBSD ports, and OpenBSD.
 
 To see their current MSRV, search for:
 * [rustc in Debian Packages](https://packages.debian.org/search?keywords=rustc) and see the version listed for testing.
-* [lang/rust in FreeBSD ports](https://www.freshports.org/lang/rust) and see the version listed for quarterly releases for `amd64`
+* [lang/rust in FreeBSD ports](https://www.freshports.org/lang/rust) and see the version listed for quarterly releases for `amd64` and `aarch64`
+* [ports/lang/rust in OpenBSD ports](https://cvsweb.openbsd.org/ports/lang/rust/Makefile) and see the latest version with a `CVS Tags` of the format `OPENBSD_X_Y`
 
 We use the minimum version among the two.
 
-Notice that eventually that may lag behind the latest of rustc by a considerable margin. However, that guarantees that `celq` can be packaged by many Linux distributions and FreeBSD.
+Notice that eventually that may lag behind the latest of rustc by a considerable margin. However, that guarantees that `celq` can be packaged by many Linux distributions, FreeBSD, and OpenBSD.
