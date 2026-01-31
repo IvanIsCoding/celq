@@ -63,14 +63,6 @@ If you are a [macOS Homebrew](https://brew.sh/) user, then you can install celq 
 brew install get-celq/tap/celq
 ```
 
-### Chocolatey (Windows)
-
-If you are a [Chocolatey](https://community.chocolatey.org/) user on Windows, you can install `celq` with:
-
-```bash
-choco install celq
-```
-
 ### Scoop (Windows)
 
 If you are a [Scoop](https://scoop.sh/) user on Windows, you can install `celq` with:
@@ -78,6 +70,14 @@ If you are a [Scoop](https://scoop.sh/) user on Windows, you can install `celq` 
 ```bash
 scoop bucket add get-celq https://github.com/get-celq/scoop-bucket
 scoop install get-celq/celq
+```
+
+### Chocolatey (Windows)
+
+If you are a [Chocolatey](https://community.chocolatey.org/) user on Windows, you can install `celq` with:
+
+```bash
+choco install celq
 ```
 
 ### Cargo
