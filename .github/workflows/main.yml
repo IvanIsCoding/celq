@@ -194,8 +194,8 @@ jobs:
           path: target/${{ matrix.target }}/debug/celq
           retention-days: 1
 
-  test-debian-oldstable:
-    name: Test on Debian Oldstable for (${{ matrix.target }})
+  test-debian-oldoldstable:
+    name: Test on Debian Oldoldstable for (${{ matrix.target }})
     needs: zigbuild
     strategy:
       matrix:
@@ -206,7 +206,7 @@ jobs:
             target: aarch64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     container:
-      image: debian:oldstable
+      image: debian:oldoldstable
     steps:
       - uses: actions/checkout@v4
       
