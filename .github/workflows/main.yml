@@ -48,8 +48,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install Rust 1.91.1
-        uses: dtolnay/rust-toolchain@1.91.1
+      - name: Install Rust MSRV
+        uses: dtolnay/rust-toolchain@1.90.0
         with:
           components: clippy
       
@@ -360,7 +360,6 @@ jobs:
           release: "7.8"
           usesh: true
           prepare: |
-            pkg_add -u
             pkg_add rust
           run: |
             cargo build --locked
