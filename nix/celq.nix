@@ -14,10 +14,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   src = fetchCrate {
     pname = finalAttrs.pname;
     version = finalAttrs.version;
-    sha256 = "sha256-cOoIyhOADr+xgd2T7m/jSwu4vndTObZ7vKDSntJfCuQ=";
+    sha256 = "sha256-JyJ1lmeHuOZiOd8Fr8gkFmsI/vmkzOW/9Ypqyl/tnhc=";
   };
 
-  cargoHash = "sha256-8QU2yoagNrZoOqknQqpkZbgcmDyvR5TNB6RUHt0Qjok=";
+  cargoHash = "sha256-IQ40VXhgF02UWAu61BLK/owVWo25rJVAnEm2IxsaVbU=";
 
   nativeInstallCheckInputs = [
     versionCheckHook
