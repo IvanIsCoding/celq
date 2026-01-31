@@ -19,8 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install Rust 1.91.1
-        uses: dtolnay/rust-toolchain@1.91.1
+      - name: Install Rust MSRV
+        uses: dtolnay/rust-toolchain@1.90.0
       
       - name: Build with locked dependencies
         run: cargo build --locked
