@@ -345,6 +345,8 @@ jobs:
           path: homebrew-tap
 
       - name: Update Homebrew formula
+        env:
+          GH_TOKEN: ${{ github.token }}
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
         run: |
           chmod +x celq-repo/.github/scripts/update-homebrew-formula.sh
