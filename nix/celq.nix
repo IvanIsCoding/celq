@@ -8,7 +8,7 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "celq";
-  version = "0.3.1";
+  version = "0.3.2";
 
   # Fetch from crates.io
   src = fetchCrate {
