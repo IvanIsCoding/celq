@@ -1,6 +1,12 @@
 Changelog
 =========
 
+[v0.3.2](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.2) - 2026-01-31
+
+### Miscellaneous
+
+* Downgraded the MSRV to Rust 1.90
+
 [v0.3.1](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.1) - 2026-01-27
 
 ### Added
