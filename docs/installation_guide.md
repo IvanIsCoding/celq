@@ -197,6 +197,20 @@ If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used 
 uvx celq -n '"Hello World"'
 ```
 
+### Conda Forge
+
+celq is available on [conda-forge](https://anaconda.org/channels/conda-forge/packages/celq/overview) and can be installed with `conda`, `mamba`, `micromamba`, and `pixi`:
+
+```bash
+conda install -c conda-forge celq
+```
+
+If you have [pixi](https://pixi.prefix.dev/latest/), you can run celq in a temporary environment with:
+
+```bash
+pixi exec celq -n '"Hello World"'
+```
+
 ## Integrity and Authenticity
 
 `celq` publishes a `SHA256SUMS` file for each of its release in the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify integrity of the downloaded files.

@@ -280,7 +280,6 @@ jobs:
   test-pixi-install:
     name: Test Pixi (conda-forge global) on ubuntu-24.04
     runs-on: ubuntu-24.04
-    if: false # disable until conda-forge package is available
     steps:
       - uses: actions/checkout@v4
 

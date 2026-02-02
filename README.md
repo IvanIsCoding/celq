@@ -187,6 +187,20 @@ If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used 
 uvx celq -n '"Hello World"'
 ```
 
+### Conda Forge
+
+celq is available on [conda-forge](https://anaconda.org/channels/conda-forge/packages/celq/overview) and can be installed with `conda`, `mamba`, `micromamba`, and `pixi`:
+
+```bash
+conda install -c conda-forge celq
+```
+
+If you have [pixi](https://pixi.prefix.dev/latest/), you can run celq in a temporary environment with:
+
+```bash
+pixi exec celq -n '"Hello World"'
+```
+
 ## Limitations
 
 ### Eager JSON Parsing
