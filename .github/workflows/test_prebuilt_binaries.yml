@@ -322,6 +322,7 @@ jobs:
         uses: jdx/mise-action@v3
         with:
           cache: false
+          experimental: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           mise_toml: |
             [tools]
