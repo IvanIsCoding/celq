@@ -288,7 +288,6 @@ jobs:
   test-pixi-install:
     name: Test Pixi (conda-forge global) on ubuntu-24.04
     runs-on: ubuntu-24.04
-    needs: test-pip-install
     steps:
       - uses: actions/checkout@v4
 
@@ -311,7 +310,7 @@ jobs:
   test-mise-install:
     name: Test mise (conda backend) on Windows (Git Bash)
     runs-on: windows-latest
-    needs: test-choco-install
+    needs: test-pixi-install
     defaults:
       run:
         shell: bash
@@ -379,6 +378,8 @@ jobs:
 
       - name: Get latest release version
         id: get_version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=$(curl -s https://api.github.com/repos/IvanIsCoding/celq/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
