@@ -88,6 +88,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install celq via curl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
 
@@ -238,7 +240,6 @@ jobs:
 
   test-choco-install:
     name: Test Chocolatey install on Windows (Git Bash)
-    if: false # enable once 0.2.0 makes it to Chocolatey
     runs-on: windows-latest
     defaults:
       run:
@@ -260,6 +261,7 @@ jobs:
   test-winget-install:
     name: Test WinGet install on Windows (Git Bash)
     runs-on: windows-latest
+    needs: test-scoop-install
     defaults:
       run:
         shell: bash
@@ -286,6 +288,7 @@ jobs:
   test-pixi-install:
     name: Test Pixi (conda-forge global) on ubuntu-24.04
     runs-on: ubuntu-24.04
+    needs: test-pip-install
     steps:
       - uses: actions/checkout@v4
 
