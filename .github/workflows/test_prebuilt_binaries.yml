@@ -23,6 +23,7 @@ jobs:
   test-curl-install-with-checksum:
     name: Test curl installer with checksum verification on ubuntu-slim
     runs-on: ubuntu-slim
+    needs: test-curl-install
     steps:
       - uses: actions/checkout@v4
 
@@ -49,6 +50,7 @@ jobs:
   test-curl-install-with-attestation:
     name: Test curl installer with attestation verification on ubuntu-slim
     runs-on: ubuntu-slim
+    needs: test-curl-install-with-checksum
     steps:
       - uses: actions/checkout@v4
 
@@ -153,6 +155,7 @@ jobs:
   test-linuxbrew-install:
     name: Test brew install on Linux (x86_64)
     runs-on: ubuntu-slim
+    needs: test-brew-install
     steps:
       - uses: actions/checkout@v4
 
@@ -190,6 +193,7 @@ jobs:
   test-gha-install-action:
     name: Test taiki-e/install-action on ubuntu-slim
     runs-on: ubuntu-slim
+    needs: test-cargo-binstall
     steps:
       - uses: actions/checkout@v4
 
