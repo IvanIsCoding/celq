@@ -308,6 +308,31 @@ jobs:
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
+  test-mise-install:
+    name: Test mise (conda backend) on Windows (Git Bash)
+    runs-on: windows-latest
+    needs: test-choco-install
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install celq via mise
+        uses: jdx/mise-action@v3
+        with:
+          cache: false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          mise_toml: |
+            [tools]
+            "conda:celq" = "latest"
+
+      - name: Print celq version
+        run: celq --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
+
   test-nix-flake:
     name: Test Nix flake validity and run
     runs-on: ubuntu-24.04
@@ -399,6 +424,7 @@ jobs:
       - test-choco-install
       - test-winget-install
       - test-pixi-install
+      - test-mise-install
       - test-nix-flake
       - test-nix-flake-dev
       - test-freebsd-install
@@ -422,6 +448,7 @@ jobs:
           echo "- chocolatey install: ${{ needs.test-choco-install.result }}"
           echo "- winget install: ${{ needs.test-winget-install.result }}"
           echo "- pixi (conda-forge): ${{ needs.test-pixi-install.result }}"
+          echo "- mise (conda backend): ${{ needs.test-mise-install.result }}"
           echo "- nix flake: ${{ needs.test-nix-flake.result }}"
           echo "- nix flake (latest): ${{ needs.test-nix-flake-dev.result }}"
           echo "- freebsd install: ${{ needs.test-freebsd-install.result }}"
@@ -440,6 +467,7 @@ jobs:
              [ "${{ needs.test-choco-install.result }}" != "success" ] || \
              [ "${{ needs.test-winget-install.result }}" != "success" ] || \
              [ "${{ needs.test-pixi-install.result }}" != "success" ] || \
+             [ "${{ needs.test-mise-install.result }}" != "success" ] || \
              [ "${{ needs.test-nix-flake.result }}" != "success" ] || \
               [ "${{ needs.test-nix-flake-dev.result }}" != "success" ] || \
              [ "${{ needs.test-freebsd-install.result }}" != "success" ]; then

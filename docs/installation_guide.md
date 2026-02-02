@@ -219,6 +219,21 @@ If you have [pixi](https://pixi.prefix.dev/latest/), you can run celq in a tempo
 pixi exec celq -n '"Hello World"'
 ```
 
+### Mise
+
+celq can be used with [mise](https://mise.jdx.dev/). To install celq, use the Conda back-end:
+
+```
+mise use -g conda:celq
+```
+
+Alternatively, add this to `mise.toml`:
+
+```toml
+[tools]
+"conda:celq" = "latest"
+```
+
 ## Integrity and Authenticity
 
 `celq` publishes a `SHA256SUMS` file for each of its release in the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify integrity of the downloaded files.
