@@ -233,6 +233,7 @@ jobs:
 
   test-choco-install:
     name: Test Chocolatey install on Windows (Git Bash)
+    if: false # enable once 0.2.0 makes it to Chocolatey
     runs-on: windows-latest
     defaults:
       run:

@@ -80,6 +80,14 @@ If you are a [Chocolatey](https://community.chocolatey.org/) user on Windows, yo
 choco install celq
 ```
 
+### WinGet (Windows)
+
+If you are a [WinGet](https://learn.microsoft.com/windows/package-manager/winget/) user on Windows, you can install `celq` with:
+
+```bash
+winget install IvanIsCoding.celq
+```
+
 ### Cargo
 
 #### Installing From Source 
