@@ -364,3 +364,39 @@ jobs:
           run: |
             cargo build --locked
             cargo test --locked
+    
+    netbsd:
+    name: NetBSD (QEMU)
+    needs: [build, format, clippy]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@668c092af3649c4b664c54e4b704aa46782f6f7c # v2
+        id: filter
+        with:
+          filters: |
+            rust:
+              - '**/*.rs'
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+              - '.cirrus.star'
+              - '.github/workflows/main.yml'
+              - '.cargo/**'
+              - 'src/**'
+              - 'tests/**'
+              - '.github/scripts/smoke-test.sh'
+      
+      - name: Test on NetBSD
+        if: steps.filter.outputs.rust == 'true'
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: "10.1"
+          usesh: true
+          prepare: |
+            /usr/sbin/pkg_add rust
+          run: |
+            cargo build --locked
+            cargo test --locked

@@ -176,7 +176,11 @@ su root -c 'install -m 755 celq /usr/local/bin/'
 
 ### OpenBSD
 
-OpenBSD builds are tested in CI using the latest stable release. `celq` strives to always compile with the Rust version provided in the ports tree. Refer to the [Cargo](#cargo) section for instructions.
+OpenBSD builds are tested in CI using the latest stable release. `celq` strives to always compile with the Rust version provided in the ports tree. Refer to the [Cargo](#cargo) section for installation instructions.
+
+### NetBSD
+
+NetBSD builds are tested in CI against the latest stable release. `celq` aims to remain compatible with the Rust version provided by the NetBSD pkgsrc quarterly branch. See the [Cargo](#cargo) section for installation instructions.
 
 ### NPM (Node.js/JavaScript)
 
