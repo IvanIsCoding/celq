@@ -213,7 +213,7 @@ pixi exec celq -n '"Hello World"'
 
 celq can be used with [mise](https://mise.jdx.dev/). To install celq, use the Conda back-end:
 
-```
+```bash
 mise use -g conda:celq
 ```
 
