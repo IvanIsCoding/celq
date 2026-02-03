@@ -365,7 +365,7 @@ jobs:
             cargo build --locked
             cargo test --locked
     
-    netbsd:
+  netbsd:
     name: NetBSD (QEMU)
     needs: [build, format, clippy]
     runs-on: ubuntu-latest
