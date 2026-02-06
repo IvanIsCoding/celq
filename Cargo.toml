@@ -33,9 +33,10 @@ name = "celq"
 path = "src/documentation.rs"
 
 [features]
-default = ["mimalloc", "from-toml", "from-yaml", "greppable"]
+default = ["mimalloc", "from-toml", "from-yaml", "greppable", "from-xml"]
 from-toml = ["dep:toml"]
 from-yaml = ["dep:serde-saphyr"]
+from-xml = ["dep:xml2json-rs"]
 greppable = ["dep:ressa", "dep:resast"]
 
 [dependencies]
@@ -51,6 +52,7 @@ toml = { version = "=0.9.8", default-features = false, features = ["parse", "ser
 serde-saphyr = { version = "=0.0.16", default-features = false, optional = true }
 ressa = { version = "=0.8.2", optional = true}
 resast = { version = "=0.5.0", optional = true }
+xml2json-rs = {version = "=1.0.1", optional = true }
 
 [dev-dependencies]
 tempfile = "3"

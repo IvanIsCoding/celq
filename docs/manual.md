@@ -39,10 +39,10 @@ See the [installation guide](`crate::installation_guide`) for installation instr
 ```none
 A CEL command-line query tool for JSON data
 
-Usage: celq [OPTIONS] <expr|--from-file <FILE>>
+Usage: celq [OPTIONS] [expr]
 
 Arguments:
-  [expr]  CEL expression to evaluate
+  [expr]  CEL expression to evaluate [default: this]
 
 Options:
   -a, --arg <name:type=value>  Define argument variables, types, and values. Format: name:type=value. Supported types: int, uint, float, bool, string
@@ -53,6 +53,7 @@ Options:
       --from-json5             Parse input as JSON5 instead of JSON
       --from-toml              Parse input as TOML instead of JSON
       --from-yaml              Parse input as YAML instead of JSON
+      --from-xml               Parse input as XML instead of JSON
       --from-gron              Parse input as gron (greppable output) instead of JSON
   -j, --jobs <N>               Parallelism level for NDJSON inputs (number of threads, -1 for all available) [default: 1]
   -R, --root-var <ROOT_VAR>    Variable name for the root JSON input [default: this]
@@ -144,8 +145,8 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [this keyword](#this-keyword)
   * [Writing Files](#writing-files)
   * [Output JSON](#output-json)
-  * [Slicing lists](#slicing-lists)
   * [Reading CEL from a file](#reading-cel-from-a-file)
+  * [Slicing lists](#slicing-lists)
   * [Dealing with NDJSON](#dealing-with-ndjson)
   * [Slurping](#slurping)
   * [Logical Calculator](#logical-calculator)
@@ -156,6 +157,7 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [TOML Support](#toml-support)
   * [YAML Support](#yaml-support)
   * [YAML with multiple documents](#yaml-with-multiple-documents)
+  * [XML Support](#xml-support)
   * [Pretty Printing](#pretty-printing)
   * [Raw Output](#raw-output)
   * [Grep friendly output](#grep-friendly-output)
@@ -443,6 +445,59 @@ The document gets parsed as a list of documents. To access the `tags` field of t
 ```bash
 celq --from-yaml 'this[1].tags' < multi.yaml
 ```
+
+### XML Support
+
+`celq` supports XML via the `--froml-xml` flag. Take `example.xml`:
+
+<details>
+<summary>example.xml</summary>
+
+```xml
+<?xml version="1.0"?>
+<items>
+  <item id="1">
+    <name>apple</name>
+    <price>1.25</price>
+  </item>
+  <item id="2">
+    <name>banana</name>
+    <price>0.75</price>
+  </item>
+</items>
+```
+</details>
+
+Running `celq --from-xml -S < example.xml` converts it to the following:
+
+<details>
+<summary>example_xml.json</summary>
+
+```json
+{
+  "items": {
+    "item": [
+      {
+        "$": {
+          "id": "1"
+        },
+        "name": "apple",
+        "price": "1.25"
+      },
+      {
+        "$": {
+          "id": "2"
+        },
+        "name": "banana",
+        "price": "0.75"
+      }
+    ]
+  }
+}
+```
+</details>
+
+`celq`'s XML parser does not try to convert types and puts attributes in the `$` field.
 
 ### Pretty Printing
 

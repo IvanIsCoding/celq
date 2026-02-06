@@ -951,3 +951,106 @@ fn test_slice_fails_without_extensions() -> io::Result<()> {
 
     Ok(())
 }
+
+// XML tests
+
+// XML with nested elements
+#[cfg(feature = "from-xml")]
+test!(
+    xml_nested_elements,
+    &[
+        "--from-xml",
+        "this.database.host + ':' + string(this.database.port)"
+    ],
+    r#"<database>
+  <host>localhost</host>
+  <port>5432</port>
+</database>"#,
+    "\"localhost:5432\""
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_array_of_elements,
+    &["--from-xml", "this.servers.server.map(s, s.ip)"],
+    r#"<servers>
+  <server>
+    <ip>192.168.1.1</ip>
+    <name>alpha</name>
+  </server>
+  <server>
+    <ip>192.168.1.2</ip>
+    <name>beta</name>
+  </server>
+</servers>"#,
+    "[\"192.168.1.1\",\"192.168.1.2\"]"
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_with_attributes,
+    &[
+        "--from-xml",
+        "this.user.name + ' <' + this.user.email + '>'"
+    ],
+    r#"<user>
+  <name>Alice</name>
+  <email>alice@example.com</email>
+</user>"#,
+    "\"Alice <alice@example.com>\""
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_simple_structure,
+    &["--from-xml", "int(this.point.x) + int(this.point.y)"],
+    r#"<point>
+  <x>10</x>
+  <y>20</y>
+</point>"#,
+    "30"
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_text_content,
+    &["--from-xml", "this.message"],
+    r#"<message>Hello, World!</message>"#,
+    r#""Hello, World!""#
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_mixed_content,
+    &[
+        "--from-xml",
+        "this.person.name + ' is ' + string(this.person.age)"
+    ],
+    r#"<person>
+  <name>Bob</name>
+  <age>25</age>
+</person>"#,
+    "\"Bob is 25\""
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_to_pretty_sorted_json,
+    &["--from-xml", "--sort-keys", "--pretty-print", "this"],
+    r#"<root>
+  <person>
+    <name>Alice</name>
+    <age>30</age>
+  </person>
+  <id>1</id>
+</root>"#,
+    r#"{
+  "root": {
+    "id": "1",
+    "person": {
+      "age": "30",
+      "name": "Alice"
+    }
+  }
+}"#
+);

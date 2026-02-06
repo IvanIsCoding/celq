@@ -62,6 +62,23 @@ pub fn json_to_cel_variables(
                 ));
             }
         }
+        InputFormat::Xml => {
+            #[cfg(feature = "from-xml")]
+            {
+                xml2json_rs::JsonConfig::new()
+                    .explicit_array(false)
+                    .finalize()
+                    .build_from_xml(json_str)
+                    .map_err(serde_json::Error::custom)?
+            }
+
+            #[cfg(not(feature = "from-xml"))]
+            {
+                return Err(serde_json::Error::custom(
+                    "Binary was compiled without XML support",
+                ));
+            }
+        }
         InputFormat::Gron => {
             #[cfg(feature = "greppable")]
             {

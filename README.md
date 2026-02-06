@@ -19,7 +19,7 @@ celq -n --arg='fruit:string=apple' 'fruit.contains("a")'
 # Outputs: true
 ```
 
-Popular configuration formats such as JSON5, YAML, and TOML are supported. The closely related format NDJSON is also supported.
+Popular configuration formats such as JSON5, YAML, TOML, and XML are supported. The closely related format NDJSON is also supported.
 
 For detailed usage examples and recipes, see the [manual](https://docs.rs/celq/latest/celq/).
 

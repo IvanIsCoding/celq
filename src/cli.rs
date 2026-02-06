@@ -24,6 +24,7 @@ pub enum InputFormat {
     Json5,
     Toml,
     Yaml,
+    Xml,
     Gron,
 }
 
@@ -129,6 +130,10 @@ pub struct Cli {
     #[arg(long = "from-yaml")]
     pub from_yaml: bool,
 
+    /// Parse input as XML instead of JSON
+    #[arg(long = "from-xml")]
+    pub from_xml: bool,
+
     /// Parse input as gron (greppable output) instead of JSON
     #[arg(long = "from-gron")]
     pub from_gron: bool,
@@ -184,6 +189,8 @@ impl Cli {
             InputFormat::Yaml
         } else if self.from_toml {
             InputFormat::Toml
+        } else if self.from_xml {
+            InputFormat::Xml
         } else if self.from_json5 {
             InputFormat::Json5
         } else if self.slurp {
