@@ -33,10 +33,11 @@ jobs:
       - name: Build WASM binary
         run: |
           cd celq-repo
-          cargo build \
+          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo build \
             --no-default-features \
             --features "from-toml,from-yaml,greppable,from-xml" \
             --release \
+            -Z build-std=std,panic_abort \
             --target wasm32-wasip1
           
           echo "✅ WASM build completed"
