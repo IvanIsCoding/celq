@@ -33,6 +33,7 @@
     "@ivaniscoding/celq-windows-arm64": node_version,
     "@ivaniscoding/celq-windows-x64": node_version
   },
+  "license": "MIT OR Apache-2.0",
   "eslintConfig": {
     "extends": [
       "eslint:recommended",
