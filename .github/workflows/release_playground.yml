@@ -25,6 +25,15 @@ jobs:
         with:
           path: celq-repo
 
+      - name: Install Pixi
+        uses: prefix-dev/setup-pixi@v0.9.3
+        with:
+          pixi-version: v0.62.2
+          cache: false
+          run-install: false
+          global-environments: |
+            binaryen=121
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -48,6 +57,19 @@ jobs:
           
           echo "✅ WASM build completed"
 
+      - name: Optimize WASM with wasm-opt
+        run: |
+          cd celq-repo
+          wasm-opt -Oz \
+            target/wasm32-wasip1/release/celq.wasm \
+            -o celq.opt.wasm
+          
+          # Show size comparison
+          echo "📊 Size comparison:"
+          ls -lh target/wasm32-wasip1/release/celq.wasm celq.opt.wasm
+          
+          echo "✅ WASM optimization completed"
+
       - name: Checkout playground repository
         uses: actions/checkout@v4
         with:
@@ -57,8 +79,8 @@ jobs:
 
       - name: Copy WASM binary to playground
         run: |
-          cp celq-repo/target/wasm32-wasip1/release/celq.wasm playground-repo/celq.wasm
-          echo "✅ WASM binary copied to playground repository"
+          cp celq-repo/celq.opt.wasm playground-repo/celq.wasm
+          echo "✅ Optimized WASM binary copied to playground repository"
 
       - name: Commit and push to playground
         run: |
