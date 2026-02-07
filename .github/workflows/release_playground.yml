@@ -62,6 +62,7 @@ jobs:
           cd celq-repo
           wasm-opt -Oz \
             --enable-bulk-memory \
+            --enable-nontrapping-float-to-int \
             target/wasm32-wasip1/release/celq.wasm \
             -o celq.opt.wasm
           
