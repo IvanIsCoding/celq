@@ -63,6 +63,8 @@ jobs:
           wasm-opt -Oz \
             --enable-bulk-memory \
             --enable-nontrapping-float-to-int \
+            --vacuum \
+            --converge \
             target/wasm32-wasip1/release/celq.wasm \
             -o celq.opt.wasm
           
