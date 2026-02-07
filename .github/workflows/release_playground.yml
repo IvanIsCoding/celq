@@ -61,6 +61,7 @@ jobs:
         run: |
           cd celq-repo
           wasm-opt -Oz \
+            --enable-bulk-memory \
             target/wasm32-wasip1/release/celq.wasm \
             -o celq.opt.wasm
           
