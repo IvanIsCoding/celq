@@ -34,7 +34,12 @@ jobs:
       - name: Build WASM binary
         run: |
           cd celq-repo
-          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo build \
+          RUSTC_BOOTSTRAP=1 RUSTFLAGS="\
+            -Z unstable-options \
+            -C opt-level=z \
+            -C debuginfo=0 \
+            -C strip=symbols \
+          " cargo build \
             --no-default-features \
             --features "from-toml,from-yaml,greppable,from-xml" \
             --release \
