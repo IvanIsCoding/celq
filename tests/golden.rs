@@ -815,13 +815,11 @@ json.person.name = "Bob";
 
 #[cfg(feature = "greppable")]
 test!(
-    greppable_ndjson_prints_all_results,
+    greppable_ndjson_prints_only_last_result,
     &["--greppable", "-S", "this"],
     r#"{"a":1}
 {"b":2}"#,
     r#"json = {};
-json.a = 1;
-json = {};
 json.b = 2;
 "#
 );

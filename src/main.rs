@@ -95,10 +95,12 @@ fn main() -> io::Result<()> {
         Ok(results) => {
             // Print all outputs, unless void mode is enabled
             if !cli.void {
-                for (output, _) in &results {
-                    if cli.greppable {
+                if cli.greppable {
+                    if let Some((output, _)) = results.last() {
                         print!("{}", output);
-                    } else {
+                    }
+                } else {
+                    for (output, _) in &results {
                         println!("{}", output);
                     }
                 }

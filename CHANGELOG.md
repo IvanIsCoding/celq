@@ -6,7 +6,6 @@ Changelog
 
 ### Fixed
 
-* Fixed `--greppable` so NDJSON input prints all matching results instead of only the last one.
 * Fixed conflicting input-format flags so combinations such as `--from-xml --from-yaml` are rejected by the CLI.
 
 ### Miscellaneous
