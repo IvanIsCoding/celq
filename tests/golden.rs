@@ -75,7 +75,13 @@ fn golden_test_failure(args: &[&str], input: &str, err_ex: &str) -> io::Result<(
     use io::Write;
     {
         let mut stdin = child.stdin.take().unwrap();
-        stdin.write_all(input.as_bytes())?;
+        // Some failures happen during argument parsing before stdin is read.
+        // In that case the child may exit early and close the pipe first.
+        match stdin.write_all(input.as_bytes()) {
+            Ok(()) => {}
+            Err(err) if err.kind() == io::ErrorKind::BrokenPipe => {}
+            Err(err) => return Err(err),
+        }
         drop(stdin);
     }
 
