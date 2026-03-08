@@ -1,7 +1,7 @@
 [package]
 name = "celq"
 description = "A CEL command-line query tool for JSON data"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2024"
 rust-version = "1.90"
 authors = ["Ivan Carvalho <ivancarvalho@gatech.edu>"]
@@ -47,7 +47,7 @@ serde = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.11"
 mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = true }
-json5 = "1.3.0"
+json5 = "1.3"
 toml = { version = "=1.0.6", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
 serde-saphyr = { version = "=0.0.21", default-features = false, optional = true }
 ressa = { version = "=0.8.2", optional = true}
