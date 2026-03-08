@@ -180,7 +180,7 @@ NetBSD builds are tested in CI against the latest stable release. `celq` aims to
 npm install celq
 ```
 
-This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
+This adds celq to `package.json` and makes it available for scripts. It is also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
 
 ```bash
 npx celq -n '"Hello World"'
@@ -276,7 +276,7 @@ All the documentation in the manual has been hand-crafted. That was done to keep
 
 ## License
 
-This project is dual-licensed under the MIT License and Apache 2.0 licenses.  See [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE) file for details.
+This project is dual-licensed under the MIT License and Apache 2.0 licenses. See [LICENSE-MIT](LICENSE-MIT) and [LICENSE-APACHE](LICENSE-APACHE) files for details.
 
 The `install.sh` published with each GitHub release and its template at the root of the repository (`template_install.sh`) are licensed independently. Those files are under the CC0-1.0 license. They are the original work of Casey Rodarmor from [just](https://github.com/casey/just) and have been adapted for celq.
 

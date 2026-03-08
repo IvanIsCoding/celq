@@ -34,7 +34,7 @@
 
 * [jo](https://github.com/jpmens/jo) is less verbose than celq for creating JSON output from the CLI
 * jo doesn't read from the input by default. celq needs the `-n` flag to ignore the input.
-* jo can created nested objects by composing calls e.g. `jo github=$(jo user=get-celq repo=homebrew-tap)`. At the moment, celq's arguments don't support maps yet
+* jo can create nested objects by composing calls e.g. `jo github=$(jo user=get-celq repo=homebrew-tap)`. At the moment, celq's arguments don't support maps yet
 
 ## gron vs celq
 
@@ -53,11 +53,11 @@
 
 ## jql vs celq
 
-* [jql](https://github.com/yamafaktory/jql) uses its own syntax to query JSON with selectors. celq is closer to how imperative programming languges access JSON fields.
+* [jql](https://github.com/yamafaktory/jql) uses its own syntax to query JSON with selectors. celq is closer to how imperative programming languages access JSON fields.
 * jql did not support JSON5, YAML, and TOML when celq was originally written.
 
 ## DuckDB JSON vs celq
 
 * [DuckDB](https://duckdb.org/docs/stable/data/json/overview) excels at querying JSON with schemas using SQL
-* celq and jq excel at querying unstructed JSON
+* celq and jq excel at querying unstructured JSON
 * DuckDB did not support JSON5, YAML, and TOML when celq was originally written (and that is probably a good thing)

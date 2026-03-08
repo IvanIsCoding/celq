@@ -109,9 +109,9 @@ cargo binstall celq
   run: echo ${{ steps.exampleID.outputs.result }}
 ```
 
-The best practice for GitHub Actions is to select both the version for the tool:
+The best practice for GitHub Actions is to select both versions:
 * The tool version is specified by the optional `version` parameter
-* The action version is specified `celq-action@actionVersion`
+* The action version is specified by `celq-action@actionVersion`
 
 For example:
 ```yaml
@@ -190,7 +190,7 @@ NetBSD builds are tested in CI against the latest stable release. `celq` aims to
 npm install celq
 ```
 
-This adds celq to `package.json` and makes it available for scripts. It's also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
+This adds celq to `package.json` and makes it available for scripts. It is also possible to run single commands with [npx](https://docs.npmjs.com/cli/v8/commands/npx):
 
 ```bash
 npx celq -n '"Hello World"'
@@ -240,7 +240,7 @@ Alternatively, add this to `mise.toml`:
 
 ## Integrity and Authenticity
 
-`celq` publishes a `SHA256SUMS` file for each of its release in the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify integrity of the downloaded files.
+`celq` publishes a `SHA256SUMS` file for each of its releases on the [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). The checksum can be used to verify the integrity of the downloaded files.
 
 The `celq` installer supports the `--verify-checksum` flag to ensure the integrity of the pre-built binaries:
 

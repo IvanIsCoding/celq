@@ -60,7 +60,7 @@ Options:
   -r, --raw-output             If the output is a JSON string, output it raw without quotes
   -S, --sort-keys              Output the fields of each object with the keys in sorted order
   -f, --from-file <FILE>       Read CEL expression from a file
-  -p, --pretty-print           Output JSON with identation and line breaks for human readability
+  -p, --pretty-print           Output JSON with indentation and line breaks for human readability
   -g, --greppable              Output in a greppable format (gron style)
       --no-extensions          Disable extensions and use only standard CEL functions
   -h, --help                   Print help
@@ -170,7 +170,7 @@ By default, `celq` reads from the standard input. To read from a file, use `<` f
 celq "this.chart.result[0].meta.symbol" < yfinance.json
 ```
 
-It's also possibile to pipe the output from `cat`:
+It is also possible to pipe the output from `cat`:
 
 ```bash
 cat yfinance.json | celq "this.chart.result[0].meta.symbol"
@@ -219,7 +219,7 @@ cat yfinance.json | celq '{"symbol": this.chart.result[0].meta.longName, "price"
 
 The command outputs: `{"price":271.01,"symbol":"Apple Inc."}`
 
-Notice that by default `celq` does not guarantee the key order of the output. If you require so, pass the `--sort-keys` option:
+Notice that by default `celq` does not guarantee the key order of the output. If you require it, pass the `--sort-keys` option:
 
 ```bash
 cat yfinance.json | celq --sort-keys '{"symbol": this.chart.result[0].meta.longName, "price": this.chart.result[0].meta.regularMarketPrice}'
@@ -236,7 +236,7 @@ In the previous example, the CEL expression for the JSON became long. Let's say 
 }
 ```
 
-If we pass the `--from-file` argument, we can load the expression and keep the command succint:
+If we pass the `--from-file` argument, we can load the expression and keep the command succinct:
 
 ```bash
 cat yfinance.json | celq --from-file stock.cel
@@ -251,15 +251,15 @@ echo '["apples", "bananas", "blueberry"]' | celq 'this.slice(1, 3)'
 # Outputs: ["bananas", "blueberry"]
 ```
 
-Slicing follows Python conventions: it is 0-indexed and works with negative indices. The `.slice()` calls always requires two arguments. If you need to slice until the end of the list, do `this.slice(pos, size(this.slice))`. Similarly, do `this.slice(0, pos)` to start from the beginning.
+Slicing follows Python conventions: it is 0-indexed and works with negative indices. The `.slice()` call always requires two arguments. If you need to slice until the end of the list, do `this.slice(pos, size(this.slice))`. Similarly, do `this.slice(0, pos)` to start from the beginning.
 
-If you want to keep your CEL code portable, pass the `--no-extensions` arguments to disable slicing and all other extensions.
+If you want to keep your CEL code portable, pass the `--no-extensions` argument to disable slicing and all other extensions.
 
 ### Dealing with NDJSON
 
 `celq` can deal with [Newline-Delimited JSON (NDJSON)](https://web.archive.org/web/20231218162511/https://ndjson.org/). That format is also called [JSON Lines (JSONL)](https://web.archive.org/web/20251130123805/https://jsonlines.org./).
 
-`celq` detects the content of multi-line files. Firstly, it tries to parse the input as a NDJSON where each line is a JSON value. If that fails, we parse the input as a single JSON file.
+`celq` detects the content of multi-line files. First, it tries to parse the input as NDJSON where each line is a JSON value. If that fails, it parses the input as a single JSON file.
 
 Take for example the following file, `example.ndjson`:
 
@@ -293,7 +293,7 @@ For example:
 cat example.json | celq --slurp "this"
 ```
 
-Outputs: `[{"y":2.5,"x":1.5},{"y":4.5,"x":3.5}]`. In short, it concatenated the input in a single list.
+Outputs: `[{"y":2.5,"x":1.5},{"y":4.5,"x":3.5}]`. In short, it concatenates the input into a single list.
 
 That can be convenient. Let's say we want to access all values of `x`:
 
@@ -327,7 +327,7 @@ For example:
 cat yfinance.json | celq --root-var=request "request.chart.result[0].meta.longName"
 ```
 
-Outputs: `"Apple Inc."`. This feature can be handy when reusing CEL snippets accross different environments, as they will not use `this` as a variable. That becomes particularly useful with the `--from-file` feature.
+Outputs: `"Apple Inc."`. This feature can be handy when reusing CEL snippets across different environments, as they will not use `this` as a variable. That becomes particularly useful with the `--from-file` feature.
 
 ### Boolean output
 
@@ -357,7 +357,7 @@ fi
 
 Will print: `apple contains the letter a`.
 
-Often, the `--boolean` flag plays nicely with the `--void` flag. The `--void` flag ommits all outputs to stdout, which can be handy to hide unnecessary `true` or `false` outputs for intermediary steps in bash scripts.
+Often, the `--boolean` flag plays nicely with the `--void` flag. The `--void` flag omits all output to stdout, which can be handy to hide unnecessary `true` or `false` outputs for intermediary steps in bash scripts.
 
 Note that for NDJSON inputs, `celq` sets the value based on the value of the last JSON in the NDJSON input.
 
@@ -389,7 +389,7 @@ Notice that passing the `--from-json5` clashes with the `--slurp` flag and with 
 
 ### TOML Support
 
-`celq` supports [TOML](https://toml.io/en/), another popular configuration format. For example, `celq` can query it's own manifest file:
+`celq` supports [TOML](https://toml.io/en/), another popular configuration format. For example, `celq` can query its own manifest file:
 
 ```bash
 celq --from-toml 'this.package.version' < Cargo.toml
@@ -427,7 +427,7 @@ The output is `true` and the return code is 0. We validated that the number of r
 
 ### YAML with multiple documents
 
-Some YAML files contain multiple documents with separated by `---`. For example, in `multi.yaml`:
+Some YAML files contain multiple documents separated by `---`. For example, in `multi.yaml`:
 
 ```yaml
 author: "Example Author"
@@ -448,7 +448,7 @@ celq --from-yaml 'this[1].tags' < multi.yaml
 
 ### XML Support
 
-`celq` supports XML via the `--froml-xml` flag. Take `example.xml`:
+`celq` supports XML via the `--from-xml` flag. Take `example.xml`:
 
 <details>
 <summary>example.xml</summary>
@@ -526,7 +526,7 @@ By default, `celq` outputs valid JSON. This is generally the best option, but it
 echo '["apples", "bananas", "blueberries"]' | celq 'this[0]'
 ```
 
-Will always outputs `"apples"` with quotes. If you want to save it in an envrionment variable, the quotes will be included. To bypass that, the `--raw-output` option is convenient:
+Will always output `"apples"` with quotes. If you want to save it in an environment variable, the quotes will be included. To bypass that, the `--raw-output` option is convenient:
 
 ```bash
 FRUIT=$(echo '["apples", "bananas", "blueberries"]' | celq --raw-output 'this[0]')
@@ -560,7 +560,7 @@ celq --from-toml -g -S  < Cargo.toml > cargo_toml.js
 
 Writes the following to `cargo_toml.js`:
 
-```javacript
+```javascript
 json = {};
 json.bin = [];
 json.bin[0] = {};
@@ -575,7 +575,7 @@ For NDJSON inputs, `--greppable` outputs only the last line. This happens to pre
 
 ### Reverting filtered grep output
 
-`celq` also has a `--from-gron` flag that parsers the output of `gron` and `celq --greppable`. It is equivalent to `gron -u`. That can be useful for converting output filtered by grep back to JSON.
+`celq` also has a `--from-gron` flag that parses the output of `gron` and `celq --greppable`. It is equivalent to `gron -u`. That can be useful for converting output filtered by grep back to JSON.
 
 For example:
 
