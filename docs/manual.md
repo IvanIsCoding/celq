@@ -92,7 +92,7 @@ Want to try `celq` without installing anything? Visit the [celq-playground](http
 
 ## References
 
-- [CEL Language Definition](https://github.com/google/cel-spec/blob/master/doc/langdef.md)
+- [CEL By Example](https://celbyexample.com/)
 - [cel-rust](https://github.com/cel-rust/cel-rust): the Rust implementation of CEL powering `celq`
 - [Comparison with other tools](`crate::comparison_with_other_tools`)
 
