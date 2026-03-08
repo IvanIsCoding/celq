@@ -130,3 +130,7 @@ fn compile_expression(expression: Option<&str>, from_file: Option<&PathBuf>) -> 
 
     Program::compile(&source).map_err(|e| anyhow::anyhow!(e))
 }
+
+#[cfg(test)]
+#[path = "main_test.rs"]
+mod tests;

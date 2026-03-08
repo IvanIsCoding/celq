@@ -300,3 +300,35 @@ fn test_handle_buffer_custom_root_var() {
     assert_eq!(results[0].0, "42");
     assert!(results[0].1);
 }
+
+#[test]
+fn test_handle_buffer_rejects_zero_parallelism() {
+    let program = Program::compile("this.x").unwrap();
+    let args = BTreeMap::new();
+    let input = r#"{"x": 42}"#;
+    let cursor = Cursor::new(input.as_bytes());
+    let reader = BufReader::new(cursor);
+    let mut params = default_params();
+    params.parallelism = 0;
+
+    let err = handle_buffer(&program, &args, &params, reader)
+        .unwrap_err()
+        .to_string();
+
+    assert!(err.contains("Parallelism level cannot be 0"));
+}
+
+#[test]
+#[cfg(not(feature = "greppable"))]
+fn test_handle_json_greppable_disabled() {
+    let program = Program::compile("this").unwrap();
+    let args = BTreeMap::new();
+    let mut params = default_params();
+    params.greppable = true;
+
+    let err = handle_json(&program, &args, &params, Some(r#"{"x": 42}"#))
+        .unwrap_err()
+        .to_string();
+
+    assert!(err.contains("Binary was compiled without greppable support"));
+}

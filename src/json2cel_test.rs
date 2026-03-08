@@ -259,6 +259,29 @@ fn test_yaml_format_disabled() {
 
 #[test]
 #[cfg(feature = "from-yaml")]
+fn test_yaml_invalid_input() {
+    let vars = json_to_cel_variables(
+        "{ invalid: [yaml",
+        ROOT_VAR,
+        InputFormat::Yaml,
+        DEFAULT_PARALLELISM,
+    );
+
+    assert!(vars.is_err());
+}
+
+#[test]
+#[cfg(not(feature = "from-xml"))]
+fn test_xml_format_disabled() {
+    let xml_input = r#"<root><value>42</value></root>"#;
+
+    let vars = json_to_cel_variables(xml_input, ROOT_VAR, InputFormat::Xml, DEFAULT_PARALLELISM);
+
+    assert!(vars.is_err());
+}
+
+#[test]
+#[cfg(feature = "from-yaml")]
 fn test_yaml_multi_document_format() {
     let yaml_input = r#"name: first
 ---

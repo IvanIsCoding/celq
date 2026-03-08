@@ -234,3 +234,7 @@ pub struct InputParameters {
     pub greppable: bool,
     pub no_extensions: bool,
 }
+
+#[cfg(test)]
+#[path = "cli_test.rs"]
+mod tests;
