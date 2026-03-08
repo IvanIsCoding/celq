@@ -1,6 +1,12 @@
 {
   "name": "celq",
   "version": node_version,
+  "description": "A CEL command-line query tool for JSON data",
+  "keywords": [
+    "cel",
+    "query",
+    "json"
+  ],
   "bin": "lib/index.js",
   "scripts": {
     "typecheck": "tsc --noEmit",
