@@ -472,6 +472,18 @@ test!(
     "20"
 );
 
+test!(
+    rename_root_variable_overrides_same_named_arg,
+    &[
+        "--root-var=request",
+        "--arg",
+        "request:int=99",
+        "request.value"
+    ],
+    r#"{"value":42}"#,
+    "42"
+);
+
 // Multi-line JSON5 (with trailing comma and comment)
 test!(
     multiline_json5_object,
@@ -692,6 +704,16 @@ value: third
     "[\"first\",\"second\",\"third\"]"
 );
 
+#[cfg(feature = "from-yaml")]
+test!(
+    yaml_multi_document_single_doc_stays_scalar,
+    &["--from-yaml", "this.name"],
+    r#"name: Alice
+age: 30
+"#,
+    "\"Alice\""
+);
+
 // Void test
 test!(void_mode, &["--void", "-n", "2 + 2"], "", "");
 
@@ -857,6 +879,17 @@ json.a.b.c.d[0].e = "deep";
     r#"{"a":{"b":{"c":{"d":[{"e":"deep"}]}}}}"#
 );
 
+#[cfg(feature = "greppable")]
+test!(
+    greppable_round_trip_special_keys,
+    &["--from-gron", "-S", "this"],
+    r#"json = {};
+json["key with spaces"] = "value";
+json["key-with-dashes"] = "other";
+"#,
+    r#"{"key with spaces":"value","key-with-dashes":"other"}"#
+);
+
 // Slice extension tests
 test!(
     slice_basic,
@@ -884,6 +917,13 @@ test!(
     &["this.items.slice(2, 100)"],
     r#"{"items":[1,2,3]}"#,
     "[3]"
+);
+
+test!(
+    slice_empty_result,
+    &["this.items.slice(3, 3)"],
+    r#"{"items":[1,2,3,4]}"#,
+    "[]"
 );
 
 test!(

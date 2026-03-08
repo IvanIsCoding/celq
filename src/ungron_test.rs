@@ -80,3 +80,24 @@ json.nothing = null;"#;
 
     assert_eq!(result, expected);
 }
+
+#[test]
+fn test_empty_container_assignments_do_not_overwrite_existing_values() {
+    let input = r#"json = {};
+json.user = {};
+json.user.name = "John";
+json.user = {};
+json.items = [];
+json.items[0] = "first";
+json.items = [];"#;
+
+    let result = gron_to_json(input).unwrap();
+    let expected: JsonValue = serde_json::json!({
+        "user": {
+            "name": "John"
+        },
+        "items": ["first"]
+    });
+
+    assert_eq!(result, expected);
+}

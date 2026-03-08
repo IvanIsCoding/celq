@@ -55,6 +55,20 @@ fn test_handle_json_with_args() {
 }
 
 #[test]
+fn test_handle_json_input_overrides_arg_with_same_name() {
+    let program = Program::compile("this.value").unwrap();
+    let mut args = BTreeMap::new();
+    args.insert("this".to_string(), CelValue::Int(999));
+    let json = r#"{"value": 50}"#;
+    let params = default_params();
+
+    let (output, is_truthy) = handle_json(&program, &args, &params, Some(json)).unwrap();
+
+    assert!(output.contains("50"));
+    assert!(is_truthy);
+}
+
+#[test]
 fn test_handle_json_args_and_json() {
     let program = Program::compile("x + this.value").unwrap();
     let mut args = BTreeMap::new();
@@ -112,6 +126,36 @@ fn test_handle_json_truthiness_empty_string() {
     let (_output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
 
     assert!(!is_truthy);
+}
+
+#[test]
+fn test_handle_json_raw_output_for_string() {
+    let program = Program::compile(r#""hello""#).unwrap();
+    let args = BTreeMap::new();
+    let mut params = default_params();
+    params.raw_output = true;
+
+    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+
+    assert_eq!(output, "hello");
+    assert!(is_truthy);
+}
+
+#[test]
+fn test_handle_json_sorted_pretty_output() {
+    let program = Program::compile(r#"{"z": {"b": 2, "a": 1}, "a": 0}"#).unwrap();
+    let args = BTreeMap::new();
+    let mut params = default_params();
+    params.sort_keys = true;
+    params.pretty_print = true;
+
+    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+
+    assert_eq!(
+        output,
+        "{\n  \"a\": 0,\n  \"z\": {\n    \"a\": 1,\n    \"b\": 2\n  }\n}"
+    );
+    assert!(is_truthy);
 }
 
 #[test]
@@ -238,4 +282,21 @@ fn test_handle_buffer_skip_empty_lines() {
     assert!(results[0].0.contains("1"));
     assert!(results[1].0.contains("2"));
     assert!(results[2].0.contains("3"));
+}
+
+#[test]
+fn test_handle_buffer_custom_root_var() {
+    let program = Program::compile("request.x").unwrap();
+    let args = BTreeMap::new();
+    let input = r#"{"x": 42}"#;
+    let cursor = Cursor::new(input.as_bytes());
+    let reader = BufReader::new(cursor);
+    let mut params = default_params();
+    params.root_var = "request".to_string();
+
+    let results = handle_buffer(&program, &args, &params, reader).unwrap();
+
+    assert_eq!(results.len(), 1);
+    assert_eq!(results[0].0, "42");
+    assert!(results[0].1);
 }

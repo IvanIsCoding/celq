@@ -170,6 +170,18 @@ fn test_slurp_parallel() {
 }
 
 #[test]
+fn test_slurp_empty_input() {
+    let vars =
+        json_to_cel_variables("", ROOT_VAR, InputFormat::SlurpJson, DEFAULT_PARALLELISM).unwrap();
+
+    if let CelValue::List(list) = vars.get("this").unwrap() {
+        assert!(list.is_empty());
+    } else {
+        panic!("Expected list");
+    }
+}
+
+#[test]
 #[cfg(feature = "from-toml")]
 fn test_toml_format() {
     let toml_input = r#"
@@ -243,6 +255,24 @@ fn test_yaml_format_disabled() {
     let vars = json_to_cel_variables(yaml_input, ROOT_VAR, InputFormat::Yaml, DEFAULT_PARALLELISM);
 
     assert!(vars.is_err());
+}
+
+#[test]
+#[cfg(feature = "from-yaml")]
+fn test_yaml_multi_document_format() {
+    let yaml_input = r#"name: first
+---
+name: second
+"#;
+
+    let vars = json_to_cel_variables(yaml_input, ROOT_VAR, InputFormat::Yaml, DEFAULT_PARALLELISM)
+        .unwrap();
+
+    if let CelValue::List(list) = vars.get("this").unwrap() {
+        assert_eq!(list.len(), 2);
+    } else {
+        panic!("Expected list");
+    }
 }
 
 #[test]
