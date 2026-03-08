@@ -1,6 +1,19 @@
 Changelog
 =========
 
+[v0.3.4](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.4) - 2026-03-07
+------------------------------------------------------------------------
+
+### Fixed
+
+* Fixed `--greppable` so NDJSON input prints all matching results instead of only the last one.
+* Fixed conflicting input-format flags so combinations such as `--from-xml --from-yaml` are rejected by the CLI.
+
+### Miscellaneous
+
+* Bumped the TOML parser (`toml` -> 1.0.6).
+* Bumped the YAML parser (`serde-saphyr` -> 0.0.21).
+
 [v0.3.3](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.1) - 2026-02-05
 ------------------------------------------------------------------------
 

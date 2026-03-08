@@ -82,7 +82,14 @@ impl std::str::FromStr for Argument {
     ),
     group(
         ArgGroup::new("input_format")
-            .args(&["slurp", "from_json5", "from_toml", "from_yaml", "from_gron"])
+            .args(&[
+                "slurp",
+                "from_json5",
+                "from_toml",
+                "from_yaml",
+                "from_xml",
+                "from_gron",
+            ])
     ),
     group(
         ArgGroup::new("output_style")

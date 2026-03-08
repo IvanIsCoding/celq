@@ -63,6 +63,42 @@ fn golden_test(args: &[&str], input: &str, out_ex: &str) -> io::Result<()> {
     Ok(())
 }
 
+#[cfg(all(feature = "from-xml", feature = "from-yaml"))]
+fn golden_test_failure(args: &[&str], input: &str, err_ex: &str) -> io::Result<()> {
+    let mut child = process::Command::new(env!("CARGO_BIN_EXE_celq"))
+        .args(args)
+        .stdin(process::Stdio::piped())
+        .stdout(process::Stdio::piped())
+        .stderr(process::Stdio::piped())
+        .spawn()?;
+
+    use io::Write;
+    {
+        let mut stdin = child.stdin.take().unwrap();
+        stdin.write_all(input.as_bytes())?;
+        drop(stdin);
+    }
+
+    let output = child.wait_with_output()?;
+
+    assert!(
+        !output.status.success(),
+        "Expected failure, but process succeeded with stdout: {}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+
+    let err_act = str::from_utf8(&output.stderr).expect("invalid UTF-8 in stderr");
+    let err_act = err_act.replace('\r', "");
+    assert!(
+        err_act.contains(err_ex),
+        "Expected stderr to contain:\n{}\n---\nActual stderr:\n{}\n---",
+        err_ex,
+        err_act
+    );
+
+    Ok(())
+}
+
 macro_rules! test {
     ($name:ident, $args:expr, $input:expr, $output:expr) => {
         #[test]
@@ -773,6 +809,19 @@ json.person.name = "Bob";
 
 #[cfg(feature = "greppable")]
 test!(
+    greppable_ndjson_prints_all_results,
+    &["--greppable", "-S", "this"],
+    r#"{"a":1}
+{"b":2}"#,
+    r#"json = {};
+json.a = 1;
+json = {};
+json.b = 2;
+"#
+);
+
+#[cfg(feature = "greppable")]
+test!(
     greppable_json5,
     &["--greppable", "-S", "--from-json5", "this"],
     r#"{
@@ -990,6 +1039,16 @@ fn test_slice_fails_without_extensions() -> io::Result<()> {
     );
 
     Ok(())
+}
+
+#[cfg(all(feature = "from-xml", feature = "from-yaml"))]
+#[test]
+fn test_conflicting_input_format_flags_fail() -> io::Result<()> {
+    golden_test_failure(
+        &["--from-xml", "--from-yaml", "this"],
+        "<a>1</a>",
+        "the argument '--from-xml' cannot be used with '--from-yaml'",
+    )
 }
 
 // XML tests

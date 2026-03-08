@@ -95,16 +95,12 @@ fn main() -> io::Result<()> {
         Ok(results) => {
             // Print all outputs, unless void mode is enabled
             if !cli.void {
-                if !cli.greppable {
-                    for (output, _) in &results {
+                for (output, _) in &results {
+                    if cli.greppable {
+                        print!("{}", output);
+                    } else {
                         println!("{}", output);
                     }
-                } else {
-                    let last_gron = results
-                        .last()
-                        .map(|(output, _)| output.as_str())
-                        .unwrap_or("");
-                    println!("{}", last_gron);
                 }
             }
 
