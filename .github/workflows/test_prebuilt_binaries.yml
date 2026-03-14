@@ -371,7 +371,7 @@ jobs:
         run: nix run github:IvanIsCoding/celq#dev -- --version
 
   test-freebsd-install:
-    name: Test FreeBSD 14.4 (x86_64)
+    name: Test FreeBSD 14.3 (x86_64)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -388,7 +388,7 @@ jobs:
       - name: Test on FreeBSD
         uses: vmactions/freebsd-vm@v1
         with:
-          release: '14.4'
+          release: '14.3'
           usesh: true
           prepare: |
             pkg install -y curl

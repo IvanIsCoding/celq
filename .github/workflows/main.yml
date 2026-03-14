@@ -231,10 +231,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - release: "14.4"
+          - release: "14.3"
             arch: x86_64
             artifact: celq-x86_64-unknown-freebsd
-          - release: "14.4"
+          - release: "14.3"
             arch: aarch64
             artifact: celq-aarch64-unknown-freebsd
 
