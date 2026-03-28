@@ -1,7 +1,7 @@
 [package]
 name = "celq"
 description = "A CEL command-line query tool for JSON data"
-version = "0.3.4"
+version = "0.4.0"
 edition = "2024"
 rust-version = "1.90"
 authors = ["Ivan Carvalho <ivancarvalho@gatech.edu>"]
@@ -41,7 +41,7 @@ greppable = ["dep:ressa", "dep:resast"]
 
 [dependencies]
 anyhow = "1"
-cel = { version = "0.12.0", features = ["bytes", "json", "regex", "chrono"] }
+cel = { version = "0.13.0", features = ["bytes", "json", "regex", "chrono"] }
 clap = { version = ">= 4.5.0, < 5.0.0", features = ["derive"] }
 serde = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
