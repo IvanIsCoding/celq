@@ -1,6 +1,14 @@
 Changelog
 =========
 
+[v0.4.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.4) - 2026-03-28
+------------------------------------------------------------------------
+
+### Miscellaneous
+
+* Bumped the CEL interpreter (`cel` -> 0.13.0). This could theoretically be a breaking change as the new version of the parser is more compliant with the CEL standard and could reject some existing queries. In practice, this is a quality-of-life improvement by rejecting buggy queries.
+* Bumped the YAML parser (`serde-saphyr` -> 0.0.22).
+
 [v0.3.4](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.4) - 2026-03-07
 ------------------------------------------------------------------------
 
