@@ -1,4 +1,4 @@
-FREEBSD_IMAGE = "freebsd-14-4"
+FREEBSD_IMAGE = "freebsd-14-3"
 
 def main(ctx):
     return [
