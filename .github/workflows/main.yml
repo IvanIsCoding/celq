@@ -353,3 +353,39 @@ jobs:
           run: |
             cargo build --locked
             cargo test --locked
+
+  freebsd:
+    name: FreeBSD (QEMU)
+    needs: [build, format, clippy]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@668c092af3649c4b664c54e4b704aa46782f6f7c # v2
+        id: filter
+        with:
+          filters: |
+            rust:
+              - '**/*.rs'
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+              - '.cirrus.star'
+              - '.github/workflows/main.yml'
+              - '.cargo/**'
+              - 'src/**'
+              - 'tests/**'
+              - '.github/scripts/smoke-test.sh'
+      
+      - name: Test on FreeBSD
+        if: steps.filter.outputs.rust == 'true'
+        uses: vmactions/freebsd-vm@v1
+        with:
+          release: "14.4"
+          usesh: true
+          prepare: |
+            pkg install -y rust
+          run: |
+            cargo build --locked
+            cargo test --locked

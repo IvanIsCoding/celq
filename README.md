@@ -149,7 +149,7 @@ See the [installation guide](https://docs.rs/celq/latest/celq/installation_guide
 
 ### FreeBSD
 
-FreeBSD builds are tested in [Cirrus CI](https://cirrus-ci.org/) and cross-compiled with [Zig](https://github.com/rust-cross/cargo-zigbuild). Although `celq` is not yet in the ports tree, it does publish pre-built binaries:
+FreeBSD builds are tested with [freebsd-vm](https://github.com/vmactions/freebsd-vm) and cross-compiled with [Zig](https://github.com/rust-cross/cargo-zigbuild). Although `celq` is not yet in the ports tree, it does publish pre-built binaries:
 
 ```bash
 VERSION=v0.4.0
