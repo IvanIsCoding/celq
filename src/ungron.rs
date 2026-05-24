@@ -21,8 +21,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 use anyhow::{Context, Result, anyhow};
-use resast::prelude::*;
-use ressa::Parser;
 use serde_json::{Value as JsonValue, json};
 
 pub fn gron_to_json(input: &str) -> Result<JsonValue> {
@@ -41,21 +39,10 @@ pub fn gron_to_json(input: &str) -> Result<JsonValue> {
 }
 
 fn parse_and_apply_line(line: &str, root: &mut JsonValue) -> Result<()> {
-    let mut parser = Parser::new(line).map_err(|e| anyhow!("Parser init failed: {:?}", e))?;
-
-    let part = parser
-        .next()
-        .ok_or_else(|| anyhow!("Empty line"))?
-        .map_err(|e| anyhow!("Parse error: {:?}", e))?;
-
-    if let ProgramPart::Stmt(Stmt::Expr(Expr::Assign(assign))) = part {
-        let path = extract_path(&assign.left)?;
-        let value = extract_value(&assign.right)?;
-        set_value_at_path(root, &path, value)?;
-        Ok(())
-    } else {
-        Err(anyhow!("Expected assignment (e.g., json.a = 1)"))
-    }
+    let (left, right) = split_assignment(line)?;
+    let path = parse_path(left.trim())?;
+    let value = parse_value(right.trim())?;
+    set_value_at_path(root, &path, value)
 }
 
 #[derive(Debug)]
@@ -64,71 +51,197 @@ enum PathSegment {
     Index(usize),
 }
 
-fn extract_path(left: &AssignLeft) -> Result<Vec<PathSegment>> {
-    let mut segments = Vec::new();
-    let expr = match left {
-        AssignLeft::Expr(e) => e,
-        _ => return Err(anyhow!("Unsupported assignment target")),
-    };
+fn split_assignment(line: &str) -> Result<(&str, &str)> {
+    let mut string_delimiter = None;
+    let mut escaped = false;
 
-    let mut current_expr: &Expr = expr;
-
-    // Walk up the MemberExpressions (e.g., json.user["id"])
-    while let Expr::Member(mem) = current_expr {
-        let seg = match &*mem.property {
-            Expr::Ident(i) => PathSegment::Property(i.name.to_string()),
-            Expr::Lit(Lit::String(StringLit::Double(s)))
-            | Expr::Lit(Lit::String(StringLit::Single(s))) => PathSegment::Property(s.to_string()),
-            Expr::Lit(Lit::Number(n)) => PathSegment::Index(n.parse()?),
-            _ => return Err(anyhow!("Unsupported path segment type")),
-        };
-        segments.push(seg);
-        current_expr = &*mem.object;
+    for (idx, ch) in line.char_indices() {
+        match string_delimiter {
+            Some(delimiter) if escaped => escaped = false,
+            Some(_) if ch == '\\' => escaped = true,
+            Some(delimiter) if ch == delimiter => string_delimiter = None,
+            Some(_) => {}
+            None if ch == '"' || ch == '\'' => string_delimiter = Some(ch),
+            None if ch == '=' => return Ok((&line[..idx], &line[idx + ch.len_utf8()..])),
+            None => {}
+        }
     }
 
-    // Root must be 'json'
-    if let Expr::Ident(ident) = current_expr
-        && ident.name != "json"
-    {
-        return Err(anyhow!("Path root must be 'json', found '{}'", ident.name));
-    }
-
-    segments.reverse();
-    Ok(segments)
+    Err(anyhow!("Expected assignment (e.g., json.a = 1)"))
 }
 
-fn extract_value(expr: &Expr) -> Result<JsonValue> {
-    match expr {
-        Expr::Lit(lit) => match lit {
-            Lit::Null => Ok(JsonValue::Null),
-            Lit::Boolean(b) => Ok(JsonValue::Bool(*b)),
-            Lit::Number(n) => {
-                // Try integer first, then float, to ensure test equality passes
-                if let Ok(i) = n.parse::<i64>() {
-                    Ok(json!(i))
-                } else {
-                    Ok(json!(n.parse::<f64>()?))
+fn parse_path(left: &str) -> Result<Vec<PathSegment>> {
+    let mut parser = PathParser::new(left);
+    parser.parse()
+}
+
+struct PathParser<'a> {
+    input: &'a str,
+    pos: usize,
+}
+
+impl<'a> PathParser<'a> {
+    fn new(input: &'a str) -> Self {
+        Self { input, pos: 0 }
+    }
+
+    fn parse(&mut self) -> Result<Vec<PathSegment>> {
+        self.consume_root()?;
+
+        let mut segments = Vec::new();
+        while !self.is_done() {
+            match self.peek_char() {
+                Some('.') => {
+                    self.bump_char();
+                    segments.push(PathSegment::Property(self.parse_dot_property()?));
                 }
-            }
-            Lit::String(StringLit::Double(s)) | Lit::String(StringLit::Single(s)) => {
-                Ok(json!(s.to_string()))
-            }
-            _ => Err(anyhow!("Unsupported literal")),
-        },
-        Expr::Unary(u) if u.operator == UnaryOp::Minus => {
-            let val = extract_value(&u.argument)?;
-            if let Some(i) = val.as_i64() {
-                Ok(json!(-i))
-            } else if let Some(f) = val.as_f64() {
-                Ok(json!(-f))
-            } else {
-                Err(anyhow!("Cannot negate non-numeric value"))
+                Some('[') => segments.push(self.parse_bracket_segment()?),
+                Some(ch) => return Err(anyhow!("Unexpected character in path: '{}'", ch)),
+                None => break,
             }
         }
-        Expr::Array(_) => Ok(json!([])),
-        Expr::Obj(_) => Ok(json!({})),
-        _ => Err(anyhow!("Value type not supported")),
+
+        Ok(segments)
     }
+
+    fn consume_root(&mut self) -> Result<()> {
+        let Some(root) = self.read_identifier() else {
+            return Err(anyhow!("Path root must be 'json'"));
+        };
+
+        if root != "json" {
+            return Err(anyhow!("Path root must be 'json', found '{}'", root));
+        }
+
+        Ok(())
+    }
+
+    fn parse_dot_property(&mut self) -> Result<String> {
+        self.read_identifier()
+            .ok_or_else(|| anyhow!("Expected property name after '.'"))
+    }
+
+    fn parse_bracket_segment(&mut self) -> Result<PathSegment> {
+        self.expect_char('[')?;
+        let segment = match self.peek_char() {
+            Some('"') => PathSegment::Property(self.parse_json_string()?),
+            Some(ch) if ch.is_ascii_digit() => PathSegment::Index(self.parse_index()?),
+            Some(ch) => {
+                return Err(anyhow!(
+                    "Unsupported bracket path segment starting with '{}'",
+                    ch
+                ));
+            }
+            None => return Err(anyhow!("Unclosed bracket path segment")),
+        };
+        self.expect_char(']')?;
+        Ok(segment)
+    }
+
+    fn parse_json_string(&mut self) -> Result<String> {
+        let start = self.pos;
+        self.bump_char();
+
+        let mut escaped = false;
+        while let Some(ch) = self.peek_char() {
+            self.bump_char();
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == '"' {
+                return serde_json::from_str(&self.input[start..self.pos])
+                    .context("Failed to parse quoted path segment");
+            }
+        }
+
+        Err(anyhow!("Unclosed string path segment"))
+    }
+
+    fn parse_index(&mut self) -> Result<usize> {
+        let start = self.pos;
+        while matches!(self.peek_char(), Some(ch) if ch.is_ascii_digit()) {
+            self.bump_char();
+        }
+        self.input[start..self.pos]
+            .parse()
+            .context("Failed to parse array index")
+    }
+
+    fn read_identifier(&mut self) -> Option<String> {
+        let start = self.pos;
+        let mut chars = self.input[self.pos..].char_indices();
+        let (_, first) = chars.next()?;
+
+        if !(first == '_' || first == '$' || first.is_ascii_alphabetic()) {
+            return None;
+        }
+
+        self.pos += first.len_utf8();
+        while let Some(ch) = self.peek_char() {
+            if ch == '_' || ch == '$' || ch.is_ascii_alphanumeric() {
+                self.bump_char();
+            } else {
+                break;
+            }
+        }
+
+        Some(self.input[start..self.pos].to_string())
+    }
+
+    fn expect_char(&mut self, expected: char) -> Result<()> {
+        match self.peek_char() {
+            Some(ch) if ch == expected => {
+                self.bump_char();
+                Ok(())
+            }
+            Some(ch) => Err(anyhow!("Expected '{}', found '{}'", expected, ch)),
+            None => Err(anyhow!("Expected '{}', found end of path", expected)),
+        }
+    }
+
+    fn peek_char(&self) -> Option<char> {
+        self.input[self.pos..].chars().next()
+    }
+
+    fn bump_char(&mut self) {
+        if let Some(ch) = self.peek_char() {
+            self.pos += ch.len_utf8();
+        }
+    }
+
+    fn is_done(&self) -> bool {
+        self.pos == self.input.len()
+    }
+}
+
+fn parse_value(right: &str) -> Result<JsonValue> {
+    let Some(value_src) = strip_trailing_semicolon(right) else {
+        return Err(anyhow!("Expected assignment to end with ';'"));
+    };
+
+    serde_json::from_str(value_src.trim()).context("Failed to parse gron value as JSON")
+}
+
+fn strip_trailing_semicolon(right: &str) -> Option<&str> {
+    let mut string_delimiter = None;
+    let mut escaped = false;
+    let mut semicolon = None;
+
+    for (idx, ch) in right.char_indices() {
+        match string_delimiter {
+            Some(delimiter) if escaped => escaped = false,
+            Some(_) if ch == '\\' => escaped = true,
+            Some(delimiter) if ch == delimiter => string_delimiter = None,
+            Some(_) => {}
+            None if ch == '"' => string_delimiter = Some(ch),
+            None if ch == ';' => semicolon = Some(idx),
+            None if !ch.is_whitespace() && semicolon.is_some() => return None,
+            None => {}
+        }
+    }
+
+    semicolon.map(|idx| &right[..idx])
 }
 
 fn set_value_at_path(root: &mut JsonValue, path: &[PathSegment], value: JsonValue) -> Result<()> {

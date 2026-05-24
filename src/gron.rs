@@ -20,8 +20,6 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-use resast::prelude::*;
-use ressa::Parser;
 use serde_json::Value as JsonValue;
 use std::fmt::Write;
 
@@ -70,27 +68,13 @@ fn gron_recursive(value: &JsonValue, path: &mut String, output: &mut String) {
 
 /// Check if a string is a valid JavaScript identifier
 fn is_valid_identifier(s: &str) -> bool {
-    if s.is_empty() {
+    let mut chars = s.chars();
+    let Some(first) = chars.next() else {
         return false;
-    }
+    };
 
-    // 1. Quick check: identifiers cannot contain whitespace or newlines
-    if s.chars().any(|c| c.is_whitespace() || c.is_control()) {
-        return false;
-    }
-
-    let test_code = format!("json.{}", s);
-
-    // If the parser errors, we should escape in quotes
-    if let Ok(mut parser) = Parser::new(&test_code) {
-        // This is a good sign, but we need to ensure the entire input was consumed
-        if let Some(Ok(ProgramPart::Stmt(Stmt::Expr(Expr::Member(_))))) = parser.next() {
-            // Guard against tokens such as newline
-            return parser.next().is_none();
-        }
-    }
-
-    false
+    (first == '_' || first == '$' || first.is_ascii_alphabetic())
+        && chars.all(|ch| ch == '_' || ch == '$' || ch.is_ascii_alphanumeric())
 }
 
 /// Append a path segment to the existing path buffer, using dot notation for valid identifiers,
