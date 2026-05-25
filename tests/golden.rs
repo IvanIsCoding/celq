@@ -1105,6 +1105,16 @@ test!(
 
 #[cfg(feature = "from-xml")]
 test!(
+    xml_element_attributes,
+    &["--from-xml", "this.user.name + ' #' + this.user['$'].id"],
+    r#"<user id="42">
+  <name>Alice</name>
+</user>"#,
+    "\"Alice #42\""
+);
+
+#[cfg(feature = "from-xml")]
+test!(
     xml_simple_structure,
     &["--from-xml", "int(this.point.x) + int(this.point.y)"],
     r#"<point>

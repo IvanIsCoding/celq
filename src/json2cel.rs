@@ -65,11 +65,7 @@ pub fn json_to_cel_variables(
         InputFormat::Xml => {
             #[cfg(feature = "from-xml")]
             {
-                xml2json_rs::JsonConfig::new()
-                    .explicit_array(false)
-                    .finalize()
-                    .build_from_xml(json_str)
-                    .map_err(serde_json::Error::custom)?
+                crate::xml2json::parse_xml(json_str).map_err(serde_json::Error::custom)?
             }
 
             #[cfg(not(feature = "from-xml"))]

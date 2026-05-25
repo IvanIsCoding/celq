@@ -14,6 +14,9 @@ mod input_handler;
 mod json2cel;
 pub mod slice_extension;
 
+#[cfg(feature = "from-xml")]
+mod xml2json;
+
 use args2cel::args_to_cel_variables;
 pub use cli::Argument;
 use cli::Cli;

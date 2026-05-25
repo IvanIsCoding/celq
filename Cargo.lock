@@ -218,13 +218,13 @@ dependencies = [
  "clap",
  "json5",
  "mimalloc",
+ "quick-xml",
  "rayon",
  "serde",
  "serde-saphyr",
  "serde_json",
  "tempfile",
  "toml",
- "xml2json-rs",
 ]
 
 [[package]]
@@ -668,9 +668,9 @@ dependencies = [
 
 [[package]]
 name = "quick-xml"
-version = "0.23.1"
+version = "0.40.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11bafc859c6815fbaffbbbf4229ecb767ac913fecb27f9ad4343662e9ef099ea"
+checksum = "2474bd2e5029e7ccb6abb2ba48cf2383a333851dedf495901544281590c7da7f"
 dependencies = [
  "memchr",
 ]
@@ -1305,19 +1305,6 @@ dependencies = [
  "serde_json",
  "unicode-xid",
  "wasmparser",
-]
-
-[[package]]
-name = "xml2json-rs"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6ba4fb1256176d2eb02e25065efade8e43215a4d0743cb823991aea314077ea"
-dependencies = [
- "lazy_static",
- "quick-xml",
- "regex",
- "serde",
- "serde_json",
 ]
 
 [[package]]
