@@ -57,7 +57,7 @@ fn split_assignment(line: &str) -> Result<(&str, &str)> {
 
     for (idx, ch) in line.char_indices() {
         match string_delimiter {
-            Some(delimiter) if escaped => escaped = false,
+            Some(_) if escaped => escaped = false,
             Some(_) if ch == '\\' => escaped = true,
             Some(delimiter) if ch == delimiter => string_delimiter = None,
             Some(_) => {}
@@ -230,7 +230,7 @@ fn strip_trailing_semicolon(right: &str) -> Option<&str> {
 
     for (idx, ch) in right.char_indices() {
         match string_delimiter {
-            Some(delimiter) if escaped => escaped = false,
+            Some(_) if escaped => escaped = false,
             Some(_) if ch == '\\' => escaped = true,
             Some(delimiter) if ch == delimiter => string_delimiter = None,
             Some(_) => {}
