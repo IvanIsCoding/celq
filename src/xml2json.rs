@@ -71,13 +71,23 @@ pub fn parse_xml(xml: &str) -> Result<Value, XmlParseError> {
     let mut reader = Reader::from_str(xml);
     let mut stack = Vec::new();
     let mut output = Value::Null;
+    let mut root_seen = false;
 
     loop {
         match reader.read_event() {
-            Ok(Event::Start(event)) => stack.push(node_from_start(&reader, &event)?),
+            Ok(Event::Start(event)) => {
+                if root_seen && stack.is_empty() {
+                    return Err(XmlParseError("multiple root elements".to_string()));
+                }
+                stack.push(node_from_start(&reader, &event)?);
+            }
             Ok(Event::Empty(event)) => {
+                if root_seen && stack.is_empty() {
+                    return Err(XmlParseError("multiple root elements".to_string()));
+                }
                 let node = node_from_start(&reader, &event)?;
                 if let Some(root) = close_node(node, &mut stack)? {
+                    root_seen = true;
                     output = root;
                 }
             }
@@ -86,6 +96,8 @@ pub fn parse_xml(xml: &str) -> Result<Value, XmlParseError> {
             Ok(Event::CData(event)) => {
                 if let Some(node) = stack.last_mut() {
                     node.text.push_str(&event.decode()?);
+                } else {
+                    return Err(XmlParseError("CDATA outside root element".to_string()));
                 }
             }
             Ok(Event::End(event)) => {
@@ -100,6 +112,7 @@ pub fn parse_xml(xml: &str) -> Result<Value, XmlParseError> {
                     )));
                 }
                 if let Some(root) = close_node(node, &mut stack)? {
+                    root_seen = true;
                     output = root;
                 }
             }
@@ -144,6 +157,8 @@ fn node_from_start(reader: &Reader<&[u8]>, event: &BytesStart<'_>) -> Result<Nod
 fn append_text(stack: &mut [Node], event: BytesText<'_>) -> Result<(), XmlParseError> {
     if let Some(node) = stack.last_mut() {
         node.text.push_str(&event.decode()?);
+    } else if !event.decode()?.chars().all(char::is_whitespace) {
+        return Err(XmlParseError("text outside root element".to_string()));
     }
     Ok(())
 }
@@ -159,6 +174,10 @@ fn append_ref(stack: &mut [Node], event: BytesRef<'_>) -> Result<(), XmlParseErr
             })?;
             node.text.push_str(resolved);
         }
+    } else {
+        return Err(XmlParseError(
+            "entity reference outside root element".to_string(),
+        ));
     }
     Ok(())
 }

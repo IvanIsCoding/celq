@@ -98,6 +98,22 @@ fn rejects_unclosed_elements_at_end_of_input() {
 }
 
 #[test]
+fn rejects_multiple_root_elements() {
+    let err = parse_xml("<foo>one</foo><bar>two</bar>")
+        .unwrap_err()
+        .to_string();
+
+    assert!(err.contains("multiple root elements"));
+}
+
+#[test]
+fn rejects_text_outside_root_element() {
+    let err = parse_xml("text<foo>bar</foo>").unwrap_err().to_string();
+
+    assert!(err.contains("text outside root element"));
+}
+
+#[test]
 fn rejects_unknown_entity_references() {
     let err = parse_xml("<foo>&unknown;</foo>").unwrap_err().to_string();
 

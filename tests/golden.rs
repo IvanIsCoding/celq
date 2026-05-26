@@ -919,6 +919,26 @@ json["123numeric"] = "value4";
 
 #[cfg(feature = "greppable")]
 test!(
+    from_gron_single_quoted_path_segment,
+    &["--from-gron", "-S", "this"],
+    r#"json = {};
+json['User-Agent'] = "gron/0.1";
+"#,
+    r#"{"User-Agent":"gron/0.1"}"#
+);
+
+#[cfg(feature = "greppable")]
+test!(
+    from_gron_single_quoted_value,
+    &["--from-gron", "-S", "this"],
+    r#"json = {};
+json.value = 'single quoted';
+"#,
+    r#"{"value":"single quoted"}"#
+);
+
+#[cfg(feature = "greppable")]
+test!(
     from_gron_deeply_nested,
     &["--from-gron", "-S", "this"],
     r#"json = {};

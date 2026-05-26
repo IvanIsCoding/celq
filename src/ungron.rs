@@ -125,6 +125,7 @@ impl<'a> PathParser<'a> {
         self.expect_char('[')?;
         let segment = match self.peek_char() {
             Some('"') => PathSegment::Property(self.parse_json_string()?),
+            Some('\'') => PathSegment::Property(self.parse_quoted_string('\'')?),
             Some(ch) if ch.is_ascii_digit() => PathSegment::Index(self.parse_index()?),
             Some(ch) => {
                 return Err(anyhow!(
@@ -156,6 +157,61 @@ impl<'a> PathParser<'a> {
         }
 
         Err(anyhow!("Unclosed string path segment"))
+    }
+
+    fn parse_quoted_string(&mut self, delimiter: char) -> Result<String> {
+        self.bump_char();
+
+        let mut result = String::new();
+        while let Some(ch) = self.peek_char() {
+            self.bump_char();
+            if ch == delimiter {
+                return Ok(result);
+            }
+            if ch == '\\' {
+                result.push(self.parse_escape_sequence()?);
+            } else {
+                result.push(ch);
+            }
+        }
+
+        Err(anyhow!("Unclosed string path segment"))
+    }
+
+    fn parse_escape_sequence(&mut self) -> Result<char> {
+        let Some(ch) = self.peek_char() else {
+            return Err(anyhow!("Unclosed escape sequence"));
+        };
+        self.bump_char();
+
+        match ch {
+            '"' => Ok('"'),
+            '\'' => Ok('\''),
+            '\\' => Ok('\\'),
+            '/' => Ok('/'),
+            'b' => Ok('\u{0008}'),
+            'f' => Ok('\u{000c}'),
+            'n' => Ok('\n'),
+            'r' => Ok('\r'),
+            't' => Ok('\t'),
+            'u' => self.parse_unicode_escape(),
+            other => Ok(other),
+        }
+    }
+
+    fn parse_unicode_escape(&mut self) -> Result<char> {
+        let start = self.pos;
+        for _ in 0..4 {
+            match self.peek_char() {
+                Some(ch) if ch.is_ascii_hexdigit() => self.bump_char(),
+                Some(ch) => return Err(anyhow!("Invalid unicode escape character '{}'", ch)),
+                None => return Err(anyhow!("Unclosed unicode escape sequence")),
+            }
+        }
+
+        let code = u32::from_str_radix(&self.input[start..self.pos], 16)
+            .context("Failed to parse unicode escape")?;
+        char::from_u32(code).ok_or_else(|| anyhow!("Invalid unicode escape code point"))
     }
 
     fn parse_index(&mut self) -> Result<usize> {
@@ -220,7 +276,12 @@ fn parse_value(right: &str) -> Result<JsonValue> {
         return Err(anyhow!("Expected assignment to end with ';'"));
     };
 
-    serde_json::from_str(value_src.trim()).context("Failed to parse gron value as JSON")
+    let value_src = value_src.trim();
+    if value_src.starts_with('\'') {
+        return parse_single_quoted_value(value_src);
+    }
+
+    serde_json::from_str(value_src).context("Failed to parse gron value as JSON")
 }
 
 fn strip_trailing_semicolon(right: &str) -> Option<&str> {
@@ -234,7 +295,7 @@ fn strip_trailing_semicolon(right: &str) -> Option<&str> {
             Some(_) if ch == '\\' => escaped = true,
             Some(delimiter) if ch == delimiter => string_delimiter = None,
             Some(_) => {}
-            None if ch == '"' => string_delimiter = Some(ch),
+            None if ch == '"' || ch == '\'' => string_delimiter = Some(ch),
             None if ch == ';' => semicolon = Some(idx),
             None if !ch.is_whitespace() && semicolon.is_some() => return None,
             None => {}
@@ -242,6 +303,15 @@ fn strip_trailing_semicolon(right: &str) -> Option<&str> {
     }
 
     semicolon.map(|idx| &right[..idx])
+}
+
+fn parse_single_quoted_value(value_src: &str) -> Result<JsonValue> {
+    let mut parser = PathParser::new(value_src);
+    let value = parser.parse_quoted_string('\'')?;
+    if !parser.input[parser.pos..].trim().is_empty() {
+        return Err(anyhow!("Unexpected characters after string value"));
+    }
+    Ok(JsonValue::String(value))
 }
 
 fn set_value_at_path(root: &mut JsonValue, path: &[PathSegment], value: JsonValue) -> Result<()> {
