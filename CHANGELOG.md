@@ -1,7 +1,18 @@
 Changelog
 =========
 
-[v0.4.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.3.4) - 2026-03-28
+[v0.4.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.5.0) - TBD
+------------------------------------------------------------------------
+
+### Miscellaneous
+
+* Switched XML parsing from `xml2json-rs` to `quick-xml`. `xml2json-rs` was based on an older version of `quick-xml` that was not up-to-date
+* The gron parser and serializer has been completely rewritten using `serde_json`. The `ressa` and `resast` JavaScript parsers were dropped. This leads to smaller binaries.
+* Bumped the YAML parser (`serde-saphyr` -> 0.0.26).
+* Bumped the toml parser (`toml` -> 1.1.2).
+
+
+[v0.4.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.4.0) - 2026-03-28
 ------------------------------------------------------------------------
 
 ### Miscellaneous

@@ -22,10 +22,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
 
 To pin a specific version, change the URL to include the version. For example:
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.4.0/install.sh | bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.5.0/install.sh | bash
 ```
 
-Will always install the same version, 0.4.0.
+Will always install the same version, 0.5.0.
 
 The `--target` option can be specified to avoid guessing the architecture. For example:
 ```bash
