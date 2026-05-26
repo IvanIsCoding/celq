@@ -1,7 +1,7 @@
 Changelog
 =========
 
-[v0.4.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.5.0) - TBD
+[v0.5.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.5.0) - TBD
 ------------------------------------------------------------------------
 
 ### Miscellaneous
