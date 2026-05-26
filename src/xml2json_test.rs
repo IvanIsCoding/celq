@@ -82,3 +82,45 @@ fn rejects_mismatched_tags() {
 
     assert!(err.contains("mismatched") || (err.contains("foo") && err.contains("baz")));
 }
+
+#[test]
+fn rejects_closing_tag_without_open_element() {
+    let err = parse_xml("</foo>").unwrap_err().to_string();
+
+    assert!(err.contains("does not match any open tag"));
+}
+
+#[test]
+fn rejects_unclosed_elements_at_end_of_input() {
+    let err = parse_xml("<foo><bar>").unwrap_err().to_string();
+
+    assert!(err.contains("unexpected end of input"));
+}
+
+#[test]
+fn rejects_unknown_entity_references() {
+    let err = parse_xml("<foo>&unknown;</foo>").unwrap_err().to_string();
+
+    assert!(err.contains("unknown XML entity reference: &unknown;"));
+}
+
+#[test]
+fn rejects_invalid_character_references() {
+    let err = parse_xml("<foo>&#xnothex;</foo>").unwrap_err().to_string();
+
+    assert!(err.contains("invalid digit") || err.contains("Invalid"));
+}
+
+#[test]
+fn rejects_malformed_attributes() {
+    let err = parse_xml("<foo bar></foo>").unwrap_err().to_string();
+
+    assert!(err.contains("attribute") || err.contains("error at position"));
+}
+
+#[test]
+fn rejects_malformed_xml_events() {
+    let err = parse_xml("<foo><bar></foo></bar>").unwrap_err().to_string();
+
+    assert!(err.contains("mismatched") || err.contains("error at position"));
+}

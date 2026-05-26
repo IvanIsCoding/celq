@@ -1091,6 +1091,18 @@ test!(
 
 #[cfg(feature = "from-xml")]
 test!(
+    xml_three_repeated_elements_append_to_array,
+    &["--from-xml", "this.servers.server.map(s, s.ip)"],
+    r#"<servers>
+  <server><ip>192.168.1.1</ip></server>
+  <server><ip>192.168.1.2</ip></server>
+  <server><ip>192.168.1.3</ip></server>
+</servers>"#,
+    "[\"192.168.1.1\",\"192.168.1.2\",\"192.168.1.3\"]"
+);
+
+#[cfg(feature = "from-xml")]
+test!(
     xml_with_attributes,
     &[
         "--from-xml",
@@ -1166,4 +1178,52 @@ test!(
     }
   }
 }"#
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_empty_root_element,
+    &["--from-xml", "this.empty == ''"],
+    r#"<empty/>"#,
+    "true"
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_empty_child_element,
+    &[
+        "--from-xml",
+        "this.config.enabled == '' && this.config.name == 'celq'"
+    ],
+    r#"<config>
+  <enabled/>
+  <name>celq</name>
+</config>"#,
+    "true"
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_cdata_and_references,
+    &["--from-xml", "this.message"],
+    r#"<message><![CDATA[Use <tags>]]> &amp; &#65;</message>"#,
+    r#""Use <tags> & A""#
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_mixed_text_and_child_preserves_text_key,
+    &["--from-xml", "this.article['_'] + '|' + this.article.title"],
+    r#"<article>Intro <title>XML</title> outro</article>"#,
+    r#""Intro  outro|XML""#
+);
+
+#[cfg(feature = "from-xml")]
+test!(
+    xml_declaration_comments_and_processing_instructions,
+    &["--from-xml", "this.root.value"],
+    r#"<?xml version="1.0"?>
+<!-- ignored -->
+<root><?format compact?><value>ok</value></root>"#,
+    r#""ok""#
 );
