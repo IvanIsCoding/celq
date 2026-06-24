@@ -32,7 +32,14 @@ cargo test
 
 Unit tests live very close to the implementation. Next to the `module.rs`, there's generally a `module_test.rs`. It's fine to use unit tests for smaller details.
 
-Integration tests live in the `test/` folder, mostly in `tests/golden.rs`. When fixing a bug or adding a feature, please try to add a test covering multiple combinations to that file.
+Integration tests live in the `tests/` folder. They are split into per-format golden test files, each gated by the feature flag it exercises:
+
+* `tests/base.rs` — shared helpers (`golden_test` / `golden_test_failure`) and the `test!` macro used by every other file.
+* `tests/json_golden.rs` — core, JSON, and JSON5 tests (no feature gate).
+* `tests/toml_golden.rs`, `tests/yaml_golden.rs`, `tests/xml_golden.rs`, and `tests/gron_golden.rs` — format-specific tests for `from-toml`, `from-yaml`, `from-xml`, and `greppable`.
+* `tests/failures_golden.rs` — tests that assert a non-zero exit code.
+
+When fixing a bug or adding a feature, please try to add a test covering multiple combinations to the matching format file.
 
 ## Documentation
 

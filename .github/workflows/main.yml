@@ -99,10 +99,29 @@ jobs:
       
       - name: Run tests
         run: cargo test --locked --target ${{ matrix.target }}
-      
-      - name: Run tests (with default features disabled, Linux x86-64 only)
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
-        run: cargo test --locked --no-default-features --target ${{ matrix.target }}
+
+  features:
+    name: Feature matrix (${{ matrix.features }})
+    needs: [build, format, clippy]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        features:
+          - "--no-default-features"
+          - "--no-default-features --features from-toml"
+          - "--no-default-features --features from-yaml"
+          - "--no-default-features --features from-xml"
+          - "--no-default-features --features greppable"
+          - "--all-features"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust MSRV
+        uses: dtolnay/rust-toolchain@1.90.0
+
+      - name: Run tests
+        run: cargo test --locked ${{ matrix.features }}
 
   docs:
     name: Documentation
