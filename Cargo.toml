@@ -42,7 +42,7 @@ greppable = []
 [dependencies]
 anyhow = "1"
 cel = { version = "0.13.0", features = ["bytes", "json", "regex", "chrono"] }
-clap = { version = ">= 4.5.0, < 5.0.0", features = ["derive"] }
+clap = { version = ">= 4.5.0, < 5.0.0", default-features = false, features = ["derive", "std", "help", "usage", "error-context", "suggestions"] }
 serde = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.11"
