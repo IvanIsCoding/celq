@@ -51,6 +51,12 @@ jobs:
               TARGET: x86_64-pc-windows-msvc,
             }
           - {
+              NAME: win32-arm64-msvc,
+              OS: windows-11-vs2026-arm,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-pc-windows-msvc,
+            }
+          - {
               NAME: darwin-arm64,
               OS: macos-15,
               TOOLCHAIN: stable,
