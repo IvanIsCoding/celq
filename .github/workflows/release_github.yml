@@ -148,7 +148,7 @@ jobs:
       - name: Install cargo-zigbuild
         uses: taiki-e/install-action@v2
         with:
-          tool: cargo-zigbuild@0.21.6
+          tool: cargo-zigbuild@0.23.2
 
       - name: Build with Zig
         if: matrix.target != 'aarch64-unknown-freebsd'
