@@ -45,6 +45,8 @@ jobs:
           cd celq-repo
           RUSTC_BOOTSTRAP=1 RUSTFLAGS="\
             -Z unstable-options \
+            -Z location-detail=none \
+            -Z share-generics=y \
             -C opt-level=z \
             -C debuginfo=0 \
             -C strip=symbols \
