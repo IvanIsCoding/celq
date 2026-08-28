@@ -8,7 +8,7 @@ jobs:
     name: Test curl installer on ubuntu-slim
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install celq via curl
         run: |
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-slim
     needs: test-curl-install
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install GitHub CLI
         run: |
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-slim
     needs: test-curl-install-with-checksum
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install GitHub CLI
         run: |
@@ -85,7 +85,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install celq via curl
         env:
@@ -103,10 +103,10 @@ jobs:
     name: Test npm install (global) on ubuntu-slim
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
 
@@ -123,10 +123,10 @@ jobs:
     name: Test pip install (global) on ubuntu-slim
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -143,7 +143,7 @@ jobs:
     name: Test brew install on macOS (arm)
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install celq via Homebrew
         run: brew install get-celq/tap/celq
@@ -159,7 +159,7 @@ jobs:
     runs-on: ubuntu-slim
     needs: test-brew-install
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Homebrew
         id: set-up-homebrew
@@ -178,7 +178,7 @@ jobs:
     name: Test cargo-binstall on ubuntu-latest
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
@@ -197,7 +197,7 @@ jobs:
     runs-on: ubuntu-slim
     needs: test-cargo-binstall
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: taiki-e/install-action@v2
         with:
@@ -217,7 +217,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Scoop
         shell: pwsh
@@ -245,7 +245,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install celq via Chocolatey
         shell: pwsh
@@ -266,7 +266,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         
       - name: Install celq via WinGet
         shell: pwsh
@@ -289,7 +289,7 @@ jobs:
     name: Test Pixi (conda-forge global) on ubuntu-24.04
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Pixi
         uses: prefix-dev/setup-pixi@v0.9.3
@@ -315,7 +315,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install celq via mise
         uses: jdx/mise-action@v3
@@ -374,7 +374,7 @@ jobs:
     name: Test FreeBSD 14.4 (x86_64)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Get latest release version
         id: get_version

@@ -17,7 +17,7 @@ jobs:
     name: Build (Linux x86-64)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@1.94.1
@@ -32,7 +32,7 @@ jobs:
     name: Format Check
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -46,7 +46,7 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@1.94.1
@@ -83,7 +83,7 @@ jobs:
             rust: stable
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Install Rust ${{ matrix.rust }}
         uses: dtolnay/rust-toolchain@master
@@ -115,7 +115,7 @@ jobs:
           - "--no-default-features --features greppable"
           - "--all-features"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@1.94.1
@@ -128,7 +128,7 @@ jobs:
     needs: [build, format, clippy]
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -139,7 +139,7 @@ jobs:
           RUSTDOCFLAGS: "-D warnings"
       
       - name: Upload documentation
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: documentation
           path: target/doc/
@@ -170,7 +170,7 @@ jobs:
             zigtargetsuffix: ""
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
@@ -207,7 +207,7 @@ jobs:
           -Z build-std=std,panic_abort
       
       - name: Upload celq binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: celq-${{ matrix.target }}
           path: target/${{ matrix.target }}/debug/celq
@@ -227,10 +227,10 @@ jobs:
     container:
       image: debian:oldoldstable
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Download celq binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: celq-${{ matrix.target }}
           path: ./bin
@@ -258,10 +258,10 @@ jobs:
             artifact: celq-aarch64-unknown-freebsd
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download celq binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ${{ matrix.artifact }}
           path: ./bin
@@ -283,7 +283,7 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -308,9 +308,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: dorny/paths-filter@668c092af3649c4b664c54e4b704aa46782f6f7c # v2
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
@@ -344,9 +344,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: dorny/paths-filter@668c092af3649c4b664c54e4b704aa46782f6f7c # v2
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |
@@ -380,9 +380,9 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: dorny/paths-filter@668c092af3649c4b664c54e4b704aa46782f6f7c # v2
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
         id: filter
         with:
           filters: |

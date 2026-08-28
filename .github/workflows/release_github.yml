@@ -51,7 +51,7 @@ jobs:
           - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm, pretty_target: linux-aarch64-musl }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -126,7 +126,7 @@ jobs:
           - { target: aarch64-unknown-freebsd, os: ubuntu-24.04-arm, zigtargetsuffix: "", pretty_target: freebsd-aarch64 }
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -191,12 +191,12 @@ jobs:
     environment: github_release
     steps:
       - name: Checkout celq repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: celq-repo
 
       - name: Checkout get-celq.github.io repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: get-celq/get-celq.github.io
           token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
@@ -317,7 +317,7 @@ jobs:
     environment: github_release
     steps:
       - name: Checkout celq repository (for template)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: celq-repo
 
@@ -338,7 +338,7 @@ jobs:
 
       - name: Checkout homebrew-tap repository
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: get-celq/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
@@ -376,7 +376,7 @@ jobs:
     environment: github_release
     steps:
       - name: Checkout celq repository (for template)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: celq-repo
 
@@ -397,7 +397,7 @@ jobs:
 
       - name: Checkout scoop-bucket repository
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: get-celq/scoop-bucket
           token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
