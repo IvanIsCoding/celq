@@ -18,22 +18,52 @@ jobs:
       matrix:
         build:
           - {
-              NAME: win32-x64-msvc,
-              OS: windows-2025,
+              NAME: win32-arm64-msvc,
+              OS: windows-11-vs2026-arm,
               TOOLCHAIN: stable,
-              TARGET: x86_64-pc-windows-msvc,
+              TARGET: aarch64-pc-windows-msvc,
+            }
+          # Linux wheels were omitted from the first 0.6.0 PyPI attempt and
+          # are intentionally isolated here so existing filenames are not
+          # uploaded again.
+          - {
+              NAME: linux-x64,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: x86_64-unknown-linux-gnu,
+              MANYLINUX: manylinux_2_28,
             }
           - {
-              NAME: darwin-arm64,
-              OS: macos-15,
+              NAME: linux-x64,
+              OS: ubuntu-24.04,
               TOOLCHAIN: stable,
-              TARGET: aarch64-apple-darwin,
+              TARGET: x86_64-unknown-linux-musl,
             }
           - {
-              NAME: darwin-x64,
-              OS: macos-15-intel,
+              NAME: linux-arm64,
+              OS: ubuntu-24.04-arm,
               TOOLCHAIN: stable,
-              TARGET: x86_64-apple-darwin,
+              TARGET: aarch64-unknown-linux-gnu,
+              MANYLINUX: manylinux_2_28,
+            }
+          - {
+              NAME: linux-arm64,
+              OS: ubuntu-24.04-arm,
+              TOOLCHAIN: stable,
+              TARGET: aarch64-unknown-linux-musl,
+            }
+          - {
+              NAME: linux-riscv64,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: riscv64gc-unknown-linux-gnu,
+              MANYLINUX: manylinux_2_31,
+            }
+          - {
+              NAME: linux-riscv64,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: riscv64gc-unknown-linux-musl,
             }
     steps:
       - name: Checkout
@@ -53,11 +83,18 @@ jobs:
       - name: Install Python 3.12
         run: uv python install 3.12
 
+      - name: Install cargo-zigbuild
+        if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-linux-')
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild@0.23.2
+          fallback: none
+
       - name: Build Python wheels (Linux manylinux with Zig)
         if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-gnu')
         working-directory: pypi
         run: |
-          uvx --from maturin==1.11.5 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.6 \
+          uvx --from maturin==1.12.3 --with ziglang==0.15.1 \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --compatibility ${{ matrix.build.MANYLINUX }} --out dist
 
       - name: Build Python wheels (Linux musllinux with Zig)
@@ -66,34 +103,19 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-          uvx --from maturin==1.11.5 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.6 \
+          uvx --from maturin==1.12.3 --with ziglang==0.15.1 \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
 
       - name: Build Python wheels (Windows/macOS)
         if: runner.os != 'Linux'
         working-directory: pypi
         run: |
-          uv build --wheel --out-dir dist
+          if [[ "${{ matrix.build.TARGET }}" == "aarch64-pc-windows-msvc" ]]; then
+            uvx --from maturin==1.12.3 maturin build --release \
+              --target aarch64-pc-windows-msvc --out dist
+          else
+            uv build --wheel --out-dir dist
+          fi
 
       - name: Publish wheels to PyPI
         run: uv publish --trusted-publishing always pypi/dist/*.whl
-
-  publish-source:
-    name: Publish source distribution (manual stopgap)
-    runs-on: ubuntu-24.04
-    environment: pypi_release
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-        with:
-          version: "0.9.22"
-
-      - name: Build source distribution
-        working-directory: pypi
-        run: uv build --sdist --out-dir dist
-
-      - name: Publish source distribution to PyPI
-        run: uv publish --trusted-publishing always pypi/dist/*.tar.gz
