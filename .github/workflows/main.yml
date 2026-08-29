@@ -161,6 +161,14 @@ jobs:
             target: aarch64-unknown-linux-gnu
             zigtargetsuffix: .2.28
           - os: ubuntu-24.04
+            arch: RISC-V 64
+            target: riscv64gc-unknown-linux-gnu
+            zigtargetsuffix: .2.28
+          - os: ubuntu-24.04
+            arch: RISC-V 64
+            target: riscv64gc-unknown-linux-musl
+            zigtargetsuffix: ""
+          - os: ubuntu-24.04
             arch: x86-64
             target: x86_64-unknown-freebsd
             zigtargetsuffix: ""
@@ -272,6 +280,36 @@ jobs:
           release: ${{ matrix.release }}
           arch: ${{ matrix.arch }}
           usesh: true
+          run: |
+            chmod +x ./bin/celq
+            sh .github/scripts/smoke-test.sh ./bin/celq
+
+  test-debian-riscv64:
+    name: Test on Debian 13 (${{ matrix.target }})
+    needs: zigbuild
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - riscv64gc-unknown-linux-gnu
+          - riscv64gc-unknown-linux-musl
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download celq binary
+        uses: actions/download-artifact@v8
+        with:
+          name: celq-${{ matrix.target }}
+          path: ./bin
+
+      - name: Test on Debian
+        uses: vmactions/debian-vm@v1
+        with:
+          release: "13"
+          arch: riscv64
           run: |
             chmod +x ./bin/celq
             sh .github/scripts/smoke-test.sh ./bin/celq
