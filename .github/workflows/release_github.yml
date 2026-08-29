@@ -119,8 +119,8 @@ jobs:
           # Linux ARM64 (zigbuild - glibc 2.28)
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, zigtargetsuffix: .2.28, pretty_target: linux-aarch64-gnu }
 
-          # Linux RISC-V 64 (zigbuild - glibc 2.28)
-          - { target: riscv64gc-unknown-linux-gnu, os: ubuntu-24.04, zigtargetsuffix: .2.28, pretty_target: linux-riscv64-gnu }
+          # Linux RISC-V 64 (zigbuild - glibc 2.31)
+          - { target: riscv64gc-unknown-linux-gnu, os: ubuntu-24.04, zigtargetsuffix: .2.31, pretty_target: linux-riscv64-gnu }
 
           # Linux RISC-V 64 (zigbuild - musl static binary)
           - { target: riscv64gc-unknown-linux-musl, os: ubuntu-24.04, zigtargetsuffix: "", pretty_target: linux-riscv64-musl }

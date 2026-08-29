@@ -163,7 +163,7 @@ jobs:
           - os: ubuntu-24.04
             arch: RISC-V 64
             target: riscv64gc-unknown-linux-gnu
-            zigtargetsuffix: .2.28
+            zigtargetsuffix: .2.31
           - os: ubuntu-24.04
             arch: RISC-V 64
             target: riscv64gc-unknown-linux-musl
