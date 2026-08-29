@@ -1,7 +1,26 @@
 Changelog
 =========
 
-[v0.5.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.5.0) - TBD
+[v0.6.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.6.0) - 2026-08-28
+------------------------------------------------------------------------
+
+### Added
+
+* celq binaries now can be audited with [cargo-audit](https://crates.io/crates/cargo-audit)!
+* Added pre-built Linux RISC-V 64 binaries across GitHub releases, PyPI, NPM.
+* Added Windows ARM64 to the test matrix.
+
+### Miscellaneous
+
+* Bumped the CEL interpreter (`cel` -> 0.14.4). This could theoretically be a breaking change as the new version of the parser is more compliant with the CEL standard and could reject some existing queries. In practice, this is a quality-of-life improvement by rejecting buggy queries.
+* Bumped the YAML parser (`serde-saphyr` -> 1.1.0).
+* Bumped the toml parser (`toml` -> 1.1.4).
+* Raised the MSRV to Rust 1.94
+* celq binaries are not built with [cargo-auditable](https://crates.io/crates/cargo-auditable). This embeds informations about
+celq's dependencies in the binary. Should there be a vulnerability affecting one of celq's parsers or CEL interpreter, external tools
+will be able to flag it.
+
+[v0.5.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.5.0) - 2026-05-25
 ------------------------------------------------------------------------
 
 ### Miscellaneous
