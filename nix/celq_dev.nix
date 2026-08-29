@@ -17,6 +17,15 @@ rustPlatform.buildRustPackage (finalAttrs: {
   # Fetch from HEAD
   src = lib.cleanSource ../.;
 
+  postPatch = ''
+    # importCargoLock normalizes crates.io entries to the static CDN above;
+    # keep the lockfile in the unpacked source identical to the vendored one.
+    substituteInPlace Cargo.lock \
+      --replace-fail \
+      'registry+https://github.com/rust-lang/crates.io-index' \
+      'sparse+https://static.crates.io/crates'
+  '';
+
   cargoLock = {
     lockFileContents = builtins.replaceStrings
       [ "registry+https://github.com/rust-lang/crates.io-index" ]
