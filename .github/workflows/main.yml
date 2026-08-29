@@ -81,6 +81,9 @@ jobs:
           - os: windows-2025
             target: x86_64-pc-windows-msvc
             rust: stable
+          - os: windows-11-vs2026-arm
+            target: aarch64-pc-windows-msvc
+            rust: stable
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
