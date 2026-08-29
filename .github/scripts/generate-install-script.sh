@@ -33,6 +33,8 @@ declare -A DOWNLOADS=(
   ["linux-aarch64-musl"]="celq-linux-aarch64-musl.tar.gz"
   ["linux-x86_64-gnu"]="celq-linux-x86_64-gnu.tar.gz"
   ["linux-aarch64-gnu"]="celq-linux-aarch64-gnu.tar.gz"
+  ["linux-riscv64-musl"]="celq-linux-riscv64-musl.tar.gz"
+  ["linux-riscv64-gnu"]="celq-linux-riscv64-gnu.tar.gz"
 )
 
 declare -A CHECKSUMS
@@ -80,6 +82,8 @@ sed -e "s/{{CELQ_VERSION}}/${VERSION}/g" \
     -e "s/{{CHECKSUM_LINUX_AARCH64_MUSL}}/${CHECKSUMS[linux-aarch64-musl]}/g" \
     -e "s/{{CHECKSUM_LINUX_X86_64_GNU}}/${CHECKSUMS[linux-x86_64-gnu]}/g" \
     -e "s/{{CHECKSUM_LINUX_AARCH64_GNU}}/${CHECKSUMS[linux-aarch64-gnu]}/g" \
+    -e "s/{{CHECKSUM_LINUX_RISCV64_MUSL}}/${CHECKSUMS[linux-riscv64-musl]}/g" \
+    -e "s/{{CHECKSUM_LINUX_RISCV64_GNU}}/${CHECKSUMS[linux-riscv64-gnu]}/g" \
     "$TEMPLATE_FILE" > "$OUTPUT_FILE"
 
 chmod +x "$OUTPUT_FILE"

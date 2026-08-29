@@ -114,6 +114,12 @@ get_expected_checksum() {
     aarch64-unknown-linux-gnu)
       echo "{{CHECKSUM_LINUX_AARCH64_GNU}}"
       ;;
+    riscv64gc-unknown-linux-musl)
+      echo "{{CHECKSUM_LINUX_RISCV64_MUSL}}"
+      ;;
+    riscv64gc-unknown-linux-gnu)
+      echo "{{CHECKSUM_LINUX_RISCV64_GNU}}"
+      ;;
     *)
       err "No checksum available for target: $rust_target"
       ;;
@@ -165,6 +171,8 @@ target_to_pretty_name() {
     aarch64-unknown-linux-musl) echo "linux-aarch64-musl";;
     x86_64-unknown-linux-gnu) echo "linux-x86_64-gnu";;
     aarch64-unknown-linux-gnu) echo "linux-aarch64-gnu";;
+    riscv64gc-unknown-linux-musl) echo "linux-riscv64-musl";;
+    riscv64gc-unknown-linux-gnu) echo "linux-riscv64-gnu";;
     *)
       err "Unsupported target: $rust_target"
       ;;
@@ -255,6 +263,7 @@ if [ -z "${target-}" ]; then
 
   case $uname_target in
     aarch64-Linux) target=aarch64-unknown-linux-musl;;
+    riscv64-Linux) target=riscv64gc-unknown-linux-musl;;
     arm64-Darwin) target=aarch64-apple-darwin;;
     x86_64-Darwin) target=x86_64-apple-darwin;;
     x86_64-Linux) target=x86_64-unknown-linux-musl;;
