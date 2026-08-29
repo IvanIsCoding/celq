@@ -43,6 +43,9 @@ jobs:
           
           # Windows x86-64 (native)
           - { target: x86_64-pc-windows-msvc, os: windows-2025, pretty_target: windows-x86_64 }
+
+          # Windows ARM64 (native)
+          - { target: aarch64-pc-windows-msvc, os: windows-11-vs2026-arm, pretty_target: windows-arm64 }
           
           # Linux x86-64 (native - musl static binary)
           - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04, pretty_target: linux-x86_64-musl }
@@ -421,23 +424,30 @@ jobs:
           token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
           path: scoop-bucket
 
-      - name: Download Windows binary and calculate SHA256
+      - name: Download Windows binaries and calculate SHA256 hashes
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
         run: |
           VERSION="${{ github.ref_name }}"
           
-          # Download the Windows binary zip (using pretty name)
-          ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-x86_64.zip"
+          # Download the Windows binary zips (using pretty names)
+          X86_64_ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-x86_64.zip"
+          ARM64_ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-arm64.zip"
           
-          echo "Downloading Windows binary from: $ZIP_URL"
-          curl -sL "$ZIP_URL" -o "/tmp/celq-windows-x86_64.zip"
+          echo "Downloading Windows x86-64 binary from: $X86_64_ZIP_URL"
+          curl -fsSL "$X86_64_ZIP_URL" -o "/tmp/celq-windows-x86_64.zip"
+
+          echo "Downloading Windows ARM64 binary from: $ARM64_ZIP_URL"
+          curl -fsSL "$ARM64_ZIP_URL" -o "/tmp/celq-windows-arm64.zip"
           
-          # Calculate SHA256
-          SHA256=$(sha256sum "/tmp/celq-windows-x86_64.zip" | awk '{print $1}')
-          echo "Calculated SHA256: $SHA256"
+          # Calculate SHA256 hashes
+          X86_64_SHA256=$(sha256sum "/tmp/celq-windows-x86_64.zip" | awk '{print $1}')
+          ARM64_SHA256=$(sha256sum "/tmp/celq-windows-arm64.zip" | awk '{print $1}')
+          echo "Calculated x86-64 SHA256: $X86_64_SHA256"
+          echo "Calculated ARM64 SHA256: $ARM64_SHA256"
           
           # Export for next step
-          echo "CELQ_SHA256=$SHA256" >> $GITHUB_ENV
+          echo "CELQ_X86_64_SHA256=$X86_64_SHA256" >> $GITHUB_ENV
+          echo "CELQ_ARM64_SHA256=$ARM64_SHA256" >> $GITHUB_ENV
 
       - name: Generate Scoop manifest using celq
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
@@ -455,7 +465,8 @@ jobs:
             -S \
             --from-file "scoop/celq.json.cel" \
             --arg="celq_version:string=${VERSION_WITHOUT_V}" \
-            --arg="celq_sha256:string=${CELQ_SHA256}" \
+            --arg="celq_x86_64_sha256:string=${CELQ_X86_64_SHA256}" \
+            --arg="celq_arm64_sha256:string=${CELQ_ARM64_SHA256}" \
             > "../scoop-bucket/bucket/celq.json"
           
           echo "Scoop manifest generated successfully"

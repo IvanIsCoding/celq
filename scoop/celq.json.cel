@@ -6,7 +6,11 @@
   "architecture": {
     "64bit": {
       "url": "https://github.com/IvanIsCoding/celq/releases/download/v" + celq_version + "/celq-windows-x86_64.zip",
-      "hash": celq_sha256
+      "hash": celq_x86_64_sha256
+    },
+    "arm64": {
+      "url": "https://github.com/IvanIsCoding/celq/releases/download/v" + celq_version + "/celq-windows-arm64.zip",
+      "hash": celq_arm64_sha256
     }
   },
   "bin": "celq.exe",
@@ -17,6 +21,9 @@
     "architecture": {
       "64bit": {
         "url": "https://github.com/IvanIsCoding/celq/releases/download/v$version/celq-windows-x86_64.zip"
+      },
+      "arm64": {
+        "url": "https://github.com/IvanIsCoding/celq/releases/download/v$version/celq-windows-arm64.zip"
       }
     }
   }
