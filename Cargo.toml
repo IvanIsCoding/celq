@@ -41,15 +41,15 @@ greppable = []
 
 [dependencies]
 anyhow = "1"
-cel = { version = "0.14.0", features = ["bytes", "json", "regex", "chrono"] }
+cel = { version = "0.14.4", features = ["bytes", "json", "regex", "chrono"] }
 clap = { version = ">= 4.5.0, < 5.0.0", default-features = false, features = ["derive", "std", "help", "usage", "error-context", "suggestions"] }
 serde = "1"
 serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.12"
 mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = true }
 json5 = "1.3"
-toml = { version = "=1.1.3", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
-serde-saphyr = { version = "=0.0.29", default-features = false, features = ["deserialize"], optional = true }
+toml = { version = "=1.1.4", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
+serde-saphyr = { version = "=1.1.0", default-features = false, features = ["deserialize"], optional = true }
 quick-xml = { version = "=0.41.0", optional = true }
 
 [dev-dependencies]
