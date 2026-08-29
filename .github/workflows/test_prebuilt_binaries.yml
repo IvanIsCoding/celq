@@ -20,6 +20,38 @@ jobs:
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh ~/.cargo/bin/celq
 
+  test-curl-install-riscv64:
+    name: Test curl installer on Debian RISC-V 64
+    needs: test-curl-install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download and run installer script on x86-64 host
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL \
+            https://get-celq.github.io/install.sh -o install.sh
+          mkdir -p riscv-bin/gnu riscv-bin/musl
+          bash install.sh --target riscv64gc-unknown-linux-gnu --to riscv-bin/gnu
+          bash install.sh --target riscv64gc-unknown-linux-musl --to riscv-bin/musl
+
+      - name: Test on Debian RISC-V 64
+        uses: vmactions/debian-vm@v1
+        with:
+          release: "13"
+          arch: riscv64
+          usesh: true
+          run: |
+            chmod +x riscv-bin/gnu/celq riscv-bin/musl/celq
+            mv riscv-bin/gnu/celq /usr/local/bin/celq-gnu
+            mv riscv-bin/musl/celq /usr/local/bin/celq-musl
+            /usr/local/bin/celq-gnu --version
+            sh .github/scripts/smoke-test.sh /usr/local/bin/celq-gnu
+            /usr/local/bin/celq-musl --version
+            sh .github/scripts/smoke-test.sh /usr/local/bin/celq-musl
+
   test-curl-install-with-checksum:
     name: Test curl installer with checksum verification on ubuntu-slim
     runs-on: ubuntu-slim
@@ -182,6 +214,8 @@ jobs:
 
       - name: Install cargo-binstall
         uses: cargo-bins/cargo-binstall@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install celq via cargo-binstall
         run: cargo binstall celq -y
@@ -190,6 +224,32 @@ jobs:
         run: celq --version
 
       - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh "$(which celq)"
+
+  test-cargo-binstall-windows-arm64:
+    name: Test cargo-binstall on Windows ARM64
+    needs: test-cargo-binstall
+    runs-on: windows-11-vs2026-arm
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install celq via cargo-binstall
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: cargo binstall celq -y
+
+      - name: Print celq version
+        shell: pwsh
+        run: celq --version
+
+      - name: Run smoke test
+        shell: bash
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
   
   test-gha-install-action:
@@ -415,6 +475,7 @@ jobs:
     name: Installation Tests Summary
     needs:
       - test-curl-install
+      - test-curl-install-riscv64
       - test-curl-install-with-attestation
       - test-curl-install-with-checksum
       - test-curl-install-windows
@@ -423,6 +484,7 @@ jobs:
       - test-brew-install
       - test-linuxbrew-install
       - test-cargo-binstall
+      - test-cargo-binstall-windows-arm64
       - test-gha-install-action
       - test-scoop-install
       - test-choco-install
@@ -439,6 +501,7 @@ jobs:
         run: |
           echo "Installation test results:"
           echo "- curl installer: ${{ needs.test-curl-install.result }}"
+          echo "- curl installer (RISC-V 64): ${{ needs.test-curl-install-riscv64.result }}"
           echo "- curl installer (attestation): ${{ needs.test-curl-install-with-attestation.result }}"
           echo "- curl installer (checksum): ${{ needs.test-curl-install-with-checksum.result }}"
           echo "- curl installer (Windows): ${{ needs.test-curl-install-windows.result }}"
@@ -447,6 +510,7 @@ jobs:
           echo "- brew install: ${{ needs.test-brew-install.result }}"
           echo "- linuxbrew install: ${{ needs.test-linuxbrew-install.result }}"
           echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
+          echo "- cargo-binstall (Windows ARM64): ${{ needs.test-cargo-binstall-windows-arm64.result }}"
           echo "- GitHub Actions install action: ${{ needs.test-gha-install-action.result }}"
           echo "- scoop install: ${{ needs.test-scoop-install.result }}"
           echo "- chocolatey install: ${{ needs.test-choco-install.result }}"
@@ -458,6 +522,7 @@ jobs:
           echo "- freebsd install: ${{ needs.test-freebsd-install.result }}"
 
           if [ "${{ needs.test-curl-install.result }}" != "success" ] || \
+             [ "${{ needs.test-curl-install-riscv64.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-with-attestation.result }}" != "success" ] || \
               [ "${{ needs.test-curl-install-with-checksum.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-windows.result }}" != "success" ] || \
@@ -466,6 +531,7 @@ jobs:
              [ "${{ needs.test-brew-install.result }}" != "success" ] || \
               [ "${{ needs.test-linuxbrew-install.result }}" != "success" ] || \
              [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
+              [ "${{ needs.test-cargo-binstall-windows-arm64.result }}" != "success" ] || \
               [ "${{ needs.test-gha-install-action.result }}" != "success" ] || \
              [ "${{ needs.test-scoop-install.result }}" != "success" ] || \
              [ "${{ needs.test-choco-install.result }}" != "success" ] || \
