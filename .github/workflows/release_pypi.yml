@@ -17,19 +17,13 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - {
-              NAME: win32-arm64-msvc,
-              OS: windows-11-vs2026-arm,
-              TOOLCHAIN: stable,
-              TARGET: aarch64-pc-windows-msvc,
-            }
           # Linux wheels were omitted from the first 0.6.0 PyPI attempt and
           # are intentionally isolated here so existing filenames are not
           # uploaded again.
           - {
               NAME: linux-arm64,
               OS: ubuntu-24.04-arm,
-              TOOLCHAIN: stable,
+              TOOLCHAIN: 1.94.1,
               TARGET: aarch64-unknown-linux-gnu,
               MANYLINUX: manylinux_2_28,
               ZIG: 0.14.1,
@@ -37,7 +31,7 @@ jobs:
           - {
               NAME: linux-arm64,
               OS: ubuntu-24.04-arm,
-              TOOLCHAIN: stable,
+              TOOLCHAIN: 1.94.1,
               TARGET: aarch64-unknown-linux-musl,
               ZIG: 0.14.1,
             }
@@ -60,7 +54,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Install cargo-zigbuild
-        if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-linux-')
+        if: runner.os == 'Linux'
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-zigbuild@0.23.2
@@ -71,7 +65,8 @@ jobs:
         working-directory: pypi
         run: |
           uvx --from maturin==1.12.3 --with ziglang==${{ matrix.build.ZIG }} \
-            maturin build --release --target ${{ matrix.build.TARGET }} --zig --compatibility ${{ matrix.build.MANYLINUX }} --out dist
+            maturin build --release --target ${{ matrix.build.TARGET }} --zig \
+            --compatibility ${{ matrix.build.MANYLINUX }} --out dist
 
       - name: Build Python wheels (Linux musllinux with Zig)
         if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-musl')
@@ -81,14 +76,6 @@ jobs:
           sudo apt-get install -y musl-tools
           uvx --from maturin==1.12.3 --with ziglang==${{ matrix.build.ZIG }} \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
-
-      - name: Build Python wheel (Windows ARM64)
-        if: runner.os != 'Linux'
-        working-directory: pypi
-        shell: bash
-        run: |
-          uvx --from maturin==1.12.3 maturin build --release \
-            --target aarch64-pc-windows-msvc --out dist
 
       - name: Publish wheels to PyPI
         run: uv publish --trusted-publishing always pypi/dist/*.whl
