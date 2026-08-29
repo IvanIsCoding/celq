@@ -20,6 +20,9 @@ rustPlatform.buildRustPackage (finalAttrs: {
   cargoLock = {
     lockFile = ../Cargo.lock;
     allowBuiltinFetchGit = true;
+    extraRegistries = {
+      "https://github.com/rust-lang/crates.io-index" = "https://static.crates.io/crates";
+    };
   };
 
   nativeInstallCheckInputs = [

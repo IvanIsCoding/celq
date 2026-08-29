@@ -51,18 +51,17 @@ echo
 echo "Step 2: Calculating fetchCrate hash..."
 echo "(This may take a moment...)"
 
+# Use Nix's fake SHA-256 so the fetcher downloads through the normal verified
+# path and reports the source hash for the requested crate version.
+sed -i.bak 's|sha256 = "sha256-[^"]*";|sha256 = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";|' "$NIX_FILE"
+rm -f "$NIX_FILE.bak"
+
 set +e
 BUILD_OUTPUT=$(nix build . 2>&1)
-BUILD_EXIT=$?
 set -e
 
 # Extract hash from build output
-FETCH_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | head -1)
-
-if [ -z "$FETCH_HASH" ]; then
-    # If the build didn't fail with hash error, extract current hash
-    FETCH_HASH=$(grep -oP 'sha256 = "sha256-\K[^"]+' "$NIX_FILE" | head -1)
-fi
+FETCH_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | head -1 || true)
 
 if [ -z "$FETCH_HASH" ]; then
     echo "❌ Failed to extract fetchCrate hash"
@@ -89,11 +88,10 @@ rm -f "$NIX_FILE.bak"
 
 set +e
 BUILD_OUTPUT=$(nix build . 2>&1)
-BUILD_EXIT=$?
 set -e
 
 # Extract cargoHash from error message
-CARGO_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | tail -1)
+CARGO_HASH=$(echo "$BUILD_OUTPUT" | grep -oP "got:\s+sha256-\K[A-Za-z0-9+/=]+" | tail -1 || true)
 
 if [ -z "$CARGO_HASH" ]; then
     echo "❌ Failed to extract cargoHash"

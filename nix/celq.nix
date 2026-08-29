@@ -14,6 +14,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
   src = fetchCrate {
     pname = finalAttrs.pname;
     version = finalAttrs.version;
+    registryDl = "https://static.crates.io/crates";
     sha256 = "sha256-mpqLQC3JtzNuacuyhHwN//BKF49ln0PIlKbyhutAjd8=";
   };
 
