@@ -18,10 +18,13 @@ rustPlatform.buildRustPackage (finalAttrs: {
   src = lib.cleanSource ../.;
 
   cargoLock = {
-    lockFile = ../Cargo.lock;
+    lockFileContents = builtins.replaceStrings
+      [ "registry+https://github.com/rust-lang/crates.io-index" ]
+      [ "sparse+https://static.crates.io/crates" ]
+      (builtins.readFile ../Cargo.lock);
     allowBuiltinFetchGit = true;
     extraRegistries = {
-      "https://github.com/rust-lang/crates.io-index" = "https://static.crates.io/crates";
+      "sparse+https://static.crates.io/crates" = "https://static.crates.io/crates";
     };
   };
 
