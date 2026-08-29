@@ -2,9 +2,6 @@ name: Release to PyPI
 
 on:
   workflow_dispatch:  # Manual trigger only
-  push:
-    tags:
-      - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
 permissions:
   # IMPORTANT: this permission is mandatory for Trusted Publishing
@@ -21,55 +18,10 @@ jobs:
       matrix:
         build:
           - {
-              NAME: linux-x64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: x86_64-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_28,
-            }
-          - {
-              NAME: linux-x64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: x86_64-unknown-linux-musl,
-            }
-          - {
-              NAME: linux-arm64,
-              OS: ubuntu-24.04-arm,
-              TOOLCHAIN: stable,
-              TARGET: aarch64-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_28,
-            }
-          - {
-              NAME: linux-arm64,
-              OS: ubuntu-24.04-arm,
-              TOOLCHAIN: stable,
-              TARGET: aarch64-unknown-linux-musl,
-            }
-          - {
-              NAME: linux-riscv64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: riscv64gc-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_31,
-            }
-          - {
-              NAME: linux-riscv64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: riscv64gc-unknown-linux-musl,
-            }
-          - {
               NAME: win32-x64-msvc,
               OS: windows-2025,
               TOOLCHAIN: stable,
               TARGET: x86_64-pc-windows-msvc,
-            }
-          - {
-              NAME: win32-arm64-msvc,
-              OS: windows-11-vs2026-arm,
-              TOOLCHAIN: stable,
-              TARGET: aarch64-pc-windows-msvc,
             }
           - {
               NAME: darwin-arm64,
@@ -105,7 +57,7 @@ jobs:
         if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-gnu')
         working-directory: pypi
         run: |
-          uvx --from maturin==1.12.3 --with ziglang==0.15.1 --with cargo-zigbuild==0.23.2 \
+          uvx --from maturin==1.11.5 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.6 \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --compatibility ${{ matrix.build.MANYLINUX }} --out dist
 
       - name: Build Python wheels (Linux musllinux with Zig)
@@ -114,7 +66,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-          uvx --from maturin==1.12.3 --with ziglang==0.15.1 --with cargo-zigbuild==0.23.2 \
+          uvx --from maturin==1.11.5 --with ziglang==0.15.1 --with cargo-zigbuild==0.21.6 \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
 
       - name: Build Python wheels (Windows/macOS)
@@ -126,12 +78,22 @@ jobs:
       - name: Publish wheels to PyPI
         run: uv publish --trusted-publishing always pypi/dist/*.whl
 
+  publish-source:
+    name: Publish source distribution (manual stopgap)
+    runs-on: ubuntu-24.04
+    environment: pypi_release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.22"
+
       - name: Build source distribution
-        if: matrix.build.TARGET == 'x86_64-unknown-linux-gnu'
         working-directory: pypi
-        run: |
-          uv build --sdist --out-dir dist
+        run: uv build --sdist --out-dir dist
 
       - name: Publish source distribution to PyPI
-        if: matrix.build.TARGET == 'x86_64-unknown-linux-gnu'
         run: uv publish --trusted-publishing always pypi/dist/*.tar.gz
