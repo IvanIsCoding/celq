@@ -27,43 +27,19 @@ jobs:
           # are intentionally isolated here so existing filenames are not
           # uploaded again.
           - {
-              NAME: linux-x64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: x86_64-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_28,
-            }
-          - {
-              NAME: linux-x64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: x86_64-unknown-linux-musl,
-            }
-          - {
               NAME: linux-arm64,
               OS: ubuntu-24.04-arm,
               TOOLCHAIN: stable,
               TARGET: aarch64-unknown-linux-gnu,
               MANYLINUX: manylinux_2_28,
+              ZIG: 0.14.1,
             }
           - {
               NAME: linux-arm64,
               OS: ubuntu-24.04-arm,
               TOOLCHAIN: stable,
               TARGET: aarch64-unknown-linux-musl,
-            }
-          - {
-              NAME: linux-riscv64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: riscv64gc-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_31,
-            }
-          - {
-              NAME: linux-riscv64,
-              OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: riscv64gc-unknown-linux-musl,
+              ZIG: 0.14.1,
             }
     steps:
       - name: Checkout
@@ -94,7 +70,7 @@ jobs:
         if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-gnu')
         working-directory: pypi
         run: |
-          uvx --from maturin==1.12.3 --with ziglang==0.15.1 \
+          uvx --from maturin==1.12.3 --with ziglang==${{ matrix.build.ZIG }} \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --compatibility ${{ matrix.build.MANYLINUX }} --out dist
 
       - name: Build Python wheels (Linux musllinux with Zig)
@@ -103,19 +79,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
-          uvx --from maturin==1.12.3 --with ziglang==0.15.1 \
+          uvx --from maturin==1.12.3 --with ziglang==${{ matrix.build.ZIG }} \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
 
-      - name: Build Python wheels (Windows/macOS)
+      - name: Build Python wheel (Windows ARM64)
         if: runner.os != 'Linux'
         working-directory: pypi
+        shell: bash
         run: |
-          if [[ "${{ matrix.build.TARGET }}" == "aarch64-pc-windows-msvc" ]]; then
-            uvx --from maturin==1.12.3 maturin build --release \
-              --target aarch64-pc-windows-msvc --out dist
-          else
-            uv build --wheel --out-dir dist
-          fi
+          uvx --from maturin==1.12.3 maturin build --release \
+            --target aarch64-pc-windows-msvc --out dist
 
       - name: Publish wheels to PyPI
         run: uv publish --trusted-publishing always pypi/dist/*.whl
