@@ -226,31 +226,34 @@ jobs:
       - name: Run smoke test
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
-  test-cargo-binstall-windows-arm64:
-    name: Test cargo-binstall on Windows ARM64
-    needs: test-cargo-binstall
+  test-scoop-install-windows-arm64:
+    name: Test Scoop install on Windows ARM64
+    needs: test-scoop-install
     runs-on: windows-11-vs2026-arm
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
 
-      - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install celq via cargo-binstall
+      - name: Install Scoop
         shell: pwsh
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: cargo binstall celq -y
+        run: |
+          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+          Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+          echo "$env:USERPROFILE\scoop\shims" >> $env:GITHUB_PATH
+
+      - name: Install celq via Scoop
+        shell: pwsh
+        run: |
+          scoop bucket add get-celq https://github.com/get-celq/scoop-bucket
+          scoop install get-celq/celq
 
       - name: Print celq version
-        shell: pwsh
-        run: celq --version
+        run: ~/scoop/shims/celq --version
 
       - name: Run smoke test
-        shell: bash
-        run: sh .github/scripts/smoke-test.sh "$(which celq)"
+        run: sh .github/scripts/smoke-test.sh ~/scoop/shims/celq
   
   test-gha-install-action:
     name: Test taiki-e/install-action on ubuntu-slim
@@ -484,7 +487,7 @@ jobs:
       - test-brew-install
       - test-linuxbrew-install
       - test-cargo-binstall
-      - test-cargo-binstall-windows-arm64
+      - test-scoop-install-windows-arm64
       - test-gha-install-action
       - test-scoop-install
       - test-choco-install
@@ -510,7 +513,7 @@ jobs:
           echo "- brew install: ${{ needs.test-brew-install.result }}"
           echo "- linuxbrew install: ${{ needs.test-linuxbrew-install.result }}"
           echo "- cargo-binstall: ${{ needs.test-cargo-binstall.result }}"
-          echo "- cargo-binstall (Windows ARM64): ${{ needs.test-cargo-binstall-windows-arm64.result }}"
+          echo "- scoop install (Windows ARM64): ${{ needs.test-scoop-install-windows-arm64.result }}"
           echo "- GitHub Actions install action: ${{ needs.test-gha-install-action.result }}"
           echo "- scoop install: ${{ needs.test-scoop-install.result }}"
           echo "- chocolatey install: ${{ needs.test-choco-install.result }}"
@@ -531,7 +534,7 @@ jobs:
              [ "${{ needs.test-brew-install.result }}" != "success" ] || \
               [ "${{ needs.test-linuxbrew-install.result }}" != "success" ] || \
              [ "${{ needs.test-cargo-binstall.result }}" != "success" ] || \
-              [ "${{ needs.test-cargo-binstall-windows-arm64.result }}" != "success" ] || \
+              [ "${{ needs.test-scoop-install-windows-arm64.result }}" != "success" ] || \
               [ "${{ needs.test-gha-install-action.result }}" != "success" ] || \
              [ "${{ needs.test-scoop-install.result }}" != "success" ] || \
              [ "${{ needs.test-choco-install.result }}" != "success" ] || \
