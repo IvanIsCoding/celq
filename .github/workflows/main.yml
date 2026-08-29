@@ -205,15 +205,21 @@ jobs:
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-zigbuild@0.23.2
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
       
       - name: Build with Zig
         if: matrix.target != 'aarch64-unknown-freebsd'
-        run: cargo zigbuild --locked --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
+        run: cargo auditable zigbuild --locked --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
       
       - name: Build with Zig (FreeBSD aarch64 special case)
         if: matrix.target == 'aarch64-unknown-freebsd'
         run: |
-          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo zigbuild \
+          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo auditable zigbuild \
           --target aarch64-unknown-freebsd \
           -Z build-std=std,panic_abort
       
@@ -223,6 +229,36 @@ jobs:
           name: celq-${{ matrix.target }}
           path: target/${{ matrix.target }}/debug/celq
           retention-days: 1
+
+  audit-zigbuild-binary:
+    name: Audit Zig-built Linux x86-64 binary
+    needs: zigbuild
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download celq binary
+        uses: actions/download-artifact@v8
+        with:
+          name: celq-x86_64-unknown-linux-gnu
+          path: ./bin
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit@0.22.2
+          fallback: none
+
+      - name: Audit binary
+        run: |
+          set +e
+          cargo audit bin ./bin/celq
+          audit_status=$?
+          set -e
+
+          if [ "$audit_status" -eq 1 ]; then
+            echo "::warning::cargo-audit found one or more vulnerabilities in the binary"
+          elif [ "$audit_status" -ne 0 ]; then
+            exit "$audit_status"
+          fi
 
   test-debian-oldoldstable:
     name: Test on Debian Oldoldstable for (${{ matrix.target }})

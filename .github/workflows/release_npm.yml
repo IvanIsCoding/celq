@@ -66,6 +66,12 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.build.TARGET }}
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
       
       - name: Install musl tools (for musl targets)
         if: contains(matrix.build.TARGET, 'musl')
@@ -74,7 +80,7 @@ jobs:
           sudo apt-get install -y musl-tools
 
       - name: Build
-        run: cargo build --release --locked --target ${{ matrix.build.TARGET }}
+        run: cargo auditable build --release --locked --target ${{ matrix.build.TARGET }}
 
       - name: Install node
         uses: actions/setup-node@v6

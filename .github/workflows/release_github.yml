@@ -58,6 +58,12 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
       - name: Install musl tools (for musl targets)
         if: contains(matrix.target, 'musl')
         run: |
@@ -65,7 +71,7 @@ jobs:
           sudo apt-get install -y musl-tools
 
       - name: Build
-        run: cargo build --locked --release --target ${{ matrix.target }}
+        run: cargo auditable build --locked --release --target ${{ matrix.target }}
 
       - name: Create release archive
         id: archive
@@ -156,14 +162,20 @@ jobs:
         with:
           tool: cargo-zigbuild@0.23.2
 
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
       - name: Build with Zig
         if: matrix.target != 'aarch64-unknown-freebsd'
-        run: cargo zigbuild --locked --release --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
+        run: cargo auditable zigbuild --locked --release --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
       
       - name: Build with Zig (FreeBSD aarch64 special case)
         if: matrix.target == 'aarch64-unknown-freebsd'
         run: |
-          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo zigbuild \
+          RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo auditable zigbuild \
           --target aarch64-unknown-freebsd \
           --release \
           -Z build-std=std,panic_abort
