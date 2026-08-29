@@ -78,6 +78,10 @@ pkg-url = "{ repo }/releases/download/v{ version }/{ name }-macos-x86_64{ archiv
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-windows-x86_64{ archive-suffix }"
 pkg-fmt = "zip"
 
+[package.metadata.binstall.overrides.aarch64-pc-windows-msvc]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-windows-arm64{ archive-suffix }"
+pkg-fmt = "zip"
+
 [package.metadata.binstall.overrides.x86_64-unknown-linux-musl]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-x86_64-musl{ archive-suffix }"
 
