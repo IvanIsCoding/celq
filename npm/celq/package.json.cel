@@ -35,6 +35,7 @@
     "@ivaniscoding/celq-darwin-arm64": node_version,
     "@ivaniscoding/celq-darwin-x64": node_version,
     "@ivaniscoding/celq-linux-arm64": node_version,
+    "@ivaniscoding/celq-linux-riscv64": node_version,
     "@ivaniscoding/celq-linux-x64": node_version,
     "@ivaniscoding/celq-windows-arm64": node_version,
     "@ivaniscoding/celq-windows-x64": node_version

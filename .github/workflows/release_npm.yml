@@ -35,6 +35,13 @@ jobs:
               TARGET: aarch64-unknown-linux-musl,
             }
           - {
+              NAME: linux-riscv64-musl,
+              OS: ubuntu-24.04,
+              TOOLCHAIN: stable,
+              TARGET: riscv64gc-unknown-linux-musl,
+              CROSS: true,
+            }
+          - {
               NAME: win32-x64-msvc,
               OS: windows-2025,
               TOOLCHAIN: stable,
@@ -72,15 +79,32 @@ jobs:
         with:
           tool: cargo-auditable@0.7.5
           fallback: none
-      
+
+      - name: Install Zig (for cross-compilation)
+        if: matrix.build.CROSS == true
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Install cargo-zigbuild (for cross-compilation)
+        if: matrix.build.CROSS == true
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild@0.23.2
+
       - name: Install musl tools (for musl targets)
-        if: contains(matrix.build.TARGET, 'musl')
+        if: contains(matrix.build.TARGET, 'musl') && matrix.build.CROSS != true
         run: |
           sudo apt-get update
           sudo apt-get install -y musl-tools
 
       - name: Build
+        if: matrix.build.CROSS != true
         run: cargo auditable build --release --locked --target ${{ matrix.build.TARGET }}
+
+      - name: Build with Zig
+        if: matrix.build.CROSS == true
+        run: cargo auditable zigbuild --release --locked --target ${{ matrix.build.TARGET }}
 
       - name: Install node
         uses: actions/setup-node@v6
@@ -116,7 +140,6 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Publish the package
-        continue-on-error: true
         shell: bash
         run: |
           RELEASE_VERSION=$(npx -y celq@0.2.0 --from-toml --raw-output  "this.package.version" < "Cargo.toml")
@@ -131,6 +154,6 @@ jobs:
               --arg="node_version:string=${RELEASE_VERSION}" \
               > "npm/celq/package.json"
           cd npm/celq
-          yarn install # requires optional dependencies to be present in the registry
+          yarn install --no-immutable # requires optional dependencies to be present in the registry
           yarn build
           npm publish --access public
