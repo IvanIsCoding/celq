@@ -260,16 +260,26 @@ jobs:
         run: .github/scripts/audit-binary.sh ./bin/celq
 
   test-maturin-auditable:
-    name: Test Maturin with cargo-auditable (Linux x86-64)
+    name: Test Maturin with cargo-auditable (${{ matrix.name }})
     needs: zigbuild
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x86-64
+            os: ubuntu-24.04
+            target: x86_64-unknown-linux-gnu
+          - name: Windows x86-64
+            os: windows-2025
+            target: x86_64-pc-windows-msvc
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@1.94.1
         with:
-          targets: x86_64-unknown-linux-gnu
+          targets: ${{ matrix.target }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -280,6 +290,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Install cargo-zigbuild
+        if: runner.os == 'Linux'
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-zigbuild@0.23.2
@@ -291,15 +302,29 @@ jobs:
           tool: cargo-auditable@0.7.5
           fallback: none
 
-      - name: Configure Maturin to use cargo-auditable
+      - name: Configure Maturin to use cargo-auditable (Linux)
+        if: runner.os == 'Linux'
         run: echo "CARGO=$GITHUB_WORKSPACE/.github/scripts/cargo-auditable-wrapper.sh" >> "$GITHUB_ENV"
 
-      - name: Build Python wheel with Maturin
+      - name: Configure Maturin to use cargo-auditable (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $cargoWrapper = Join-Path $env:GITHUB_WORKSPACE ".github\scripts\cargo-auditable-wrapper.bat"
+          "CARGO=$cargoWrapper" >> $env:GITHUB_ENV
+
+      - name: Build Python wheel with Maturin (Linux)
+        if: runner.os == 'Linux'
         working-directory: pypi
         run: |
           uvx --from maturin==1.12.3 --with ziglang==0.15.1 \
-            maturin build --release --target x86_64-unknown-linux-gnu --zig \
+            maturin build --release --target ${{ matrix.target }} --zig \
             --compatibility manylinux_2_28 --out dist
+
+      - name: Build Python wheel with Maturin (Windows)
+        if: runner.os == 'Windows'
+        working-directory: pypi
+        run: uvx --from maturin==1.12.3 maturin build --release --target ${{ matrix.target }} --out dist
 
   test-debian-oldoldstable:
     name: Test on Debian Oldoldstable for (${{ matrix.target }})
