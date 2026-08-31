@@ -235,6 +235,8 @@ jobs:
     needs: zigbuild
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+
       - name: Download celq binary
         uses: actions/download-artifact@v8
         with:
