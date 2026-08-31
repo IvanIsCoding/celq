@@ -38,8 +38,8 @@ jobs:
           # macOS ARM64 (native)
           - { target: aarch64-apple-darwin, os: macos-15, pretty_target: macos-aarch64 }
 
-          # macOS x86-64 (native)
-          - { target: x86_64-apple-darwin, os: macos-15-intel, pretty_target: macos-x86_64 }
+          # macOS x86-64 (cross-compiled on Apple Silicon)
+          - { target: x86_64-apple-darwin, os: macos-15, pretty_target: macos-x86_64 }
           
           # Windows x86-64 (native)
           - { target: x86_64-pc-windows-msvc, os: windows-2025, pretty_target: windows-x86_64 }

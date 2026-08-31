@@ -79,7 +79,7 @@ jobs:
             }
           - {
               NAME: darwin-x64,
-              OS: macos-15-intel,
+              OS: macos-15,
               TOOLCHAIN: 1.94.1,
               TARGET: x86_64-apple-darwin,
             }
@@ -132,18 +132,13 @@ jobs:
           uvx --from maturin==1.12.3 --with ziglang==${{ matrix.build.ZIG }} \
             maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
 
-      - name: Build Python wheel (Windows ARM64)
-        if: matrix.build.TARGET == 'aarch64-pc-windows-msvc'
+      - name: Build Python wheels (Windows/macOS)
+        if: runner.os != 'Linux'
         working-directory: pypi
         shell: bash
         run: |
           uvx --from maturin==1.12.3 maturin build --release \
-            --target aarch64-pc-windows-msvc --out dist
-
-      - name: Build Python wheels (Windows/macOS)
-        if: runner.os != 'Linux' && matrix.build.TARGET != 'aarch64-pc-windows-msvc'
-        working-directory: pypi
-        run: uv build --wheel --out-dir dist
+            --target ${{ matrix.build.TARGET }} --out dist
 
       - name: Publish wheels to PyPI
         run: uv publish --trusted-publishing always pypi/dist/*.whl
