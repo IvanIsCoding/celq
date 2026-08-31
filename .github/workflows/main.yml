@@ -247,18 +247,15 @@ jobs:
           tool: cargo-audit@0.22.2
           fallback: none
 
-      - name: Audit binary
-        run: |
-          set +e
-          cargo audit bin ./bin/celq
-          audit_status=$?
-          set -e
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@v0.24.0
 
-          if [ "$audit_status" -eq 1 ]; then
-            echo "::warning::cargo-audit found one or more vulnerabilities in the binary"
-          elif [ "$audit_status" -ne 0 ]; then
-            exit "$audit_status"
-          fi
+      - name: Print binary packages
+        run: '"${{ steps.syft.outputs.cmd }}" scan ./bin/celq --output table'
+
+      - name: Audit binary
+        run: .github/scripts/audit-binary.sh ./bin/celq
 
   test-debian-oldoldstable:
     name: Test on Debian Oldoldstable for (${{ matrix.target }})
