@@ -108,12 +108,24 @@ jobs:
       - name: Install Python 3.12
         run: uv python install 3.12
 
+      - name: Install cargo-auditable
+        if: runner.os != 'Windows'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
       - name: Install cargo-zigbuild
         if: runner.os == 'Linux'
         uses: taiki-e/install-action@v2
         with:
           tool: cargo-zigbuild@0.23.2
           fallback: none
+
+      - name: Configure Maturin to use cargo-auditable
+        if: runner.os != 'Windows'
+        shell: bash
+        run: echo "CARGO=$GITHUB_WORKSPACE/.github/scripts/cargo-auditable-wrapper.sh" >> "$GITHUB_ENV"
 
       - name: Build Python wheels (Linux manylinux with Zig)
         if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-gnu')

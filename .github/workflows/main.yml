@@ -259,6 +259,48 @@ jobs:
       - name: Audit binary
         run: .github/scripts/audit-binary.sh ./bin/celq
 
+  test-maturin-auditable:
+    name: Test Maturin with cargo-auditable (Linux x86-64)
+    needs: zigbuild
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust MSRV
+        uses: dtolnay/rust-toolchain@1.94.1
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.9.22"
+
+      - name: Install Python 3.12
+        run: uv python install 3.12
+
+      - name: Install cargo-zigbuild
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-zigbuild@0.23.2
+          fallback: none
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
+      - name: Configure Maturin to use cargo-auditable
+        run: echo "CARGO=$GITHUB_WORKSPACE/.github/scripts/cargo-auditable-wrapper.sh" >> "$GITHUB_ENV"
+
+      - name: Build Python wheel with Maturin
+        working-directory: pypi
+        run: |
+          uvx --from maturin==1.12.3 --with ziglang==0.15.1 \
+            maturin build --release --target x86_64-unknown-linux-gnu --zig \
+            --compatibility manylinux_2_28 --out dist
+
   test-debian-oldoldstable:
     name: Test on Debian Oldoldstable for (${{ matrix.target }})
     needs: zigbuild
