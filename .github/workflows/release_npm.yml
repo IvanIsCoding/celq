@@ -9,8 +9,6 @@ on:
       - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
 permissions:
-  # IMPORTANT: this permission is mandatory for Trusted Publishing
-  id-token: write
   contents: read
 
 jobs:
@@ -18,6 +16,9 @@ jobs:
     name: Publish NPM packages
     runs-on: ${{ matrix.build.os }}
     environment: npm_release
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -68,6 +69,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -129,9 +132,14 @@ jobs:
     needs: publish-npm-binaries
     environment: npm_release
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install node
         uses: actions/setup-node@v6

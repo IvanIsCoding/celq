@@ -7,17 +7,21 @@ on:
       - "v[0-9]*"
 
 permissions:
-  id-token: write   # REQUIRED
   contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     environment: crates_io_release
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable

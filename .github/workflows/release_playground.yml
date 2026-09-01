@@ -13,6 +13,9 @@ defaults:
   run:
     shell: bash
 
+permissions:
+  contents: read
+
 jobs:
   deploy-wasm:
     name: Deploy WASM to Playground
@@ -23,6 +26,7 @@ jobs:
       - name: Checkout celq repository
         uses: actions/checkout@v7
         with:
+          persist-credentials: false
           path: celq-repo
 
       - name: Install Pixi

@@ -7,8 +7,6 @@ on:
       - "v[0-9]*"      # Trigger on version tags like v1.0.0
 
 permissions:
-  # IMPORTANT: this permission is mandatory for Trusted Publishing
-  id-token: write
   contents: read
 
 jobs:
@@ -16,6 +14,9 @@ jobs:
     name: Publish binaries
     runs-on: ${{ matrix.build.os }}
     environment: pypi_release
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
@@ -93,6 +94,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install Rust ${{ matrix.build.TOOLCHAIN }}
         uses: dtolnay/rust-toolchain@stable
@@ -165,9 +168,14 @@ jobs:
     name: Publish source distribution
     runs-on: ubuntu-24.04
     environment: pypi_release
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7

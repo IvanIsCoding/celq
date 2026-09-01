@@ -8,16 +8,20 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-  attestations: write
 
 jobs:
   release-chocolatey:
     runs-on: windows-2025
     environment: chocolatey_release
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - name: Get version from Cargo.toml
         id: get_version
