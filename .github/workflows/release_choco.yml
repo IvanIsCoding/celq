@@ -19,7 +19,7 @@ jobs:
       attestations: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -103,7 +103,7 @@ jobs:
       - name: Generate attestation for celq.exe
         id: attest_exe
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: 'tools/celq.exe'
 
@@ -128,7 +128,7 @@ jobs:
 
       - name: Import GPG key
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
-        uses: crazy-max/ghaction-import-gpg@v6
+        uses: crazy-max/ghaction-import-gpg@e89d40939c28e39f97cf32126055eeae86ba74ec # v6
         with:
           gpg_private_key: ${{ secrets.CHOCO_GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.CHOCO_GPG_PASSPHRASE }}
@@ -159,6 +159,6 @@ jobs:
       
       - name: Generate attestation for Chocolatey package
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
           subject-path: 'celq.${{ steps.get_version.outputs.VERSION }}.nupkg'
