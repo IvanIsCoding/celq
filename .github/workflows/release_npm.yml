@@ -88,6 +88,7 @@ jobs:
         uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
           version: 0.15.2
+          use-cache: false
 
       - name: Install cargo-zigbuild (for cross-compilation)
         if: matrix.build.CROSS == true
@@ -114,6 +115,7 @@ jobs:
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
 
       - name: Make publish script executable
         shell: bash
@@ -146,6 +148,7 @@ jobs:
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
 
       - name: Publish the package
         shell: bash
