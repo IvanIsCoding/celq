@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/woodruffw/zizmor/main/support/zizmor.schema.json
+
+rules:
+  template-injection:
+    ignore:
+      - release_choco.yml
+      - release_github.yml:118
+      - release_github.yml:217
+      - release_github.yml:248
+      - release_github.yml:276
+      - release_github.yml:284
+      - release_github.yml:314
+      - release_github.yml:352
+      - release_github.yml:371
+      - release_github.yml:398
+      - release_github.yml:411
+      - release_github.yml:414
+      - release_github.yml:431
+      - release_github.yml:454
+      - release_github.yml:481
+      - release_github.yml:506
+      - release_github.yml:509
+      - release_playground.yml
