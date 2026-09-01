@@ -273,7 +273,7 @@ jobs:
         uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
 
       - name: Print binary packages
-        run: '"${{ steps.syft.outputs.cmd }}" scan ./bin/celq --output table'
+        run: '"${{ steps.syft.outputs.cmd }}" scan ./bin/celq --output table' # zizmor: ignore[template-injection] command path comes from the pinned Syft action
 
       - name: Audit binary
         run: .github/scripts/audit-binary.sh ./bin/celq

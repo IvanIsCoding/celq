@@ -233,7 +233,7 @@ jobs:
           persist-credentials: false
           path: celq-repo
 
-      - name: Checkout get-celq.github.io repository
+      - name: Checkout get-celq.github.io repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: get-celq/get-celq.github.io
@@ -380,7 +380,7 @@ jobs:
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Checkout homebrew-tap repository
+      - name: Checkout homebrew-tap repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -440,7 +440,7 @@ jobs:
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Checkout scoop-bucket repository
+      - name: Checkout scoop-bucket repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:

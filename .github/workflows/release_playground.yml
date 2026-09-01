@@ -80,7 +80,7 @@ jobs:
           
           echo "✅ WASM optimization completed"
 
-      - name: Checkout playground repository
+      - name: Checkout playground repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: celq-playground/celq-playground.github.io

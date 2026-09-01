@@ -155,7 +155,7 @@ jobs:
       - name: Publish to Chocolatey
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
         run: choco push celq.${{ steps.get_version.outputs.VERSION }}.nupkg -s https://push.chocolatey.org/ --api-key=${{ secrets.CHOCO_API_KEY }}
-        shell: cmd
+        shell: cmd # zizmor: ignore[misfeature] Chocolatey publishing requires the Windows CMD shell
       
       - name: Generate attestation for Chocolatey package
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'

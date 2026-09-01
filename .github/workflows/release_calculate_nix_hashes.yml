@@ -34,4 +34,4 @@ jobs:
       
       - name: Calculate hashes
         id: hashes
-        run: .github/scripts/nix-hashes.sh "${{ inputs.new_version }}"
+        run: .github/scripts/nix-hashes.sh "${{ inputs.new_version }}" # zizmor: ignore[template-injection] trusted manual release input

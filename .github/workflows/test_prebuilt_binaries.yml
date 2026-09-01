@@ -161,7 +161,7 @@ jobs:
           node-version: '20'
 
       - name: Install celq globally via npm
-        run: npm install -g celq
+        run: npm install -g celq # zizmor: ignore[adhoc-packages] intentionally tests the published package
 
       - name: Print celq version
         run: celq --version
