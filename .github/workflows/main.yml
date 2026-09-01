@@ -275,6 +275,16 @@ jobs:
       - name: Print binary packages
         run: '"${{ steps.syft.outputs.cmd }}" scan ./bin/celq --output table' # zizmor: ignore[template-injection] command path comes from the pinned Syft action
 
+      - name: Generate SBOM from cargo-auditable binary
+        run: '"${{ steps.syft.outputs.cmd }}" scan ./bin/celq --output spdx-json=celq.spdx.json' # zizmor: ignore[template-injection] command path comes from the pinned Syft action
+
+      - name: Upload SPDX SBOM
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: celq-spdx-sbom
+          path: celq.spdx.json
+          retention-days: 1
+
       - name: Audit binary
         run: .github/scripts/audit-binary.sh ./bin/celq
 
