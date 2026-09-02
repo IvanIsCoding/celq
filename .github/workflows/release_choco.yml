@@ -17,6 +17,7 @@ jobs:
       contents: read
       id-token: write
       attestations: write
+      artifact-metadata: write
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -100,12 +101,25 @@ jobs:
           Copy-Item LICENSE-MIT -Destination tools\LICENSE.txt
         shell: pwsh
 
-      - name: Generate attestation for celq.exe
+      - name: Verify existing attestation for celq.exe
         id: attest_exe
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
-        with:
-          subject-path: 'tools/celq.exe'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh attestation verify tools/celq.exe --repo IvanIsCoding/celq
+
+          $hash = (Get-FileHash tools\celq.exe -Algorithm SHA256).Hash.ToLower()
+          $response = gh api --method GET "repos/IvanIsCoding/celq/attestations/sha256:${hash}?predicate_type=provenance" | ConvertFrom-Json
+          if ($response.attestations.Count -eq 0) {
+            throw "No provenance attestation found for celq.exe"
+          }
+
+          $bundlePath = ([Uri]$response.attestations[0].bundle_url).AbsolutePath
+          $attestationId = [System.IO.Path]::GetFileName($bundlePath).Split('.')[0]
+          $attestationUrl = "https://github.com/IvanIsCoding/celq/attestations/$attestationId"
+          echo "attestation-url=$attestationUrl" >> $env:GITHUB_OUTPUT
+        shell: pwsh
 
       - name: Template VERIFICATION.txt
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
@@ -159,6 +173,6 @@ jobs:
       
       - name: Generate attestation for Chocolatey package
         if: steps.check_prerelease.outputs.IS_PRERELEASE == 'false'
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: 'celq.${{ steps.get_version.outputs.VERSION }}.nupkg'
