@@ -65,7 +65,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install cargo-auditable
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: cargo-auditable@0.7.5
           fallback: none
@@ -178,12 +178,12 @@ jobs:
           use-cache: false
 
       - name: Install cargo-zigbuild
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: cargo-zigbuild@0.23.2
 
       - name: Install cargo-auditable
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: cargo-auditable@0.7.5
           fallback: none
@@ -562,7 +562,7 @@ jobs:
           
           echo "Generating Scoop manifest for version: $VERSION_WITHOUT_V"
           
-          npx -y celq@0.2.0 \
+          npx -y celq@0.6.0 \
             -n \
             -p \
             -S \

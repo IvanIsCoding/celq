@@ -78,7 +78,7 @@ jobs:
           targets: ${{ matrix.build.TARGET }}
 
       - name: Install cargo-auditable
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: cargo-auditable@0.7.5
           fallback: none
@@ -92,7 +92,7 @@ jobs:
 
       - name: Install cargo-zigbuild (for cross-compilation)
         if: matrix.build.CROSS == true
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: cargo-zigbuild@0.23.2
 
@@ -153,11 +153,11 @@ jobs:
       - name: Publish the package
         shell: bash
         run: |
-          RELEASE_VERSION=$(npx -y celq@0.2.0 --from-toml --raw-output  "this.package.version" < "Cargo.toml")
+          RELEASE_VERSION=$(npx -y celq@0.6.0 --from-toml --raw-output  "this.package.version" < "Cargo.toml")
           cp README.md npm/celq/README.md
           cp LICENSE-APACHE npm/celq/LICENSE-APACHE
           cp LICENSE-MIT npm/celq/LICENSE-MIT
-          npx -y celq@0.2.0 \
+          npx -y celq@0.6.0 \
               -n \
               -p \
               -S \

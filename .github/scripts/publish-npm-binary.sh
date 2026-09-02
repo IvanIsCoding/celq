@@ -12,7 +12,7 @@ BIN="celq"
 NPM_DIR="npm"
 
 # Read release version from package.json using celq
-RELEASE_VERSION=$(npx -y celq@0.2.0 --from-toml --raw-output "this.package.version" < "${NPM_DIR}/../Cargo.toml")
+RELEASE_VERSION=$(npx -y celq@0.6.0 --from-toml --raw-output "this.package.version" < "${NPM_DIR}/../Cargo.toml")
 
 # Derive OS and architecture from build name
 # Format: os-arch-variant (e.g., linux-x64-glibc, darwin-arm64)
@@ -33,7 +33,7 @@ echo "Publishing ${node_pkg} version ${RELEASE_VERSION}"
 mkdir -p "${NPM_DIR}/${node_pkg}/bin"
 
 # Generate package.json using celq
-npx -y celq@0.2.0 \
+npx -y celq@0.6.0 \
   -n \
   -p \
   -S \

@@ -45,7 +45,7 @@ jobs:
           bash install.sh --target riscv64gc-unknown-linux-musl --to riscv-bin/musl
 
       - name: Test on Debian RISC-V 64
-        uses: vmactions/debian-vm@389ba1da28ff5b440cba52db8e03fc2e08e2affa # v1
+        uses: vmactions/debian-vm@389ba1da28ff5b440cba52db8e03fc2e08e2affa # v1.0.0
         with:
           release: "13"
           arch: riscv64
@@ -292,7 +292,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2
+      - uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: celq
 
@@ -493,7 +493,7 @@ jobs:
           echo "Latest version: $VERSION"
 
       - name: Test on FreeBSD
-        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1
+        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
         with:
           release: '14.4'
           usesh: true
