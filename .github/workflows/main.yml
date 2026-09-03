@@ -170,31 +170,31 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
-            arch: x86-64
+          - arch: x86-64
             target: x86_64-unknown-linux-gnu
             zigtargetsuffix: .2.28
-          - os: ubuntu-24.04-arm
-            arch: ARM
+          - arch: ARM
             target: aarch64-unknown-linux-gnu
             zigtargetsuffix: .2.28
-          - os: ubuntu-24.04
-            arch: RISC-V 64
+          - arch: x86-64
+            target: x86_64-unknown-linux-musl
+            zigtargetsuffix: ""
+          - arch: ARM
+            target: aarch64-unknown-linux-musl
+            zigtargetsuffix: ""
+          - arch: RISC-V 64
             target: riscv64gc-unknown-linux-gnu
             zigtargetsuffix: .2.31
-          - os: ubuntu-24.04
-            arch: RISC-V 64
+          - arch: RISC-V 64
             target: riscv64gc-unknown-linux-musl
             zigtargetsuffix: ""
-          - os: ubuntu-24.04
-            arch: x86-64
+          - arch: x86-64
             target: x86_64-unknown-freebsd
             zigtargetsuffix: ""
-          - os: ubuntu-24.04-arm
-            arch: ARM
+          - arch: ARM
             target: aarch64-unknown-freebsd
             zigtargetsuffix: ""
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -358,15 +358,19 @@ jobs:
         run: uvx --from maturin==1.12.3 maturin build --release --target ${{ matrix.target }} --out dist
 
   test-debian-oldoldstable:
-    name: Test on Debian Oldoldstable for (${{ matrix.target }})
+    name: Test on Debian Oldoldstable (${{ matrix.arch }})
     needs: zigbuild
     strategy:
       matrix:
         include:
           - os: ubuntu-24.04
-            target: x86_64-unknown-linux-gnu
+            arch: x86-64
+            gnu_target: x86_64-unknown-linux-gnu
+            musl_target: x86_64-unknown-linux-musl
           - os: ubuntu-24.04-arm
-            target: aarch64-unknown-linux-gnu
+            arch: ARM64
+            gnu_target: aarch64-unknown-linux-gnu
+            musl_target: aarch64-unknown-linux-musl
     runs-on: ${{ matrix.os }}
     container:
       image: debian:oldoldstable
@@ -375,18 +379,31 @@ jobs:
         with:
           persist-credentials: false
       
-      - name: Download celq binary
+      - name: Download GNU celq binary
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: celq-${{ matrix.target }}
+          name: celq-${{ matrix.gnu_target }}
           path: ./bin
+
+      - name: Rename GNU celq binary
+        run: mv ./bin/celq ./bin/celq-gnu
+
+      - name: Download musl celq binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: celq-${{ matrix.musl_target }}
+          path: ./bin
+
+      - name: Rename musl celq binary
+        run: mv ./bin/celq ./bin/celq-musl
       
-      - name: Make binary executable
-        run: chmod +x ./bin/celq
+      - name: Make binaries executable
+        run: chmod +x ./bin/celq-gnu ./bin/celq-musl
       
-      - name: Run smoke test
+      - name: Run smoke tests
         run: |
-          sh .github/scripts/smoke-test.sh ./bin/celq
+          sh .github/scripts/smoke-test.sh ./bin/celq-gnu
+          sh .github/scripts/smoke-test.sh ./bin/celq-musl
 
   test-freebsd:
     name: Test on FreeBSD (${{ matrix.release }} – ${{ matrix.arch }})

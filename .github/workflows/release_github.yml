@@ -48,12 +48,6 @@ jobs:
           # Windows ARM64 (native)
           - { target: aarch64-pc-windows-msvc, os: windows-11-vs2026-arm, pretty_target: windows-arm64 }
           
-          # Linux x86-64 (native - musl static binary)
-          - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04, pretty_target: linux-x86_64-musl }
-
-          # Linux ARM64 (native - musl static binary)
-          - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm, pretty_target: linux-aarch64-musl }
-
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -69,12 +63,6 @@ jobs:
         with:
           tool: cargo-auditable@0.7.5
           fallback: none
-
-      - name: Install musl tools (for musl targets)
-        if: contains(matrix.target, 'musl')
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
 
       - name: Build
         run: cargo auditable build --locked --release --target ${{ matrix.target }}
@@ -125,7 +113,7 @@ jobs:
 
   build-zig:
     name: ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
     environment: github_release
     permissions:
       contents: write
@@ -137,22 +125,28 @@ jobs:
       matrix:
         include:
           # Linux x86-64 (zigbuild - glibc 2.28)
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04, zigtargetsuffix: .2.28, pretty_target: linux-x86_64-gnu }
+          - { target: x86_64-unknown-linux-gnu, zigtargetsuffix: .2.28, pretty_target: linux-x86_64-gnu }
           
           # Linux ARM64 (zigbuild - glibc 2.28)
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, zigtargetsuffix: .2.28, pretty_target: linux-aarch64-gnu }
+          - { target: aarch64-unknown-linux-gnu, zigtargetsuffix: .2.28, pretty_target: linux-aarch64-gnu }
 
           # Linux RISC-V 64 (zigbuild - glibc 2.31)
-          - { target: riscv64gc-unknown-linux-gnu, os: ubuntu-24.04, zigtargetsuffix: .2.31, pretty_target: linux-riscv64-gnu }
+          - { target: riscv64gc-unknown-linux-gnu, zigtargetsuffix: .2.31, pretty_target: linux-riscv64-gnu }
 
           # Linux RISC-V 64 (zigbuild - musl static binary)
-          - { target: riscv64gc-unknown-linux-musl, os: ubuntu-24.04, zigtargetsuffix: "", pretty_target: linux-riscv64-musl }
+          - { target: riscv64gc-unknown-linux-musl, zigtargetsuffix: "", pretty_target: linux-riscv64-musl }
+
+          # Linux x86-64 (zigbuild - musl static binary)
+          - { target: x86_64-unknown-linux-musl, zigtargetsuffix: "", pretty_target: linux-x86_64-musl }
+
+          # Linux ARM64 (zigbuild - musl static binary)
+          - { target: aarch64-unknown-linux-musl, zigtargetsuffix: "", pretty_target: linux-aarch64-musl }
 
           # FreeBSD x86-64 (zigbuild)
-          - { target: x86_64-unknown-freebsd, os: ubuntu-24.04, zigtargetsuffix: "", pretty_target: freebsd-x86_64 }
+          - { target: x86_64-unknown-freebsd, zigtargetsuffix: "", pretty_target: freebsd-x86_64 }
 
           # FreeBSD ARM64 (zigbuild)
-          - { target: aarch64-unknown-freebsd, os: ubuntu-24.04-arm, zigtargetsuffix: "", pretty_target: freebsd-aarch64 }
+          - { target: aarch64-unknown-freebsd, zigtargetsuffix: "", pretty_target: freebsd-aarch64 }
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
