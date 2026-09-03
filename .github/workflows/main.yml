@@ -252,7 +252,7 @@ jobs:
     needs: [build, format, clippy]
     runs-on: ubuntu-24.04
     env:
-      XWIN_CACHE_DIR: ${{ runner.temp }}/cargo-xwin-cache
+      XWIN_CACHE_DIR: ${{ github.workspace }}/.xwin-cache
     strategy:
       fail-fast: false
       matrix:
