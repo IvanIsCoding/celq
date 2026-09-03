@@ -14,7 +14,7 @@ permissions:
 jobs:
   publish-npm-binaries:
     name: Publish NPM packages
-    runs-on: ${{ matrix.build.os }}
+    runs-on: ubuntu-24.04
     environment: npm_release
     permissions:
       contents: read
@@ -26,45 +26,37 @@ jobs:
           - {
               NAME: linux-x64-musl,
               OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: x86_64-unknown-linux-musl,
+              ARCHIVE: celq-linux-x86_64-musl.tar.gz,
             }
           - {
               NAME: linux-arm64-musl,
               OS: ubuntu-24.04-arm,
-              TOOLCHAIN: stable,
-              TARGET: aarch64-unknown-linux-musl,
+              ARCHIVE: celq-linux-aarch64-musl.tar.gz,
             }
           - {
               NAME: linux-riscv64-musl,
               OS: ubuntu-24.04,
-              TOOLCHAIN: stable,
-              TARGET: riscv64gc-unknown-linux-musl,
-              CROSS: true,
+              ARCHIVE: celq-linux-riscv64-musl.tar.gz,
             }
           - {
               NAME: win32-x64-msvc,
               OS: windows-2025,
-              TOOLCHAIN: stable,
-              TARGET: x86_64-pc-windows-msvc,
+              ARCHIVE: celq-windows-x86_64.zip,
             }
           - {
               NAME: win32-arm64-msvc,
               OS: windows-2025,
-              TOOLCHAIN: stable,
-              TARGET: aarch64-pc-windows-msvc,
+              ARCHIVE: celq-windows-arm64.zip,
             }
           - {
               NAME: darwin-x64,
               OS: macos-15,
-              TOOLCHAIN: stable,
-              TARGET: x86_64-apple-darwin,
+              ARCHIVE: celq-macos-x86_64.tar.gz,
             }
           - {
               NAME: darwin-arm64,
               OS: macos-15,
-              TOOLCHAIN: stable,
-              TARGET: aarch64-apple-darwin,
+              ARCHIVE: celq-macos-aarch64.tar.gz,
             }
     steps:
       - name: Checkout
@@ -72,50 +64,37 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
-        with:
-          targets: ${{ matrix.build.TARGET }}
-
-      - name: Install cargo-auditable
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-auditable@0.7.5
-          fallback: none
-
-      - name: Install Zig (for cross-compilation)
-        if: matrix.build.CROSS == true
-        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
-        with:
-          version: 0.15.2
-          use-cache: false
-
-      - name: Install cargo-zigbuild (for cross-compilation)
-        if: matrix.build.CROSS == true
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-zigbuild@0.23.2
-
-      - name: Install musl tools (for musl targets)
-        if: contains(matrix.build.TARGET, 'musl') && matrix.build.CROSS != true
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-
-      - name: Build
-        if: matrix.build.CROSS != true
-        run: cargo auditable build --release --locked --target ${{ matrix.build.TARGET }}
-
-      - name: Build with Zig
-        if: matrix.build.CROSS == true
-        run: cargo auditable zigbuild --release --locked --target ${{ matrix.build.TARGET }}
-
       - name: Install node
         uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
+
+      - name: Download release binary and checksums
+        env:
+          ARCHIVE: ${{ matrix.build.ARCHIVE }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          RELEASE_VERSION=$(npx -y celq@0.6.0 --from-toml --raw-output "this.package.version" < Cargo.toml)
+          TAG="v${RELEASE_VERSION}"
+          mkdir -p release-assets release-binary
+          gh release download "${TAG}" \
+            --repo "${{ github.repository }}" \
+            --pattern "${ARCHIVE}" \
+            --pattern SHA256SUMS \
+            --dir release-assets
+
+      - name: Verify and extract release binary
+        env:
+          ARCHIVE: ${{ matrix.build.ARCHIVE }}
+        run: |
+          cd release-assets
+          grep -F "  ${ARCHIVE}" SHA256SUMS | sha256sum --check
+          case "${ARCHIVE}" in
+            *.tar.gz) tar xzf "${ARCHIVE}" -C ../release-binary ;;
+            *.zip) unzip -q "${ARCHIVE}" -d ../release-binary ;;
+          esac
 
       - name: Make publish script executable
         shell: bash
@@ -127,7 +106,7 @@ jobs:
           ./.github/scripts/publish-npm-binary.sh \
             "${{ matrix.build.NAME }}" \
             "${{ matrix.build.OS }}" \
-            "${{ matrix.build.TARGET }}"
+            "release-binary/celq${{ startsWith(matrix.build.OS, 'windows-') && '.exe' || '' }}"
 
   publish-npm-base:
     name: Publish the base NPM package

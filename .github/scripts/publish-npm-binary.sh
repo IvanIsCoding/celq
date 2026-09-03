@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Usage: publish-npm-binary.sh <build-name> <build-os> <target>
-# Example: publish-npm-binary.sh linux-x64-glibc ubuntu-24.04 x86_64-unknown-linux-gnu
+# Usage: publish-npm-binary.sh <build-name> <build-os> <binary-path>
+# Example: publish-npm-binary.sh linux-x64-musl ubuntu-24.04 release-binary/celq
 
 BUILD_NAME="$1"
 BUILD_OS="$2"
-TARGET="$3"
+BINARY_PATH="$3"
 
 BIN="celq"
 NPM_DIR="npm"
@@ -50,7 +50,7 @@ if [[ "$BUILD_OS" == windows-* ]]; then
   binary_name="${BIN}.exe"
 fi
 
-cp "target/${TARGET}/release/${binary_name}" "${NPM_DIR}/${node_pkg}/bin/"
+cp "${BINARY_PATH}" "${NPM_DIR}/${node_pkg}/bin/${binary_name}"
 cp "LICENSE-MIT" "${NPM_DIR}/${node_pkg}/"
 cp "LICENSE-APACHE" "${NPM_DIR}/${node_pkg}/"
 cp "README.md" "${NPM_DIR}/${node_pkg}/"
