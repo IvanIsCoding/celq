@@ -250,7 +250,7 @@ jobs:
   xwin:
     name: Xwin Build (${{ matrix.target }})
     needs: [build, format, clippy]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     env:
       XWIN_CACHE_DIR: ${{ github.workspace }}/.xwin-cache
     strategy:
@@ -268,8 +268,9 @@ jobs:
         id: xwin-cache-key
         run: echo "bucket=$(($(date -u +%s) / 604800))" >> "$GITHUB_OUTPUT"
 
-      - name: Cache cargo-xwin downloads
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - name: Restore cargo-xwin downloads
+        id: xwin-cache
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.XWIN_CACHE_DIR }}
           key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-${{ steps.xwin-cache-key.outputs.bucket }}
@@ -288,6 +289,13 @@ jobs:
 
       - name: Pre-cache Microsoft CRT and Windows SDK
         run: cargo xwin cache xwin --xwin-version 17 --xwin-cache-dir "${XWIN_CACHE_DIR}"
+
+      - name: Save cargo-xwin downloads
+        if: steps.xwin-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ env.XWIN_CACHE_DIR }}
+          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-${{ steps.xwin-cache-key.outputs.bucket }}
 
       - name: Install cargo-auditable
         uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
