@@ -23,7 +23,7 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build_mac:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     environment: github_release
@@ -41,13 +41,7 @@ jobs:
 
           # macOS x86-64 (cross-compiled on Apple Silicon)
           - { target: x86_64-apple-darwin, os: macos-15, pretty_target: macos-x86_64 }
-          
-          # Windows x86-64 (native)
-          - { target: x86_64-pc-windows-msvc, os: windows-2025, pretty_target: windows-x86_64 }
 
-          # Windows ARM64 (native)
-          - { target: aarch64-pc-windows-msvc, os: windows-11-vs2026-arm, pretty_target: windows-arm64 }
-          
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -70,28 +64,9 @@ jobs:
       - name: Create release archive
         id: archive
         run: |
-          EXE_suffix="" 
-          case ${{ matrix.target }} in 
-            *-pc-windows-*) EXE_suffix=".exe" ;; 
-          esac
-          
-          BIN_PATH="target/${{ matrix.target }}/release/${NAME}${EXE_suffix}"
-          BIN_NAME="${NAME}${EXE_suffix}"
-          
-          # Determine archive format based on platform
-          case ${{ matrix.target }} in
-            *-pc-windows-*)
-              # Windows: create .zip archive with pretty name
-              ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.zip"
-              7z a "${ARCHIVE_NAME}" "./${BIN_PATH}"
-              7z rn "${ARCHIVE_NAME}" "target/${{ matrix.target }}/release/${BIN_NAME}" "${BIN_NAME}"
-              ;;
-            *)
-              # Linux/macOS: create .tar.gz archive with pretty name
-              ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.tar.gz"
-              tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}/release" "${BIN_NAME}"
-              ;;
-          esac
+          BIN_PATH="target/${{ matrix.target }}/release/${NAME}"
+          ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.tar.gz"
+          tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}/release" "${NAME}"
           
           echo "BIN_PATH=${BIN_PATH}" >> $GITHUB_OUTPUT
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
@@ -111,7 +86,89 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload ${VERSION} ${{ steps.archive.outputs.ARCHIVE_NAME }}
 
-  build-zig:
+  build_xwin:
+    name: ${{ matrix.target }}
+    runs-on: ubuntu-24.04
+    environment: github_release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-pc-windows-msvc, pretty_target: windows-x86_64 }
+          - { target: aarch64-pc-windows-msvc, pretty_target: windows-arm64 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+        with:
+          version: "21.1.8"
+
+      - name: Install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
+        with:
+          targets: ${{ matrix.target }}
+          components: llvm-tools
+
+      - name: Install cargo-xwin
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-xwin@0.23.1
+          fallback: none
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
+      - name: Build with Xwin
+        env:
+          TARGET: ${{ matrix.target }}
+        run: >-
+          cargo auditable xwin build --locked --release --target "${TARGET}"
+          --xwin-version 17
+          --xwin-sdk-version 10.0.26100
+          --xwin-crt-version 14.44.17.14
+
+      - name: Create release archive
+        id: archive
+        env:
+          PRETTY_TARGET: ${{ matrix.pretty_target }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          BIN_PATH="target/${TARGET}/release/${NAME}.exe"
+          ARCHIVE_NAME="${NAME}-${PRETTY_TARGET}.zip"
+          7z a "${ARCHIVE_NAME}" "./${BIN_PATH}"
+          7z rn "${ARCHIVE_NAME}" "target/${TARGET}/release/${NAME}.exe" "${NAME}.exe"
+
+          echo "BIN_PATH=${BIN_PATH}" >> "$GITHUB_OUTPUT"
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate attestation for release binary
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.archive.outputs.BIN_PATH }}
+
+      - name: Generate attestation for release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.archive.outputs.ARCHIVE_NAME }}
+
+      - name: Upload release archive
+        env:
+          ARCHIVE_NAME: ${{ steps.archive.outputs.ARCHIVE_NAME }}
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${VERSION}" "${ARCHIVE_NAME}"
+
+  build:
     name: ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
     runs-on: ubuntu-24.04
     environment: github_release
@@ -225,7 +282,7 @@ jobs:
   update-install-script:
     name: Update install script on GitHub Pages
     runs-on: ubuntu-latest
-    needs: [build, build-zig]
+    needs: [build, build_mac, build_xwin]
     environment: github_release
     permissions:
       contents: write
@@ -305,7 +362,7 @@ jobs:
   generate-checksums:
     name: Generate SHA256 checksums
     runs-on: ubuntu-latest
-    needs: [build, build-zig, update-install-script]
+    needs: [build, build_mac, build_xwin, update-install-script]
     environment: github_release
     permissions:
       contents: write
@@ -429,7 +486,7 @@ jobs:
   update-homebrew-formula:
     name: Update Homebrew formula
     runs-on: ubuntu-latest
-    needs: [build, build-zig]
+    needs: [build, build_mac, build_xwin]
     environment: github_release
     steps:
       - name: Checkout celq repository (for template)
@@ -489,7 +546,7 @@ jobs:
   update-scoop-manifest:
     name: Update Scoop manifest
     runs-on: ubuntu-latest
-    needs: [build, build-zig]
+    needs: [build, build_mac, build_xwin]
     environment: github_release
     steps:
       - name: Checkout celq repository (for template)
