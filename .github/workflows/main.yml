@@ -166,6 +166,9 @@ jobs:
   zigbuild:
     name: Zig Build (${{ matrix.target }})
     needs: [build, format, clippy]
+    env:
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CARGO_PROFILE_DEV_STRIP: debuginfo
     strategy:
       fail-fast: false
       matrix:
@@ -239,7 +242,7 @@ jobs:
           RUSTC_BOOTSTRAP=1 RUSTFLAGS="-Z unstable-options -C panic=immediate-abort" cargo auditable zigbuild \
           --target aarch64-unknown-freebsd \
           -Z build-std=std,panic_abort
-      
+
       - name: Upload celq binary
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -289,7 +292,7 @@ jobs:
         uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.XWIN_CACHE_DIR }}
-          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc18-sdk10.0.26100.0-crt14.51.36231-${{ steps.xwin-cache-key.outputs.bucket }}
+          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
 
       - name: Install Rust 1.94.1
         uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
@@ -306,9 +309,9 @@ jobs:
       - name: Pre-cache Microsoft CRT and Windows SDK
         run: >-
           cargo xwin cache xwin
-          --xwin-version 18
-          --xwin-sdk-version 10.0.26100.0
-          --xwin-crt-version 14.51.36231
+          --xwin-version 17
+          --xwin-sdk-version 10.0.26100
+          --xwin-crt-version 14.44.17.14
           --xwin-cache-dir "${XWIN_CACHE_DIR}"
 
       - name: Save cargo-xwin downloads
@@ -316,7 +319,7 @@ jobs:
         uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: ${{ env.XWIN_CACHE_DIR }}
-          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc18-sdk10.0.26100.0-crt14.51.36231-${{ steps.xwin-cache-key.outputs.bucket }}
+          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
 
       - name: Install cargo-auditable
         uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
@@ -329,9 +332,9 @@ jobs:
           TARGET: ${{ matrix.target }}
         run: >-
           cargo auditable xwin build --locked --target "${TARGET}"
-          --xwin-version 18
-          --xwin-sdk-version 10.0.26100.0
-          --xwin-crt-version 14.51.36231
+          --xwin-version 17
+          --xwin-sdk-version 10.0.26100
+          --xwin-crt-version 14.44.17.14
           --xwin-cache-dir "${XWIN_CACHE_DIR}"
 
       - name: Upload celq binary
