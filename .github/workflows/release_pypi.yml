@@ -13,6 +13,10 @@ jobs:
   publish-binaries:
     name: Publish binaries
     runs-on: ${{ matrix.build.os }}
+    env:
+      XWIN_VERSION: "17"
+      XWIN_SDK_VERSION: "10.0.26100"
+      XWIN_CRT_VERSION: "14.44.17.14"
     environment: pypi_release
     permissions:
       contents: read
@@ -62,13 +66,13 @@ jobs:
             }
           - {
               NAME: win32-x64-msvc,
-              OS: windows-2025,
+              OS: ubuntu-24.04,
               TOOLCHAIN: 1.94.1,
               TARGET: x86_64-pc-windows-msvc,
             }
           - {
               NAME: win32-arm64-msvc,
-              OS: windows-11-vs2026-arm,
+              OS: ubuntu-24.04,
               TOOLCHAIN: 1.94.1,
               TARGET: aarch64-pc-windows-msvc,
             }
@@ -97,11 +101,18 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install LLVM and Clang
+        if: contains(matrix.build.TARGET, '-pc-windows-msvc')
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+        with:
+          version: "21.1.8"
+
       - name: Install Rust ${{ matrix.build.TOOLCHAIN }}
         uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
         with:
           toolchain: ${{ matrix.build.TOOLCHAIN }}
           targets: ${{ matrix.build.TARGET }}
+          components: llvm-tools
 
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -119,48 +130,54 @@ jobs:
           fallback: none
 
       - name: Install cargo-zigbuild
-        if: runner.os == 'Linux'
+        if: contains(matrix.build.TARGET, '-linux-')
         uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: cargo-zigbuild@0.23.2
           fallback: none
 
       - name: Configure Maturin to use cargo-auditable
-        if: runner.os != 'Windows'
         shell: bash
         run: echo "CARGO=$GITHUB_WORKSPACE/.github/scripts/cargo-auditable-wrapper.sh" >> "$GITHUB_ENV"
 
-      - name: Configure Maturin to use cargo-auditable (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $cargoWrapper = Join-Path $env:GITHUB_WORKSPACE ".github\scripts\cargo-auditable-wrapper.bat"
-          "CARGO=$cargoWrapper" >> $env:GITHUB_ENV
-
       - name: Build Python wheels (Linux manylinux with Zig)
-        if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-gnu')
+        if: contains(matrix.build.TARGET, '-linux-') && contains(matrix.build.TARGET, '-gnu')
         working-directory: pypi
+        env:
+          MANYLINUX: ${{ matrix.build.MANYLINUX }}
+          TARGET: ${{ matrix.build.TARGET }}
+          ZIG: ${{ matrix.build.ZIG }}
         run: |
-          uvx --from maturin==1.12.3 --with ziglang==${{ matrix.build.ZIG }} \
-            maturin build --release --target ${{ matrix.build.TARGET }} --zig \
-            --compatibility ${{ matrix.build.MANYLINUX }} --out dist
+          uvx --from "maturin==1.15.0" --with "ziglang==${ZIG}" \
+            maturin build --release --target "${TARGET}" --zig \
+            --compatibility "${MANYLINUX}" --out dist
 
       - name: Build Python wheels (Linux musllinux with Zig)
-        if: runner.os == 'Linux' && contains(matrix.build.TARGET, '-musl')
+        if: contains(matrix.build.TARGET, '-linux-') && contains(matrix.build.TARGET, '-musl')
         working-directory: pypi
+        env:
+          TARGET: ${{ matrix.build.TARGET }}
+          ZIG: ${{ matrix.build.ZIG }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y musl-tools
-          uvx --from maturin==1.12.3 --with ziglang==${{ matrix.build.ZIG }} \
-            maturin build --release --target ${{ matrix.build.TARGET }} --zig --out dist
+          uvx --from "maturin==1.15.0" --with "ziglang==${ZIG}" \
+            maturin build --release --target "${TARGET}" --zig --out dist
 
-      - name: Build Python wheels (Windows/macOS)
-        if: runner.os != 'Linux'
+      - name: Build Python wheels (Windows with Xwin)
+        if: contains(matrix.build.TARGET, '-pc-windows-msvc')
         working-directory: pypi
-        shell: bash
+        env:
+          MATURIN_USE_XWIN: "1"
+          TARGET: ${{ matrix.build.TARGET }}
+        run: uvx --from maturin==1.15.0 maturin build --release --target "${TARGET}" --out dist
+
+      - name: Build Python wheels (macOS)
+        if: runner.os == 'macOS'
+        working-directory: pypi
+        env:
+          TARGET: ${{ matrix.build.TARGET }}
         run: |
-          uvx --from maturin==1.12.3 maturin build --release \
-            --target ${{ matrix.build.TARGET }} --out dist
+          uvx --from maturin==1.15.0 maturin build --release \
+            --target "${TARGET}" --out dist
 
       - name: Publish wheels to PyPI
         run: uv publish --trusted-publishing always pypi/dist/*.whl
