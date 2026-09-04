@@ -439,7 +439,13 @@ jobs:
 
   test-maturin-auditable:
     name: Test Maturin with cargo-auditable (${{ matrix.name }})
-    needs: zigbuild
+    needs: [zigbuild, xwin]
+    env:
+      MATURIN_USE_XWIN: "1"
+      XWIN_CACHE_DIR: ${{ github.workspace }}/.xwin-cache
+      XWIN_VERSION: "17"
+      XWIN_SDK_VERSION: "10.0.26100"
+      XWIN_CRT_VERSION: "14.44.17.14"
     strategy:
       fail-fast: false
       matrix:
@@ -448,7 +454,7 @@ jobs:
             os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
           - name: Windows x86-64
-            os: windows-2025
+            os: ubuntu-24.04
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     steps:
@@ -456,10 +462,29 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install LLVM and Clang
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+        with:
+          version: "21.1.8"
+
+      - name: Calculate seven-day cache bucket
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        id: xwin-cache-key
+        run: echo "bucket=$(($(date -u +%s) / 604800))" >> "$GITHUB_OUTPUT"
+
+      - name: Restore cargo-xwin downloads
+        if: matrix.target == 'x86_64-pc-windows-msvc'
+        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ${{ env.XWIN_CACHE_DIR }}
+          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
+
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
         with:
           targets: ${{ matrix.target }}
+          components: llvm-tools
 
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
@@ -470,7 +495,7 @@ jobs:
         run: uv python install 3.12
 
       - name: Install cargo-zigbuild
-        if: runner.os == 'Linux'
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
         uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
           tool: cargo-zigbuild@0.23.2
@@ -482,29 +507,25 @@ jobs:
           tool: cargo-auditable@0.7.5
           fallback: none
 
-      - name: Configure Maturin to use cargo-auditable (Linux)
-        if: runner.os == 'Linux'
+      - name: Configure Maturin to use cargo-auditable
         run: echo "CARGO=$GITHUB_WORKSPACE/.github/scripts/cargo-auditable-wrapper.sh" >> "$GITHUB_ENV"
 
-      - name: Configure Maturin to use cargo-auditable (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $cargoWrapper = Join-Path $env:GITHUB_WORKSPACE ".github\scripts\cargo-auditable-wrapper.bat"
-          "CARGO=$cargoWrapper" >> $env:GITHUB_ENV
-
       - name: Build Python wheel with Maturin (Linux)
-        if: runner.os == 'Linux'
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
         working-directory: pypi
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          uvx --from maturin==1.12.3 --with ziglang==0.15.1 \
-            maturin build --release --target ${{ matrix.target }} --zig \
+          uvx --from maturin==1.15.0 --with ziglang==0.15.1 \
+            maturin build --release --target "${TARGET}" --zig \
             --compatibility manylinux_2_28 --out dist
 
       - name: Build Python wheel with Maturin (Windows)
-        if: runner.os == 'Windows'
+        if: matrix.target == 'x86_64-pc-windows-msvc'
         working-directory: pypi
-        run: uvx --from maturin==1.12.3 maturin build --release --target ${{ matrix.target }} --out dist
+        env:
+          TARGET: ${{ matrix.target }}
+        run: uvx --from maturin==1.15.0 maturin build --release --target "${TARGET}" --out dist
 
   test-debian-oldoldstable:
     name: Test on Debian Oldoldstable (${{ matrix.arch }})
