@@ -250,7 +250,7 @@ jobs:
   xwin:
     name: Xwin Build (${{ matrix.target }})
     needs: [build, format, clippy]
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-24.04
     env:
       XWIN_CACHE_DIR: ${{ github.workspace }}/.xwin-cache
     strategy:
