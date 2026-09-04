@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
       
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
       
       - name: Build with locked dependencies
         run: cargo build --locked
@@ -42,8 +42,9 @@ jobs:
           persist-credentials: false
       
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
+          toolchain: stable
           components: rustfmt
       
       - name: Check formatting
@@ -58,7 +59,7 @@ jobs:
           persist-credentials: false
       
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
         with:
           components: clippy
       
@@ -100,7 +101,7 @@ jobs:
           persist-credentials: false
       
       - name: Install Rust ${{ matrix.rust }}
-        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # master
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
@@ -134,7 +135,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
 
       - name: Run tests
         run: cargo test --locked ${{ matrix.features }}
@@ -149,7 +150,9 @@ jobs:
           persist-credentials: false
       
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        with:
+          toolchain: stable
       
       - name: Build documentation
         run: cargo doc --no-deps --all-features
@@ -204,14 +207,15 @@ jobs:
           persist-credentials: false
       
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         if: matrix.target != 'aarch64-unknown-freebsd'
         with:
+          toolchain: stable
           targets: ${{ matrix.target }}
           components: rust-src
       
       - name: Install Rust 1.94.1 (FreeBSD aarch64 special case)
-        uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
         if: matrix.target == 'aarch64-unknown-freebsd'
         with:
           components: rust-src
@@ -295,7 +299,7 @@ jobs:
           key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
 
       - name: Install Rust 1.94.1
-        uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
         with:
           targets: ${{ matrix.target }}
           components: llvm-tools
@@ -480,7 +484,7 @@ jobs:
           key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
 
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@75be91dd2711b583df57c31d0873b4145c89f1d9 # 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
         with:
           targets: ${{ matrix.target }}
           components: llvm-tools
@@ -655,8 +659,9 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
+        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
         with:
+          toolchain: stable
           components: llvm-tools-preview
 
       - name: Install cargo-llvm-cov via binstall
