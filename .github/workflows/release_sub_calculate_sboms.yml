@@ -1,0 +1,79 @@
+name: Calculate SBOMs (Release Subworkflow)
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: Display target used to identify the SBOM handoff artifact
+        required: true
+        type: string
+      archive:
+        description: Release archive containing the binary
+        required: true
+        type: string
+      binary:
+        description: Binary filename inside the release archive
+        required: true
+        type: string
+    outputs:
+      spdx_json_path:
+        description: Path to the generated SPDX JSON document
+        value: ${{ jobs.calculate.outputs.spdx_json_path }}
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  calculate:
+    name: Calculate SBOM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      spdx_json_path: binary.spdx.json
+    steps:
+      - name: Download release archive
+        env:
+          ARCHIVE: ${{ inputs.archive }}
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          mkdir -p release-assets
+          gh release download "${VERSION}" \
+            --repo "${{ github.repository }}" \
+            --pattern "${ARCHIVE}" \
+            --dir release-assets
+
+      - name: Extract release binary
+        env:
+          ARCHIVE: ${{ inputs.archive }}
+        run: |
+          mkdir -p binary
+          case "${ARCHIVE}" in
+            *.tar.gz) tar xzf "release-assets/${ARCHIVE}" -C binary ;;
+            *.zip) unzip -q "release-assets/${ARCHIVE}" -d binary ;;
+          esac
+
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      - name: Generate SPDX JSON SBOM
+        env:
+          BINARY: ${{ inputs.binary }}
+          SYFT_CMD: ${{ steps.syft.outputs.cmd }}
+        run: |
+          "${SYFT_CMD}" scan "binary/${BINARY}" \
+            --output spdx-json=binary.spdx.json
+
+      - name: Upload SBOM attestation inputs
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sbom-attestation-${{ inputs.target }}
+          path: |
+            binary/${{ inputs.binary }}
+            binary.spdx.json
+          retention-days: 1
