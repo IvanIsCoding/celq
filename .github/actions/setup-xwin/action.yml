@@ -1,0 +1,84 @@
+name: Setup Xwin
+description: Install the pinned Rust, LLVM, and cargo-xwin toolchains
+
+inputs:
+  target:
+    description: Rust Windows compilation target
+    required: true
+  rust_components:
+    description: Comma-separated Rust components to install
+    required: true
+  cache_directory:
+    description: Directory used for cargo-xwin downloads
+    required: true
+  use_cache:
+    description: Whether to restore, populate, and save the cargo-xwin cache
+    required: true
+
+outputs:
+  xwin_version:
+    description: Selected Visual Studio toolchain version
+    value: "17"
+  xwin_sdk_version:
+    description: Selected Windows SDK version
+    value: "10.0.26100"
+  xwin_crt_version:
+    description: Selected Microsoft CRT version
+    value: "14.44.17.14"
+  cache_directory:
+    description: Directory containing cargo-xwin downloads
+    value: ${{ inputs.cache_directory }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install LLVM and Clang
+      uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+      with:
+        version: "21.1.8"
+
+    - name: Calculate seven-day cache bucket
+      if: inputs.use_cache == 'true'
+      id: xwin-cache-key
+      shell: bash
+      run: echo "bucket=$(($(date -u +%s) / 604800))" >> "$GITHUB_OUTPUT"
+
+    - name: Restore cargo-xwin downloads
+      if: inputs.use_cache == 'true'
+      id: xwin-cache
+      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: ${{ inputs.cache_directory }}
+        key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
+
+    - name: Install Rust 1.94.1
+      uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+      with:
+        toolchain: 1.94.1
+        targets: ${{ inputs.target }}
+        components: ${{ inputs.rust_components }}
+
+    - name: Install cargo-xwin
+      uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+      with:
+        tool: cargo-xwin@0.23.1
+        fallback: none
+
+    - name: Pre-cache Microsoft CRT and Windows SDK
+      if: inputs.use_cache == 'true'
+      shell: bash
+      env:
+        XWIN_CACHE_DIR: ${{ inputs.cache_directory }}
+      run: >-
+        cargo xwin cache xwin
+        --xwin-version 17
+        --xwin-sdk-version 10.0.26100
+        --xwin-crt-version 14.44.17.14
+        --xwin-cache-dir "${XWIN_CACHE_DIR}"
+
+    - name: Save cargo-xwin downloads
+      if: inputs.use_cache == 'true' && steps.xwin-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      with:
+        path: ${{ inputs.cache_directory }}
+        key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}

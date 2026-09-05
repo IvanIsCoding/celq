@@ -186,30 +186,14 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-      
-      - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-        if: matrix.target != 'aarch64-unknown-freebsd'
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
         with:
-          toolchain: stable
-          targets: ${{ matrix.target }}
-          components: rust-src
-      
-      - name: Install Rust 1.94.1 (FreeBSD aarch64 special case)
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
-        if: matrix.target == 'aarch64-unknown-freebsd'
-        with:
-          components: rust-src
-      
-      - name: Install Zig
-        uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
-        with:
-          version: 0.15.2
-      
-      - name: Install cargo-zigbuild via cargo-binstall
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-zigbuild@0.23.2
+          target: ${{ matrix.target }}
+          rust_components: rust-src
+          install_target: ${{ matrix.target != 'aarch64-unknown-freebsd' }}
+          use_cache: "true"
 
       - name: Install cargo-auditable
         uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
@@ -239,8 +223,6 @@ jobs:
     name: Xwin Build (${{ matrix.target }})
     needs: [build, format, clippy]
     runs-on: ubuntu-24.04
-    env:
-      XWIN_CACHE_DIR: ${{ github.workspace }}/.xwin-cache
     strategy:
       fail-fast: false
       matrix:
@@ -252,10 +234,14 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install LLVM and Clang
-        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+      - name: Setup Xwin
+        id: setup-xwin
+        uses: $/.github/actions/setup-xwin
         with:
-          version: "21.1.8"
+          target: ${{ matrix.target }}
+          rust_components: llvm-tools
+          cache_directory: ${{ github.workspace }}/.xwin-cache
+          use_cache: "true"
 
       - name: Print LLVM tools used by cargo-xwin
         run: |
@@ -268,44 +254,6 @@ jobs:
           command -v llvm-lib
           llvm-lib --version
 
-      - name: Calculate seven-day cache bucket
-        id: xwin-cache-key
-        run: echo "bucket=$(($(date -u +%s) / 604800))" >> "$GITHUB_OUTPUT"
-
-      - name: Restore cargo-xwin downloads
-        id: xwin-cache
-        uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ${{ env.XWIN_CACHE_DIR }}
-          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
-
-      - name: Install Rust 1.94.1
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
-        with:
-          targets: ${{ matrix.target }}
-          components: llvm-tools
-
-      - name: Install cargo-xwin
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-xwin@0.23.1
-          fallback: none
-
-      - name: Pre-cache Microsoft CRT and Windows SDK
-        run: >-
-          cargo xwin cache xwin
-          --xwin-version 17
-          --xwin-sdk-version 10.0.26100
-          --xwin-crt-version 14.44.17.14
-          --xwin-cache-dir "${XWIN_CACHE_DIR}"
-
-      - name: Save cargo-xwin downloads
-        if: steps.xwin-cache.outputs.cache-hit != 'true'
-        uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-        with:
-          path: ${{ env.XWIN_CACHE_DIR }}
-          key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
-
       - name: Install cargo-auditable
         uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
         with:
@@ -315,11 +263,15 @@ jobs:
       - name: Build with Xwin
         env:
           TARGET: ${{ matrix.target }}
+          XWIN_CACHE_DIR: ${{ steps.setup-xwin.outputs.cache_directory }}
+          XWIN_CRT_VERSION: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
+          XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
+          XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
         run: >-
           cargo auditable xwin build --locked --target "${TARGET}"
-          --xwin-version 17
-          --xwin-sdk-version 10.0.26100
-          --xwin-crt-version 14.44.17.14
+          --xwin-version "${XWIN_VERSION}"
+          --xwin-sdk-version "${XWIN_SDK_VERSION}"
+          --xwin-crt-version "${XWIN_CRT_VERSION}"
           --xwin-cache-dir "${XWIN_CACHE_DIR}"
 
       - name: Upload celq binary
