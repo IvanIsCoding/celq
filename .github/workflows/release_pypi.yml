@@ -13,10 +13,6 @@ jobs:
   publish-binaries:
     name: Publish binaries
     runs-on: ${{ matrix.build.os }}
-    env:
-      XWIN_VERSION: "17"
-      XWIN_SDK_VERSION: "10.0.26100"
-      XWIN_CRT_VERSION: "14.44.17.14"
     environment: pypi_release
     permissions:
       contents: read
@@ -25,6 +21,8 @@ jobs:
       fail-fast: false
       matrix:
         build:
+          # setup-maturin installs Zig 0.15.2, while uvx supplies the wheel-specific
+          # Zig versions below until their architecture constraints are unified.
           - {
               NAME: linux-x64,
               OS: ubuntu-24.04,
@@ -98,48 +96,22 @@ jobs:
           echo "LC_ALL=C" >> "$GITHUB_ENV"
           echo "RUSTFLAGS=--remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
 
-      - name: Install LLVM and Clang
-        if: contains(matrix.build.TARGET, '-pc-windows-msvc')
-        uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+      - name: Setup Maturin
+        id: setup-maturin
+        uses: $/.github/actions/setup-maturin
         with:
-          version: "21.1.8"
-
-      - name: Install Rust 1.94.1
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
-        with:
-          targets: ${{ matrix.build.TARGET }}
-          components: llvm-tools
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
-        with:
-          version: "0.9.22"
-          enable-cache: false
-
-      - name: Install Python 3.12
-        run: uv python install 3.12
-
-      - name: Install cargo-auditable
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-auditable@0.7.5
-          fallback: none
-
-      - name: Install cargo-zigbuild
-        if: contains(matrix.build.TARGET, '-linux-')
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-zigbuild@0.23.2
-          fallback: none
-
-      - name: Configure Maturin to use cargo-auditable
-        shell: bash
-        run: echo "CARGO=$GITHUB_WORKSPACE/.github/scripts/cargo-auditable-wrapper.sh" >> "$GITHUB_ENV"
+          target: ${{ matrix.build.TARGET }}
+          rust_components: llvm-tools
+          use_xwin: ${{ contains(matrix.build.TARGET, '-pc-windows-msvc') }}
+          use_zigbuild: ${{ contains(matrix.build.TARGET, '-linux-') }}
+          cache_directory: ${{ github.workspace }}/.xwin-cache
+          use_cache: "false"
 
       - name: Build Python wheels (Linux manylinux with Zig)
         if: contains(matrix.build.TARGET, '-linux-') && contains(matrix.build.TARGET, '-gnu')
         working-directory: pypi
         env:
+          CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
           MANYLINUX: ${{ matrix.build.MANYLINUX }}
           TARGET: ${{ matrix.build.TARGET }}
           ZIG: ${{ matrix.build.ZIG }}
@@ -152,6 +124,7 @@ jobs:
         if: contains(matrix.build.TARGET, '-linux-') && contains(matrix.build.TARGET, '-musl')
         working-directory: pypi
         env:
+          CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
           TARGET: ${{ matrix.build.TARGET }}
           ZIG: ${{ matrix.build.ZIG }}
         run: |
@@ -162,14 +135,20 @@ jobs:
         if: contains(matrix.build.TARGET, '-pc-windows-msvc')
         working-directory: pypi
         env:
+          CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
           MATURIN_USE_XWIN: "1"
           TARGET: ${{ matrix.build.TARGET }}
+          XWIN_CACHE_DIR: ${{ steps.setup-maturin.outputs.xwin_cache_directory }}
+          XWIN_CRT_VERSION: ${{ steps.setup-maturin.outputs.xwin_crt_version }}
+          XWIN_SDK_VERSION: ${{ steps.setup-maturin.outputs.xwin_sdk_version }}
+          XWIN_VERSION: ${{ steps.setup-maturin.outputs.xwin_version }}
         run: uvx --from maturin==1.15.0 maturin build --release --target "${TARGET}" --out dist
 
       - name: Build Python wheels (macOS)
         if: runner.os == 'macOS'
         working-directory: pypi
         env:
+          CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
           TARGET: ${{ matrix.build.TARGET }}
         run: |
           uvx --from maturin==1.15.0 maturin build --release \
@@ -190,13 +169,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-
-      - name: Configure reproducible builds
-        run: |
-          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
-          echo "TZ=UTC" >> "$GITHUB_ENV"
-          echo "LC_ALL=C" >> "$GITHUB_ENV"
-          echo "RUSTFLAGS=--remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
 
       - name: Install uv
         uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7

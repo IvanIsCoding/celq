@@ -9,7 +9,10 @@ inputs:
     description: Comma-separated Rust components to install
     required: true
   use_xwin:
-    description: Whether to configure Xwin instead of Zigbuild
+    description: Whether to configure Xwin
+    required: true
+  use_zigbuild:
+    description: Whether to configure Zigbuild
     required: true
   cache_directory:
     description: Directory used for cargo-xwin downloads
@@ -39,7 +42,7 @@ runs:
   using: composite
   steps:
     - name: Setup Zigbuild
-      if: inputs.use_xwin == 'false'
+      if: inputs.use_xwin == 'false' && inputs.use_zigbuild == 'true'
       uses: $/.github/actions/setup-zigbuild
       with:
         target: ${{ inputs.target }}
@@ -57,10 +60,26 @@ runs:
         cache_directory: ${{ inputs.cache_directory }}
         use_cache: ${{ inputs.use_cache }}
 
+    - name: Install Rust 1.94.1 for native builds
+      if: inputs.use_xwin == 'false' && inputs.use_zigbuild == 'false'
+      uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+      with:
+        toolchain: 1.94.1
+        targets: ${{ inputs.target }}
+        components: ${{ inputs.rust_components }}
+
+    - name: Install cargo-auditable for native builds
+      if: inputs.use_xwin == 'false' && inputs.use_zigbuild == 'false'
+      uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+      with:
+        tool: cargo-auditable@0.7.5
+        fallback: none
+
     - name: Install uv
       uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
       with:
         version: "0.9.22"
+        enable-cache: ${{ inputs.use_cache }}
 
     - name: Install Python 3.12
       shell: bash
