@@ -1,0 +1,58 @@
+name: Test Debian Oldoldstable (Subworkflow)
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test on Debian Oldoldstable (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            arch: x86-64
+            gnu_target: x86_64-unknown-linux-gnu
+            musl_target: x86_64-unknown-linux-musl
+          - os: ubuntu-24.04-arm
+            arch: ARM64
+            gnu_target: aarch64-unknown-linux-gnu
+            musl_target: aarch64-unknown-linux-musl
+    container:
+      image: debian:oldoldstable
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Download GNU celq binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: celq-${{ matrix.gnu_target }}
+          path: ./bin
+
+      - name: Rename GNU celq binary
+        run: mv ./bin/celq ./bin/celq-gnu
+
+      - name: Download musl celq binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: celq-${{ matrix.musl_target }}
+          path: ./bin
+
+      - name: Rename musl celq binary
+        run: mv ./bin/celq ./bin/celq-musl
+
+      - name: Make binaries executable
+        run: chmod +x ./bin/celq-gnu ./bin/celq-musl
+
+      - name: Run smoke tests
+        run: |
+          sh .github/scripts/smoke-test.sh ./bin/celq-gnu
+          sh .github/scripts/smoke-test.sh ./bin/celq-musl

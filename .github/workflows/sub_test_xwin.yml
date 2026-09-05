@@ -1,0 +1,48 @@
+name: Test Xwin (Subworkflow)
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Test Xwin-built Windows binary (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86-64
+            os: windows-2025
+            target: x86_64-pc-windows-msvc
+          - arch: ARM64
+            os: windows-11-vs2026-arm
+            target: aarch64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Download celq binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: celq-${{ matrix.target }}-xwin
+          path: ./bin
+
+      - name: Print runner Windows toolchain versions
+        shell: pwsh
+        run: ./.github/scripts/print-windows-toolchain-versions.ps1
+
+      - name: Print celq version
+        run: ./bin/celq.exe --version
+
+      - name: Run smoke test
+        run: sh .github/scripts/smoke-test.sh ./bin/celq.exe

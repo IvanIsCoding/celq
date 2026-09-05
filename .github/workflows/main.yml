@@ -143,28 +143,9 @@ jobs:
   docs:
     name: Documentation
     needs: [build, format, clippy]
-    runs-on: ubuntu-slim
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-        with:
-          toolchain: stable
-      
-      - name: Build documentation
-        run: cargo doc --no-deps --all-features
-        env:
-          RUSTDOCFLAGS: "-D warnings"
-      
-      - name: Upload documentation
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: documentation
-          path: target/doc/
-          retention-days: 1
+    permissions:
+      contents: read
+    uses: $/.github/workflows/sub_docs.yml
 
   zigbuild:
     name: Zig Build (${{ matrix.target }})
@@ -349,42 +330,11 @@ jobs:
           retention-days: 1
 
   test-xwin-binaries:
-    name: Test Xwin-built Windows binary (${{ matrix.arch }})
+    name: Test Xwin-built Windows binaries
     needs: xwin
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        shell: bash
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: x86-64
-            os: windows-2025
-            target: x86_64-pc-windows-msvc
-          - arch: ARM64
-            os: windows-11-vs2026-arm
-            target: aarch64-pc-windows-msvc
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Download celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: celq-${{ matrix.target }}-xwin
-          path: ./bin
-
-      - name: Print runner Windows toolchain versions
-        shell: pwsh
-        run: ./.github/scripts/print-windows-toolchain-versions.ps1
-
-      - name: Print celq version
-        run: ./bin/celq.exe --version
-
-      - name: Run smoke test
-        run: sh .github/scripts/smoke-test.sh ./bin/celq.exe
+    permissions:
+      contents: read
+    uses: $/.github/workflows/sub_test_xwin.yml
 
   audit-cross-compiled-binaries:
     name: Audit cross-compiled x86-64 binaries
@@ -532,148 +482,33 @@ jobs:
         run: uvx --from maturin==1.15.0 maturin build --release --target "${TARGET}" --out dist
 
   test-debian-oldoldstable:
-    name: Test on Debian Oldoldstable (${{ matrix.arch }})
+    name: Test on Debian Oldoldstable
     needs: zigbuild
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-24.04
-            arch: x86-64
-            gnu_target: x86_64-unknown-linux-gnu
-            musl_target: x86_64-unknown-linux-musl
-          - os: ubuntu-24.04-arm
-            arch: ARM64
-            gnu_target: aarch64-unknown-linux-gnu
-            musl_target: aarch64-unknown-linux-musl
-    runs-on: ${{ matrix.os }}
-    container:
-      image: debian:oldoldstable
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-      
-      - name: Download GNU celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: celq-${{ matrix.gnu_target }}
-          path: ./bin
-
-      - name: Rename GNU celq binary
-        run: mv ./bin/celq ./bin/celq-gnu
-
-      - name: Download musl celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: celq-${{ matrix.musl_target }}
-          path: ./bin
-
-      - name: Rename musl celq binary
-        run: mv ./bin/celq ./bin/celq-musl
-      
-      - name: Make binaries executable
-        run: chmod +x ./bin/celq-gnu ./bin/celq-musl
-      
-      - name: Run smoke tests
-        run: |
-          sh .github/scripts/smoke-test.sh ./bin/celq-gnu
-          sh .github/scripts/smoke-test.sh ./bin/celq-musl
+    permissions:
+      contents: read
+    uses: $/.github/workflows/sub_test_debian_oldoldstable.yml
 
   test-freebsd:
-    name: Test on FreeBSD (${{ matrix.release }} – ${{ matrix.arch }})
+    name: Test on FreeBSD
     needs: zigbuild
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        include:
-          - release: "14.4"
-            arch: x86_64
-            artifact: celq-x86_64-unknown-freebsd
-          - release: "14.4"
-            arch: aarch64
-            artifact: celq-aarch64-unknown-freebsd
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Download celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: ${{ matrix.artifact }}
-          path: ./bin
-
-      - name: Test on FreeBSD
-        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
-        with:
-          release: ${{ matrix.release }}
-          arch: ${{ matrix.arch }}
-          usesh: true
-          run: |
-            chmod +x ./bin/celq
-            sh .github/scripts/smoke-test.sh ./bin/celq
+    permissions:
+      contents: read
+    uses: $/.github/workflows/sub_test_freebsd.yml
 
   test-debian-riscv64:
-    name: Test on Debian 13 (${{ matrix.target }})
+    name: Test on Debian 13 RISC-V 64
     needs: zigbuild
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          - riscv64gc-unknown-linux-gnu
-          - riscv64gc-unknown-linux-musl
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Download celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: celq-${{ matrix.target }}
-          path: ./bin
-
-      - name: Test on Debian
-        uses: vmactions/debian-vm@389ba1da28ff5b440cba52db8e03fc2e08e2affa # v1.0.0
-        with:
-          release: "13"
-          arch: riscv64
-          run: |
-            chmod +x ./bin/celq
-            sh .github/scripts/smoke-test.sh ./bin/celq
+    permissions:
+      contents: read
+    uses: $/.github/workflows/sub_test_riscv64.yml
 
 
   coverage:
     name: Code Coverage (Ubuntu 24.04 x86-64)
     needs: [build, format, clippy]
-    runs-on: ubuntu-24.04
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          persist-credentials: false
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
-        with:
-          toolchain: stable
-          components: llvm-tools-preview
-
-      - name: Install cargo-llvm-cov via binstall
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-llvm-cov
-
-      - name: Run coverage
-        run: |
-          cargo llvm-cov \
-            --locked \
-            --summary-only
+    permissions:
+      contents: read
+    uses: $/.github/workflows/sub_code_coverage.yml
   
   openbsd:
     name: OpenBSD (QEMU)
