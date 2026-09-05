@@ -239,7 +239,7 @@ jobs:
           persist-credentials: false
 
       - name: Install cargo-binstall
-        uses: cargo-bins/cargo-binstall@5aafaaca52423a22d83a812fa3ca77492e2895db # main
+        uses: cargo-bins/cargo-binstall@b874e25ea559687bec77e281e9b271aa1367b624 # v1.23.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
