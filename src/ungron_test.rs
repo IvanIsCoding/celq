@@ -101,3 +101,41 @@ json.items = [];"#;
 
     assert_eq!(result, expected);
 }
+
+#[test]
+fn test_parse_escape_sequence() {
+    let cases = [
+        ("\"", '"'),
+        ("'", '\''),
+        ("\\", '\\'),
+        ("/", '/'),
+        ("b", '\u{0008}'),
+        ("f", '\u{000c}'),
+        ("n", '\n'),
+        ("r", '\r'),
+        ("t", '\t'),
+        ("x", 'x'),
+        ("u2764", '\u{2764}'),
+    ];
+
+    for (input, expected) in cases {
+        let mut parser = PathParser::new(input);
+        assert_eq!(parser.parse_escape_sequence().unwrap(), expected);
+        assert!(parser.is_done());
+    }
+
+    let error = PathParser::new("").parse_escape_sequence().unwrap_err();
+    assert_eq!(error.to_string(), "Unclosed escape sequence");
+}
+
+#[test]
+fn test_parse_unicode_escape_errors() {
+    let error = PathParser::new("12x4").parse_unicode_escape().unwrap_err();
+    assert_eq!(error.to_string(), "Invalid unicode escape character 'x'");
+
+    let error = PathParser::new("123").parse_unicode_escape().unwrap_err();
+    assert_eq!(error.to_string(), "Unclosed unicode escape sequence");
+
+    let error = PathParser::new("d800").parse_unicode_escape().unwrap_err();
+    assert_eq!(error.to_string(), "Invalid unicode escape code point");
+}
