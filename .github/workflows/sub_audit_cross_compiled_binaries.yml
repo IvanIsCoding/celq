@@ -1,0 +1,65 @@
+name: Audit Cross-Compiled Binaries (Subworkflow)
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  audit:
+    name: Audit cross-compiled x86-64 binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Download Linux celq binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: celq-x86_64-unknown-linux-gnu
+          path: ./bin/linux
+
+      - name: Download Windows celq binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: celq-x86_64-pc-windows-msvc-xwin
+          path: ./bin/windows
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-audit@0.22.2
+          fallback: none
+
+      - name: Install Syft
+        id: syft
+        uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+
+      - name: Print Linux binary packages
+        run: '"${{ steps.syft.outputs.cmd }}" scan ./bin/linux/celq --output table' # zizmor: ignore[template-injection] command path comes from the pinned Syft action
+
+      - name: Print Windows binary packages
+        run: '"${{ steps.syft.outputs.cmd }}" scan ./bin/windows/celq.exe --output table' # zizmor: ignore[template-injection] command path comes from the pinned Syft action
+
+      - name: Generate SBOMs from cargo-auditable binaries
+        run: |
+          "${{ steps.syft.outputs.cmd }}" scan ./bin/linux/celq --output spdx-json=celq-linux.spdx.json
+          "${{ steps.syft.outputs.cmd }}" scan ./bin/windows/celq.exe --output spdx-json=celq-windows.spdx.json
+        # zizmor: ignore[template-injection] command path comes from the pinned Syft action
+
+      - name: Upload SPDX SBOM
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: celq-spdx-sboms
+          path: celq-*.spdx.json
+          retention-days: 1
+
+      - name: Audit binaries
+        run: |
+          .github/scripts/audit-binary.sh ./bin/linux/celq
+          .github/scripts/audit-binary.sh ./bin/windows/celq.exe
