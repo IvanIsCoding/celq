@@ -1,0 +1,72 @@
+name: Homebrew (Release Subworkflow)
+
+on:
+  workflow_call:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: Update Homebrew formula
+    runs-on: ubuntu-latest
+    environment: github_release
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout celq repository (for template)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          path: celq-repo
+
+      - name: Check if pre-release
+        id: check_prerelease
+        run: |
+          VERSION="${{ github.ref_name }}"
+
+          # Check if this is a pre-release (contains hyphen followed by alpha/beta/rc/etc)
+          if [[ "$VERSION" =~ -[a-zA-Z] ]]; then
+            echo "Pre-release detected: $VERSION"
+            echo "Skipping Homebrew formula update (Homebrew doesn't support pre-releases in main formula)"
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "Stable release detected: $VERSION"
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout homebrew-tap repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: get-celq/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Update Homebrew formula
+        env:
+          GH_TOKEN: ${{ github.token }}
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          chmod +x celq-repo/.github/scripts/update-homebrew-formula.sh
+          celq-repo/.github/scripts/update-homebrew-formula.sh \
+            "${{ github.ref_name }}" \
+            "${{ github.repository }}" \
+            "celq-repo/brew/celq.rb" \
+            "homebrew-tap/Formula/celq.rb"
+
+      - name: Commit and push Homebrew formula
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add Formula/celq.rb
+          git commit -m "Update celq to ${{ github.ref_name }}" || echo "No changes to commit"
+          git push
+
+          echo "✅ Homebrew formula updated to ${{ github.ref_name }}"

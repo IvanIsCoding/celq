@@ -1,0 +1,107 @@
+name: Scoop (Release Subworkflow)
+
+on:
+  workflow_call:
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    name: Update Scoop manifest
+    runs-on: ubuntu-latest
+    environment: github_release
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout celq repository (for template)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+          path: celq-repo
+
+      - name: Check if pre-release
+        id: check_prerelease
+        run: |
+          VERSION="${{ github.ref_name }}"
+
+          # Check if this is a pre-release (contains hyphen followed by alpha/beta/rc/etc)
+          if [[ "$VERSION" =~ -[a-zA-Z] ]]; then
+            echo "Pre-release detected: $VERSION"
+            echo "Skipping Scoop manifest update (Scoop doesn't support pre-releases)"
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "Stable release detected: $VERSION"
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout scoop-bucket repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: get-celq/scoop-bucket
+          token: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          path: scoop-bucket
+
+      - name: Download Windows binaries and calculate SHA256 hashes
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          VERSION="${{ github.ref_name }}"
+
+          # Download the Windows binary zips (using pretty names)
+          X86_64_ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-x86_64.zip"
+          ARM64_ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-arm64.zip"
+
+          echo "Downloading Windows x86-64 binary from: $X86_64_ZIP_URL"
+          curl -fsSL "$X86_64_ZIP_URL" -o "/tmp/celq-windows-x86_64.zip"
+
+          echo "Downloading Windows ARM64 binary from: $ARM64_ZIP_URL"
+          curl -fsSL "$ARM64_ZIP_URL" -o "/tmp/celq-windows-arm64.zip"
+
+          # Calculate SHA256 hashes
+          X86_64_SHA256=$(sha256sum "/tmp/celq-windows-x86_64.zip" | awk '{print $1}')
+          ARM64_SHA256=$(sha256sum "/tmp/celq-windows-arm64.zip" | awk '{print $1}')
+          echo "Calculated x86-64 SHA256: $X86_64_SHA256"
+          echo "Calculated ARM64 SHA256: $ARM64_SHA256"
+
+          # Export for next step
+          echo "CELQ_X86_64_SHA256=$X86_64_SHA256" >> $GITHUB_ENV
+          echo "CELQ_ARM64_SHA256=$ARM64_SHA256" >> $GITHUB_ENV
+
+      - name: Generate Scoop manifest using celq
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          cd celq-repo
+
+          VERSION="${{ github.ref_name }}"
+          VERSION_WITHOUT_V="${VERSION#v}"  # Remove 'v' prefix
+
+          echo "Generating Scoop manifest for version: $VERSION_WITHOUT_V"
+
+          npx -y celq@0.6.0 \
+            -n \
+            -p \
+            -S \
+            --from-file "scoop/celq.json.cel" \
+            --arg="celq_version:string=${VERSION_WITHOUT_V}" \
+            --arg="celq_x86_64_sha256:string=${CELQ_X86_64_SHA256}" \
+            --arg="celq_arm64_sha256:string=${CELQ_ARM64_SHA256}" \
+            > "../scoop-bucket/bucket/celq.json"
+
+          echo "Scoop manifest generated successfully"
+
+      - name: Commit and push Scoop manifest
+        if: steps.check_prerelease.outputs.is_prerelease == 'false'
+        run: |
+          cd scoop-bucket
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add bucket/celq.json
+          git commit -m "Update celq to ${{ github.ref_name }}" || echo "No changes to commit"
+          git push
+
+          echo "✅ Scoop manifest updated to ${{ github.ref_name }}"
