@@ -19,6 +19,9 @@ on:
       spdx_json_path:
         description: Path to the generated SPDX JSON document
         value: ${{ jobs.calculate.outputs.spdx_json_path }}
+      cyclonedx_json_path:
+        description: Path to the generated CycloneDX JSON document
+        value: ${{ jobs.calculate.outputs.cyclonedx_json_path }}
 
 permissions: {}
 
@@ -33,6 +36,7 @@ jobs:
     permissions:
       contents: read
     outputs:
+      cyclonedx_json_path: binary.cyclonedx.json
       spdx_json_path: binary.spdx.json
     steps:
       - name: Download release archive
@@ -61,13 +65,14 @@ jobs:
         id: syft
         uses: anchore/sbom-action/download-syft@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
 
-      - name: Generate SPDX JSON SBOM
+      - name: Generate JSON SBOMs
         env:
           BINARY: ${{ inputs.binary }}
           SYFT_CMD: ${{ steps.syft.outputs.cmd }}
         run: |
           "${SYFT_CMD}" scan "binary/${BINARY}" \
-            --output spdx-json=binary.spdx.json
+            --output spdx-json=binary.spdx.json \
+            --output cyclonedx-json=binary.cyclonedx.json
 
       - name: Upload SBOM attestation inputs
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -76,4 +81,5 @@ jobs:
           path: |
             binary/${{ inputs.binary }}
             binary.spdx.json
+            binary.cyclonedx.json
           retention-days: 1

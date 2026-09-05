@@ -48,15 +48,21 @@ jobs:
 
       - name: Generate SBOMs from cargo-auditable binaries
         run: |
-          "${{ steps.syft.outputs.cmd }}" scan ./bin/linux/celq --output spdx-json=celq-linux.spdx.json
-          "${{ steps.syft.outputs.cmd }}" scan ./bin/windows/celq.exe --output spdx-json=celq-windows.spdx.json
+          "${{ steps.syft.outputs.cmd }}" scan ./bin/linux/celq \
+            --output spdx-json=celq-linux.spdx.json \
+            --output cyclonedx-json=celq-linux.cyclonedx.json
+          "${{ steps.syft.outputs.cmd }}" scan ./bin/windows/celq.exe \
+            --output spdx-json=celq-windows.spdx.json \
+            --output cyclonedx-json=celq-windows.cyclonedx.json
         # zizmor: ignore[template-injection] command path comes from the pinned Syft action
 
-      - name: Upload SPDX SBOM
+      - name: Upload SBOMs
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: celq-spdx-sboms
-          path: celq-*.spdx.json
+          name: celq-sboms
+          path: |
+            celq-*.spdx.json
+            celq-*.cyclonedx.json
           retention-days: 1
 
       - name: Audit binaries
