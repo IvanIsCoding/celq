@@ -4,20 +4,20 @@ rules:
   template-injection:
     ignore:
       - release_choco.yml
-      - release_github.yml:87
-      - release_github.yml:280
-      - release_github.yml:311
-      - release_github.yml:339
-      - release_github.yml:347
-      - release_github.yml:377
-      - release_github.yml:415
-      - release_github.yml:501
-      - release_github.yml:528
-      - release_github.yml:541
-      - release_github.yml:544
-      - release_github.yml:561
-      - release_github.yml:584
-      - release_github.yml:611
-      - release_github.yml:636
-      - release_github.yml:639
+      - release_github.yml:94
+      - release_github.yml:301
+      - release_github.yml:332
+      - release_github.yml:360
+      - release_github.yml:368
+      - release_github.yml:398
+      - release_github.yml:436
+      - release_github.yml:522
+      - release_github.yml:549
+      - release_github.yml:562
+      - release_github.yml:565
+      - release_github.yml:582
+      - release_github.yml:605
+      - release_github.yml:632
+      - release_github.yml:657
+      - release_github.yml:660
       - release_playground.yml
