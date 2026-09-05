@@ -1,0 +1,47 @@
+name: FreeBSD (Subworkflow)
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: FreeBSD (QEMU)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - '**/*.rs'
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+              - '.cirrus.star'
+              - '.github/workflows/main.yml'
+              - '.github/workflows/sub_freebsd.yml'
+              - '.cargo/**'
+              - 'src/**'
+              - 'tests/**'
+              - '.github/scripts/smoke-test.sh'
+
+      - name: Test on FreeBSD
+        if: steps.filter.outputs.rust == 'true'
+        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
+        with:
+          release: "14.4"
+          usesh: true
+          prepare: |
+            pkg install -y rust
+          run: |
+            cargo build --locked
+            cargo test --locked

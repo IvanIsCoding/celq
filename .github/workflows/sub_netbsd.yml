@@ -1,0 +1,47 @@
+name: NetBSD (Subworkflow)
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: NetBSD (QEMU)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            rust:
+              - '**/*.rs'
+              - '**/Cargo.toml'
+              - '**/Cargo.lock'
+              - '.cirrus.star'
+              - '.github/workflows/main.yml'
+              - '.github/workflows/sub_netbsd.yml'
+              - '.cargo/**'
+              - 'src/**'
+              - 'tests/**'
+              - '.github/scripts/smoke-test.sh'
+
+      - name: Test on NetBSD
+        if: steps.filter.outputs.rust == 'true'
+        uses: vmactions/netbsd-vm@07366ff288a2661e3998b69c5d48eda270050635 # v1.4.8
+        with:
+          release: "10.1"
+          usesh: true
+          prepare: |
+            /usr/sbin/pkg_add rust
+          run: |
+            cargo build --locked
+            cargo test --locked
