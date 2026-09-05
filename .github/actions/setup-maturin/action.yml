@@ -1,0 +1,67 @@
+name: Setup Maturin
+description: Install the pinned Python and Rust cross-compilation toolchains for Maturin
+
+inputs:
+  target:
+    description: Rust compilation target
+    required: true
+  rust_components:
+    description: Comma-separated Rust components to install
+    required: true
+  use_xwin:
+    description: Whether to configure Xwin instead of Zigbuild
+    required: true
+  cache_directory:
+    description: Directory used for cargo-xwin downloads
+    required: true
+  use_cache:
+    description: Whether the selected cross-compilation setup should use caches
+    required: true
+
+outputs:
+  cargo_executable:
+    description: cargo-auditable wrapper used by Maturin
+    value: ${{ github.workspace }}/.github/scripts/cargo-auditable-wrapper.sh
+  xwin_version:
+    description: Selected Visual Studio toolchain version for Xwin builds
+    value: ${{ steps.setup-xwin.outputs.xwin_version }}
+  xwin_sdk_version:
+    description: Selected Windows SDK version for Xwin builds
+    value: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
+  xwin_crt_version:
+    description: Selected Microsoft CRT version for Xwin builds
+    value: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
+  xwin_cache_directory:
+    description: Directory containing cargo-xwin downloads
+    value: ${{ steps.setup-xwin.outputs.cache_directory }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Zigbuild
+      if: inputs.use_xwin == 'false'
+      uses: $/.github/actions/setup-zigbuild
+      with:
+        target: ${{ inputs.target }}
+        rust_components: ${{ inputs.rust_components }}
+        install_target: "true"
+        use_cache: ${{ inputs.use_cache }}
+
+    - name: Setup Xwin
+      if: inputs.use_xwin == 'true'
+      id: setup-xwin
+      uses: $/.github/actions/setup-xwin
+      with:
+        target: ${{ inputs.target }}
+        rust_components: ${{ inputs.rust_components }}
+        cache_directory: ${{ inputs.cache_directory }}
+        use_cache: ${{ inputs.use_cache }}
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+      with:
+        version: "0.9.22"
+
+    - name: Install Python 3.12
+      shell: bash
+      run: uv python install 3.12
