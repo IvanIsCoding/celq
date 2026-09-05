@@ -195,12 +195,6 @@ jobs:
           install_target: ${{ matrix.target != 'aarch64-unknown-freebsd' }}
           use_cache: "true"
 
-      - name: Install cargo-auditable
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-auditable@0.7.5
-          fallback: none
-      
       - name: Build with Zig
         if: matrix.target != 'aarch64-unknown-freebsd'
         run: cargo auditable zigbuild --locked --target ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
@@ -253,12 +247,6 @@ jobs:
           lld-link --version
           command -v llvm-lib
           llvm-lib --version
-
-      - name: Install cargo-auditable
-        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
-        with:
-          tool: cargo-auditable@0.7.5
-          fallback: none
 
       - name: Build with Xwin
         env:

@@ -64,6 +64,12 @@ runs:
         tool: cargo-xwin@0.23.1
         fallback: none
 
+    - name: Install cargo-auditable
+      uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+      with:
+        tool: cargo-auditable@0.7.5
+        fallback: none
+
     - name: Pre-cache Microsoft CRT and Windows SDK
       if: inputs.use_cache == 'true'
       shell: bash

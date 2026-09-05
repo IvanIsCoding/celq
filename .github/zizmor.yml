@@ -5,9 +5,9 @@ rules:
     ignore:
       - release_choco.yml
       - release_github.yml:94
-      - release_github.yml:301
-      - release_github.yml:328
-      - release_github.yml:366
+      - release_github.yml:269
+      - release_github.yml:296
+      - release_github.yml:334
       - release_sub_homebrew.yml:29
       - release_sub_homebrew.yml:56
       - release_sub_homebrew.yml:69
