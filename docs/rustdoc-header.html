@@ -68,6 +68,14 @@
         }
 
         toc.append(heading, list);
+
+        document.querySelectorAll(".installation-tabs > details > summary").forEach((summary) => {
+            summary.addEventListener("click", (event) => {
+                if (summary.parentElement.open) {
+                    event.preventDefault();
+                }
+            });
+        });
     };
 
     if (document.readyState === "loading") {
