@@ -1,0 +1,79 @@
+<script>
+(() => {
+    const pageTitles = {
+        "installation_guide": "Installation Guide - celq",
+        "comparison_with_other_tools": "Comparison with other tools - celq",
+    };
+    const currentPath = window.location.pathname;
+    const pageTitle = Object.entries(pageTitles).find(([page]) =>
+        currentPath.endsWith(`/${page}/`) || currentPath.endsWith(`/${page}/index.html`),
+    )?.[1];
+    if (pageTitle) {
+        document.title = pageTitle;
+    }
+
+    const rewriteGuideLinks = () => {
+        const guides = [
+            ["Installation Guide", "installation_guide", "installation_guide/index.html"],
+            ["Comparison with other tools", "comparison_with_other_tools", "comparison_with_other_tools/index.html"],
+        ];
+
+        const path = window.location.pathname;
+        const currentGuide = guides.find(([, page]) =>
+            path.endsWith(`/${page}/`) || path.endsWith(`/${page}/index.html`),
+        );
+
+        if (currentGuide) {
+            const [title] = currentGuide;
+            document.title = `${title} - celq`;
+            const pageHeading = document.querySelector(".main-heading h1");
+            const moduleName = pageHeading?.querySelector("span");
+            if (pageHeading && moduleName) {
+                moduleName.textContent = title;
+                if (moduleName.previousSibling?.nodeType === Node.TEXT_NODE) {
+                    moduleName.previousSibling.textContent = "";
+                }
+            }
+        }
+
+        const isCrateIndex = path.endsWith("/celq/") || path.endsWith("/celq/index.html");
+        const visibleGuides = currentGuide
+            ? guides.filter((guide) => guide !== currentGuide)
+            : isCrateIndex
+                ? guides
+                : [];
+
+        if (visibleGuides.length === 0) {
+            return;
+        }
+
+        const toc = document.querySelector("#rustdoc-toc");
+        if (!toc) {
+            return;
+        }
+
+        const heading = document.createElement("h3");
+        heading.className = "guides-heading";
+        heading.textContent = "Guides";
+
+        const list = document.createElement("ul");
+        list.className = "block guides-list";
+        for (const [title, , destination] of visibleGuides) {
+            const item = document.createElement("li");
+            const link = document.createElement("a");
+            link.href = currentGuide ? `../${destination}` : destination;
+            link.textContent = title;
+            item.append(link);
+            list.append(item);
+        }
+
+        toc.append(heading, list);
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", rewriteGuideLinks);
+    } else {
+        rewriteGuideLinks();
+    }
+})();
+</script>

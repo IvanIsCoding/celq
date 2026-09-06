@@ -46,7 +46,7 @@ When fixing a bug or adding a feature, please try to add a test covering multipl
 The `celq` manual lives in docs.rs. To build it locally, run:
 
 ```bash
-cargo rustdoc --lib --open -- --extend-css docs/rustdoc.css
+cargo rustdoc --lib --open -- --extend-css docs/rustdoc.css --html-in-header docs/rustdoc-header.html
 ```
 
 The `--extend-css` argument is required for the tabbed tables in the installation guide to render correctly. Arguments after `--` are passed only to rustdoc for the celq library target. Despite `celq` being a binary, docs.rs reads from `src/documentation.rs`. Our current documentation lives in the `docs/` folder, so `src/documentation.rs` should exclusively include the markdown from the docs folder.

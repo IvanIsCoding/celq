@@ -63,8 +63,8 @@
     display: none;
 }
 
-/* Make the guide group label read like rustdoc's "Sections" heading. */
-#rustdoc-toc a[href="#guides"] {
+/* Make the injected guide group label read like rustdoc's "Sections" heading. */
+#rustdoc-toc .guides-heading {
     color: var(--main-color);
     font-weight: 600;
 }
@@ -80,7 +80,6 @@
 }
 
 /* These headings exist to create the useful sidebar links, not body content. */
-.docblock #guides,
 main h2#modules,
 main h2#modules + dl {
     display: none;
