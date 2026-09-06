@@ -139,3 +139,43 @@ fn test_parse_unicode_escape_errors() {
     let error = PathParser::new("d800").parse_unicode_escape().unwrap_err();
     assert_eq!(error.to_string(), "Invalid unicode escape code point");
 }
+
+#[test]
+fn test_parse_bracket_segment_variants() {
+    let mut parser = PathParser::new(r#"["quoted key"]"#);
+    let segment = parser.parse_bracket_segment().unwrap();
+    assert!(matches!(
+        segment,
+        PathSegment::Property(value) if value == "quoted key"
+    ));
+    assert!(parser.is_done());
+
+    let mut parser = PathParser::new("['single quoted key']");
+    let segment = parser.parse_bracket_segment().unwrap();
+    assert!(matches!(
+        segment,
+        PathSegment::Property(value) if value == "single quoted key"
+    ));
+    assert!(parser.is_done());
+
+    let mut parser = PathParser::new("[42]");
+    let segment = parser.parse_bracket_segment().unwrap();
+    assert!(matches!(segment, PathSegment::Index(42)));
+    assert!(parser.is_done());
+}
+
+#[test]
+fn test_parse_bracket_segment_errors() {
+    let cases = [
+        ("key", "Expected '[', found 'k'"),
+        ("[", "Unclosed bracket path segment"),
+        ("[?]", "Unsupported bracket path segment starting with '?'"),
+        ("[1", "Expected ']', found end of path"),
+        ("[1}", "Expected ']', found '}'"),
+    ];
+
+    for (input, expected) in cases {
+        let error = PathParser::new(input).parse_bracket_segment().unwrap_err();
+        assert_eq!(error.to_string(), expected);
+    }
+}

@@ -93,6 +93,16 @@ fn test_string_escaping() {
 }
 
 #[test]
+fn test_escape_string_all_sequences() {
+    let input = "plain \"quoted\" \\\n\r\t\u{0008}\u{000c}\u{001f} café";
+
+    assert_eq!(
+        escape_string(input),
+        r#""plain \"quoted\" \\\n\r\t\b\f\u001f café""#
+    );
+}
+
+#[test]
 fn test_your_example() {
     let value = json!({
         "package": {
