@@ -565,6 +565,13 @@ test!(
 );
 
 test!(
+    slice_zero_to_zero,
+    &["this.items.slice(0, 0)"],
+    r#"{"items":[1,2,3]}"#,
+    "[]"
+);
+
+test!(
     slice_negative_to_positive,
     &["this.items.slice(-5, 4)"],
     r#"{"items":[5,10,15,20,25,30]}"#,
