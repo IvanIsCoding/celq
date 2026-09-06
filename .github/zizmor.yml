@@ -12,9 +12,9 @@ rules:
       - release_sub_homebrew.yml:56
       - release_sub_homebrew.yml:69
       - release_sub_homebrew.yml:72
-      - release_sub_pages.yml:41
-      - release_sub_pages.yml:69
-      - release_sub_pages.yml:77
+      - release_sub_pages.yml:63
+      - release_sub_pages.yml:91
+      - release_sub_pages.yml:99
       - release_sub_scoop.yml:29
       - release_sub_scoop.yml:52
       - release_sub_scoop.yml:79

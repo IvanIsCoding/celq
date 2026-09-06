@@ -10,8 +10,29 @@ defaults:
     shell: bash
 
 jobs:
+  get-minisign-public-key:
+    name: Get Minisign public key
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      public_key: ${{ steps.read-key.outputs.result }}
+    steps:
+      - name: Checkout celq repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Read Minisign public key from Cargo.toml
+        id: read-key
+        uses: get-celq/celq-action@2b79f5dddde4445d57eb28c6da5d38b1892eb44c # main
+        with:
+          version: 0.6.0
+          cmd: celq --from-toml --raw-output 'this.package.metadata.binstall.signing.pubkey' < Cargo.toml
+
   publish:
     name: Update install script on GitHub Pages
+    needs: [get-minisign-public-key]
     runs-on: ubuntu-latest
     environment: github_release
     permissions:
@@ -36,12 +57,13 @@ jobs:
       - name: Generate install script with checksums
         env:
           GH_TOKEN: ${{ github.token }}
+          MINISIGN_PUBLIC_KEY: ${{ needs.get-minisign-public-key.outputs.public_key }}
         run: |
           cd celq-repo
           VERSION="${{ github.ref_name }}"
 
           # Run the generation script
-          bash .github/scripts/generate-install-script.sh "$VERSION"
+          bash .github/scripts/generate-install-script.sh "$VERSION" "$MINISIGN_PUBLIC_KEY"
 
           # Generate versioned install script (e.g., v0.1.1/install.sh or v0.2.0-beta.1/install.sh)
           mkdir -p "../pages-repo/${VERSION}"

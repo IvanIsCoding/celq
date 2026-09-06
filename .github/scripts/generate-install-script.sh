@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 
 # Script to download releases and generate install.sh with SHA256 checksums
-# Usage: ./generate-install-script.sh <version>
-# Example: ./generate-install-script.sh v0.2.0
+# Usage: ./generate-install-script.sh <version> <minisign-public-key>
+# Example: ./generate-install-script.sh v0.2.0 RWTpc2uwwWWkFNqSOrizSPOqIBNTZ3vxFvmAJjyz89IntZo7zQYR5uID
 
 set -euo pipefail
 
 VERSION="${1:-}"
+MINISIGN_PUBLIC_KEY="${2:-}"
 
-if [ -z "$VERSION" ]; then
-  echo "Usage: $0 <version>"
-  echo "Example: $0 v0.2.0"
+if [ -z "$VERSION" ] || [ -z "$MINISIGN_PUBLIC_KEY" ]; then
+  echo "Usage: $0 <version> <minisign-public-key>"
+  echo "Example: $0 v0.2.0 RWTpc2uwwWWkFNqSOrizSPOqIBNTZ3vxFvmAJjyz89IntZo7zQYR5uID"
   exit 1
 fi
 
@@ -75,6 +76,7 @@ fi
 
 # Create the output with all substitutions
 sed -e "s/{{CELQ_VERSION}}/${VERSION}/g" \
+    -e "s|{{MINISIGN_PUBLIC_KEY}}|${MINISIGN_PUBLIC_KEY}|g" \
     -e "s/{{CHECKSUM_MACOS_AARCH64}}/${CHECKSUMS[macos-aarch64]}/g" \
     -e "s/{{CHECKSUM_MACOS_X86_64}}/${CHECKSUMS[macos-x86_64]}/g" \
     -e "s/{{CHECKSUM_WINDOWS_X86_64}}/${CHECKSUMS[windows-x86_64]}/g" \

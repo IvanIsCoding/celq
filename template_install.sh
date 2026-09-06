@@ -24,20 +24,22 @@ USAGE:
     install.sh [options]
 
 FLAGS:
-    -h, --help      Display this message
-    -f, --force     Force overwriting an existing binary
+    -h, --help          Display this message
+    -f, --force         Force overwriting an existing binary
 
 OPTIONS:
-    --to LOCATION   Where to install the binary [default: $CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin]
-    --target TARGET Following Rust target triple conventions (e.g. x86_64-unknown-linux-gnu).
-    --verify-checksum    Verify the downloaded archive's SHA256 checksum
-    --verify-attestation  Verify the binary's GitHub Actions attestation (requires GitHub CLI with authentication)
+    --to LOCATION       Where to install the binary [default: $CARGO_HOME/bin, $HOME/.cargo/bin, $HOME/.local/bin or $HOME/bin]
+    --target TARGET     Following Rust target triple conventions (e.g. x86_64-unknown-linux-gnu).
+    --verify-checksum   Verify the downloaded archive's SHA256 checksum
+    --verify-minisign   Verify the downloaded archive's Minisign signature (requires minisign)
+    --verify-attestation Verify the binary's GitHub Actions attestation (requires GitHub CLI with authentication)
 EOF
 }
 
 crate=celq
 url=https://github.com/IvanIsCoding/celq
 releases=$url/releases
+minisign_public_key="{{MINISIGN_PUBLIC_KEY}}"
 
 say() {
   echo "install: $*" >&2
@@ -85,6 +87,20 @@ check_attestation() {
   fi
   
   say "Attestation verification successful"
+  return 0
+}
+
+check_minisign() {
+  local archive_file="$1"
+
+  say "Verifying Minisign signature for $archive_file"
+
+  if ! minisign -Vm "$archive_file" -x /dev/stdin -P "$minisign_public_key"; then
+    say "error: Minisign signature verification failed"
+    return 1
+  fi
+
+  say "Minisign signature verification successful"
   return 0
 }
 
@@ -182,6 +198,7 @@ target_to_pretty_name() {
 force=false
 verify_attestation=false
 verify_checksums=false
+verify_minisign=false
 while test $# -gt 0; do
   case $1 in
     --force | -f)
@@ -204,6 +221,9 @@ while test $# -gt 0; do
       ;;
     --verify-checksum)
       verify_checksums=true
+      ;;
+    --verify-minisign)
+      verify_minisign=true
       ;;
     *)
       say "error: unrecognized argument '$1'. Usage:"
@@ -233,6 +253,10 @@ if [ "$verify_checksums" = true ]; then
   command -v sha256sum > /dev/null 2>&1 ||
     command -v shasum > /dev/null 2>&1 ||
     err "need sha256sum or shasum (command not found)"
+fi
+
+if [ "$verify_minisign" = true ]; then
+  need minisign
 fi
 
 if [ -z "${dest-}" ]; then
@@ -293,6 +317,7 @@ case $target in
 esac
 
 archive="$releases/download/{{CELQ_VERSION}}/$crate-$pretty_target.$extension"
+signature_url="https://github.com/get-celq/signatures/releases/download/{{CELQ_VERSION}}/$crate-$target.$extension.sig"
 
 say "Repository:  $url"
 say "Crate:       $crate"
@@ -300,6 +325,10 @@ say "Tag:         {{CELQ_VERSION}}"
 say "Target:      $target"
 say "Destination: $dest"
 say "Archive:     $archive"
+
+if [ "$verify_minisign" = true ]; then
+  say "Signature:   $signature_url"
+fi
 
 # Check if destination is in PATH
 if [[ ":$PATH:" != *":$dest:"* ]]; then
@@ -320,6 +349,10 @@ if [ "$extension" = "zip" ]; then
   if [ "$verify_checksums" = true ]; then
     verify_checksum "$archive_file" "$target" || err "Checksum verification failed"
   fi
+
+  if [ "$verify_minisign" = true ]; then
+    download "$signature_url" - | check_minisign "$archive_file" || err "Failed to download or verify Minisign signature"
+  fi
   
   if [ "$verify_attestation" = true ]; then
     check_attestation "$archive_file" || err "Attestation verification failed"
@@ -332,6 +365,10 @@ else
   
   if [ "$verify_checksums" = true ]; then
     verify_checksum "$archive_file" "$target" || err "Checksum verification failed"
+  fi
+
+  if [ "$verify_minisign" = true ]; then
+    download "$signature_url" - | check_minisign "$archive_file" || err "Failed to download or verify Minisign signature"
   fi
   
   if [ "$verify_attestation" = true ]; then
