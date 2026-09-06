@@ -134,6 +134,18 @@ json["123numeric"] = "value4";
 
 #[cfg(feature = "greppable")]
 test!(
+    from_gron_identifier_edge_cases,
+    &["--from-gron", "-S", "this"],
+    r#"json = {};
+json.$dollar = 1;
+json._underscore = 2;
+json.alpha$beta_gamma9 = 3;
+"#,
+    r#"{"$dollar":1,"_underscore":2,"alpha$beta_gamma9":3}"#
+);
+
+#[cfg(feature = "greppable")]
+test!(
     from_gron_single_quoted_path_segment,
     &["--from-gron", "-S", "this"],
     r#"json = {};

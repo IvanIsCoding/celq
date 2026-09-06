@@ -179,3 +179,81 @@ fn test_parse_bracket_segment_errors() {
         assert_eq!(error.to_string(), expected);
     }
 }
+
+#[test]
+fn test_split_assignment_ignores_equals_inside_quoted_paths() {
+    let cases = [
+        (r#"json["a=b"] = 1;"#, r#"json["a=b"] "#, " 1;"),
+        ("json['a=b'] = 2;", "json['a=b'] ", " 2;"),
+        (r#"json["a\"=b"] = 3;"#, r#"json["a\"=b"] "#, " 3;"),
+        (r"json['a\'=b'] = 4;", r"json['a\'=b'] ", " 4;"),
+    ];
+
+    for (input, expected_left, expected_right) in cases {
+        let (left, right) = split_assignment(input).unwrap();
+        assert_eq!(left, expected_left);
+        assert_eq!(right, expected_right);
+    }
+}
+
+#[test]
+fn test_read_identifier_edge_cases() {
+    for identifier in ["alpha", "_private", "$value", "alpha_beta$gamma9"] {
+        let mut parser = PathParser::new(identifier);
+        assert_eq!(parser.read_identifier().as_deref(), Some(identifier));
+        assert!(parser.is_done());
+    }
+
+    for invalid in ["", "9lives", "-name"] {
+        let mut parser = PathParser::new(invalid);
+        assert_eq!(parser.read_identifier(), None);
+        assert_eq!(parser.pos, 0);
+    }
+}
+
+#[test]
+fn test_bump_char_advances_by_utf8_length() {
+    let mut parser = PathParser::new("éx");
+
+    parser.bump_char();
+    assert_eq!(parser.pos, "é".len());
+    assert_eq!(parser.peek_char(), Some('x'));
+}
+
+#[test]
+fn test_strip_trailing_semicolon_ignores_quoted_semicolons() {
+    let cases = [
+        (r#""a;b";"#, Some(r#""a;b""#)),
+        ("'a;b';", Some("'a;b'")),
+        (r#""a\";b";"#, Some(r#""a\";b""#)),
+        ("42; \t", Some("42")),
+        ("42", None),
+        ("42; trailing", None),
+    ];
+
+    for (input, expected) in cases {
+        assert_eq!(strip_trailing_semicolon(input), expected);
+    }
+}
+
+#[test]
+fn test_empty_containers_only_preserve_matching_existing_containers() {
+    let input = r#"json.object_to_scalar = {};
+json.object_to_scalar = 1;
+json.scalar_to_object = 1;
+json.scalar_to_object = {};
+json.array_to_scalar = [];
+json.array_to_scalar = 2;
+json.scalar_to_array = 2;
+json.scalar_to_array = [];"#;
+
+    assert_eq!(
+        gron_to_json(input).unwrap(),
+        serde_json::json!({
+            "object_to_scalar": 1,
+            "scalar_to_object": {},
+            "array_to_scalar": 2,
+            "scalar_to_array": []
+        })
+    );
+}

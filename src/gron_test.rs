@@ -103,6 +103,20 @@ fn test_escape_string_all_sequences() {
 }
 
 #[test]
+fn test_identifier_edge_cases() {
+    for valid in ["alpha", "_private", "$value", "alpha_beta$gamma9"] {
+        assert!(is_valid_identifier(valid), "expected {valid:?} to be valid");
+    }
+
+    for invalid in ["", "9lives", "hyphenated-key", "non_ascii_é"] {
+        assert!(
+            !is_valid_identifier(invalid),
+            "expected {invalid:?} to be invalid"
+        );
+    }
+}
+
+#[test]
 fn test_your_example() {
     let value = json!({
         "package": {
