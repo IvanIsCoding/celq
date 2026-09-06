@@ -107,10 +107,31 @@ fn rejects_multiple_root_elements() {
 }
 
 #[test]
+fn rejects_empty_second_root_element() {
+    let err = parse_xml("<root></root><extra/>").unwrap_err();
+
+    assert_eq!(err.to_string(), "multiple root elements");
+}
+
+#[test]
 fn rejects_text_outside_root_element() {
     let err = parse_xml("text<foo>bar</foo>").unwrap_err().to_string();
 
     assert!(err.contains("text outside root element"));
+}
+
+#[test]
+fn rejects_cdata_outside_root_element() {
+    let err = parse_xml("<![CDATA[orphaned]]><root/>").unwrap_err();
+
+    assert_eq!(err.to_string(), "CDATA outside root element");
+}
+
+#[test]
+fn rejects_entity_reference_outside_root_element() {
+    let err = parse_xml("&amp;<root/>").unwrap_err();
+
+    assert_eq!(err.to_string(), "entity reference outside root element");
 }
 
 #[test]
