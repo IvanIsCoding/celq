@@ -69,6 +69,11 @@ bin-dir = "{ bin }{ binary-ext }"
 pkg-fmt = "tgz"
 disabled-strategies = ["quick-install", "compile"]
 
+[package.metadata.binstall.signing]
+algorithm = "minisign"
+pubkey = "RWTpc2uwwWWkFNqSOrizSPOqIBNTZ3vxFvmAJjyz89IntZo7zQYR5uID"
+file = "https://github.com/get-celq/signatures/releases/download/v{ version }/{ name }-{ target }{ archive-suffix }.sig"
+
 [package.metadata.binstall.overrides.aarch64-apple-darwin]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-macos-aarch64{ archive-suffix }"
 
