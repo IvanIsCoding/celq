@@ -1,0 +1,104 @@
+name: Publish v0.6.0 Minisign signatures
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NAME: celq
+  RELEASE_TAG: v0.6.0
+  SIGNATURES_REPOSITORY: get-celq/signatures
+
+permissions:
+  contents: read
+
+jobs:
+  create-minisign-release:
+    name: Create Minisign release
+    runs-on: ubuntu-latest
+    environment: github_release
+    permissions:
+      contents: read
+    steps:
+      - name: Create Minisign release if needed
+        env:
+          GH_TOKEN: ${{ secrets.SIGNATURES_TOKEN }}
+        run: |
+          if gh release view "${RELEASE_TAG}" --repo "${SIGNATURES_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Minisign release ${RELEASE_TAG} already exists"
+          else
+            gh release create "${RELEASE_TAG}" \
+              --repo "${SIGNATURES_REPOSITORY}" \
+              --title "celq ${RELEASE_TAG} signatures" \
+              --notes "Detached Minisign signatures for celq ${RELEASE_TAG} release archives."
+          fi
+
+  minisign-release-assets:
+    name: Minisign (${{ matrix.target }})
+    needs: [create-minisign-release]
+    runs-on: ubuntu-latest
+    environment: github_release
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: aarch64-apple-darwin, archive: celq-macos-aarch64.tar.gz, archive_suffix: tar.gz }
+          - { target: x86_64-apple-darwin, archive: celq-macos-x86_64.tar.gz, archive_suffix: tar.gz }
+          - { target: x86_64-pc-windows-msvc, archive: celq-windows-x86_64.zip, archive_suffix: zip }
+          - { target: aarch64-pc-windows-msvc, archive: celq-windows-arm64.zip, archive_suffix: zip }
+          - { target: x86_64-unknown-linux-musl, archive: celq-linux-x86_64-musl.tar.gz, archive_suffix: tar.gz }
+          - { target: aarch64-unknown-linux-musl, archive: celq-linux-aarch64-musl.tar.gz, archive_suffix: tar.gz }
+          - { target: x86_64-unknown-linux-gnu, archive: celq-linux-x86_64-gnu.tar.gz, archive_suffix: tar.gz }
+          - { target: aarch64-unknown-linux-gnu, archive: celq-linux-aarch64-gnu.tar.gz, archive_suffix: tar.gz }
+          - { target: riscv64gc-unknown-linux-musl, archive: celq-linux-riscv64-musl.tar.gz, archive_suffix: tar.gz }
+          - { target: riscv64gc-unknown-linux-gnu, archive: celq-linux-riscv64-gnu.tar.gz, archive_suffix: tar.gz }
+          - { target: x86_64-unknown-freebsd, archive: celq-freebsd-x86_64.tar.gz, archive_suffix: tar.gz }
+          - { target: aarch64-unknown-freebsd, archive: celq-freebsd-aarch64.tar.gz, archive_suffix: tar.gz }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install minisign
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes minisign
+
+      - name: Download release archive
+        env:
+          ARCHIVE_NAME: ${{ matrix.archive }}
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_REPOSITORY: ${{ github.repository }}
+        run: |
+          mkdir -p "${RUNNER_TEMP}/release-assets"
+          gh release download "${RELEASE_TAG}" \
+            --repo "${SOURCE_REPOSITORY}" \
+            --pattern "${ARCHIVE_NAME}" \
+            --dir "${RUNNER_TEMP}/release-assets"
+
+      - name: Sign release archive
+        env:
+          ARCHIVE_NAME: ${{ matrix.archive }}
+          ARCHIVE_SUFFIX: ${{ matrix.archive_suffix }}
+          MINISIGN_PRIVATE_KEY: ${{ secrets.MINISIGN_PRIVATE_KEY }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          ARCHIVE_PATH="${RUNNER_TEMP}/release-assets/${ARCHIVE_NAME}"
+          SIGNATURE_PATH="${RUNNER_TEMP}/release-assets/${NAME}-${TARGET}.${ARCHIVE_SUFFIX}.sig"
+          .github/scripts/sign-release-archive.sh "${ARCHIVE_PATH}" "${SIGNATURE_PATH}"
+
+      - name: Upload signature
+        env:
+          ARCHIVE_SUFFIX: ${{ matrix.archive_suffix }}
+          GH_TOKEN: ${{ secrets.SIGNATURES_TOKEN }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          SIGNATURE_PATH="${RUNNER_TEMP}/release-assets/${NAME}-${TARGET}.${ARCHIVE_SUFFIX}.sig"
+          gh release upload "${RELEASE_TAG}" "${SIGNATURE_PATH}" \
+            --repo "${SIGNATURES_REPOSITORY}" \
+            --clobber
