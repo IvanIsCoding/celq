@@ -24,9 +24,7 @@ jobs:
           toolchain: stable
 
       - name: Build documentation
-        run: cargo doc --no-deps --all-features
-        env:
-          RUSTDOCFLAGS: "-D warnings"
+        run: cargo rustdoc --lib --all-features -- -D warnings --extend-css docs/rustdoc.css
 
       - name: Upload documentation
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

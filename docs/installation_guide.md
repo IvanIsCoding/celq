@@ -1,39 +1,56 @@
 ### Pre-built Binaries
 
-We publish pre-built binaries for Linux, macOS, FreeBSD, and Windows in celq's [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases). To install the current version for Linux or macOS, run:
+We publish pre-built binaries for Linux, macOS, FreeBSD, and Windows on celq's [GitHub Releases page](https://github.com/IvanIsCoding/celq/releases).
+
+To install the current version on Linux or macOS:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bash
 ```
 
-Notice that the installer tries not to be clever and doesn't modify `$PATH` or overwrite existing files. To specify a destination, use the `--to` flag:
+#### Installer options
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
-    bash -s -- --to DESTINATION
-```
+<div class="installation-tabs" style="--arity: 4">
+<details name="installer-option" style="--n: 1" open>
+<summary><h5>Destination</h5></summary>
+<div class="installation-tab-content">
+<p>The installer doesn't modify <code>$PATH</code> or overwrite existing files. Use <code>--to</code> to install celq at a specific destination:</p>
 
-To force the installer to overwrite a version instead of failing, pass the `--force` flag:
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
+    bash -s -- --to DESTINATION</code></pre>
+</div>
+</details>
+<details name="installer-option" style="--n: 2">
+<summary><h5>Overwrite</h5></summary>
+<div class="installation-tab-content">
+<p>The installer doesn't modify <code>$PATH</code> or overwrite existing files. Use <code>--force</code> to overwrite an existing celq binary instead of failing:</p>
 
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
-    bash -s -- --force
-```
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
+    bash -s -- --force</code></pre>
+</div>
+</details>
+<details name="installer-option" style="--n: 3">
+<summary><h5>Version</h5></summary>
+<div class="installation-tab-content">
+<p>Include a version in the URL to pin the installation. This example always installs version 0.6.0:</p>
 
-To pin a specific version, change the URL to include the version. For example:
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.6.0/install.sh | bash
-```
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.6.0/install.sh | bash</code></pre>
+</div>
+</details>
+<details name="installer-option" style="--n: 4">
+<summary><h5>Target</h5></summary>
+<div class="installation-tab-content">
+<p>Use <code>--target</code> to select a platform instead of detecting it. This example always installs <code>x86_64-unknown-linux-gnu</code>:</p>
 
-Will always install the same version, 0.6.0.
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
+    bash -s -- --target x86_64-unknown-linux-gnu</code></pre>
 
-The `--target` option can be specified to avoid guessing the architecture. For example:
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
-    bash -s -- --target x86_64-unknown-linux-gnu
-```
+<p>See <a href="https://doc.rust-lang.org/beta/rustc/platform-support.html">Rust's target triples</a> for more information about target triples.</p>
+</div>
+</details>
+</div>
 
-Will always install the binary for `x86_64-unknown-linux-gnu`. See [Rust's target triples](https://doc.rust-lang.org/beta/rustc/platform-support.html) for a list of possible options.
+#### Rate limitting
 
 To prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. You might also find the [GitHub Actions](#github-actions) section valuable if running in that environment.
 
@@ -51,30 +68,37 @@ brew install get-celq/tap/celq
 
 The formula also works for [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux).
 
-### Scoop (Windows)
+### Windows
 
-If you are a [Scoop](https://scoop.sh/) user on Windows, you can install `celq` with:
+celq is available for multiple Windows package managers:
 
-```bash
-scoop bucket add get-celq https://github.com/get-celq/scoop-bucket
-scoop install get-celq/celq
-```
+<div class="installation-tabs" style="--arity: 3">
+<details name="windows-installation" style="--n: 1" open>
+<summary><h4>Scoop</h4></summary>
+<div class="installation-tab-content">
+<p>Add the <a href="https://scoop.sh/">Scoop</a> bucket, then install celq:</p>
 
-### Chocolatey (Windows)
+<pre><code class="language-powershell">scoop bucket add get-celq https://github.com/get-celq/scoop-bucket
+scoop install get-celq/celq</code></pre>
+</div>
+</details>
+<details name="windows-installation" style="--n: 2">
+<summary><h4>WinGet</h4></summary>
+<div class="installation-tab-content">
+<p>Install celq with <a href="https://learn.microsoft.com/windows/package-manager/winget/">WinGet</a>:</p>
 
-If you are a [Chocolatey](https://community.chocolatey.org/) user on Windows, you can install `celq` with:
+<pre><code class="language-powershell">winget install IvanIsCoding.celq</code></pre>
+</div>
+</details>
+<details name="windows-installation" style="--n: 3">
+<summary><h4>Chocolatey</h4></summary>
+<div class="installation-tab-content">
+<p>Install celq with <a href="https://community.chocolatey.org/">Chocolatey</a>:</p>
 
-```bash
-choco install celq
-```
-
-### WinGet (Windows)
-
-If you are a [WinGet](https://learn.microsoft.com/windows/package-manager/winget/) user on Windows, you can install `celq` with:
-
-```bash
-winget install IvanIsCoding.celq
-```
+<pre><code class="language-powershell">choco install celq</code></pre>
+</div>
+</details>
+</div>
 
 ### Cargo
 
@@ -96,91 +120,114 @@ cargo binstall celq
 
 ### GitHub Actions
 
-`celq` can be used in GitHub actions. For one-off commands, the [get-celq/celq-action](https://github.com/get-celq/celq-action) is the quickest way:
+<div class="installation-tabs" style="--arity: 2">
+<details name="github-action" style="--n: 1" open>
+<summary><h4>get-celq/celq-action</h4></summary>
+<div class="installation-tab-content">
+<p><a href="https://github.com/get-celq/celq-action">get-celq/celq-action</a> is the quickest option for one-off commands and exposes the result as an output:</p>
 
-```yaml
-- name: Example Celq Action
+<pre><code class="language-yaml">- name: Example Celq Action
   id: exampleID
   uses: get-celq/celq-action@main
   with:
-    cmd: celq 'this.exampleID' < example.json
+    cmd: celq 'this.exampleID' &lt; example.json
 
 - name: Reuse a variable obtained in another step
-  run: echo ${{ steps.exampleID.outputs.result }}
-```
+  run: echo ${{ steps.exampleID.outputs.result }}</code></pre>
 
-The best practice for GitHub Actions is to select both versions:
-* The tool version is specified by the optional `version` parameter
-* The action version is specified by `celq-action@actionVersion`
+<p>For reproducible workflows, select both versions:</p>
 
-For example:
-```yaml
-- name: Example Celq Action
+<ul>
+<li>Set the celq version with the optional <code>version</code> parameter.</li>
+<li>Set the action version in <code>get-celq/celq-action@actionVersion</code>.</li>
+</ul>
+
+<pre><code class="language-yaml">- name: Example Celq Action
   id: exampleID
   uses: get-celq/celq-action@v0.1
   with:
-    version: '0.1.2'
-    cmd: celq 'this.exampleID' < example.json
+    version: '0.6.0'
+    cmd: celq 'this.exampleID' &lt; example.json
 
 - name: Reuse a variable obtained in another step
-  run: echo ${{ steps.exampleID.outputs.result }}
-```
+  run: echo ${{ steps.exampleID.outputs.result }}</code></pre>
+</div>
+</details>
+<details name="github-action" style="--n: 2">
+<summary><h4>taiki-e/install-action</h4></summary>
+<div class="installation-tab-content">
+<p>Use <a href="https://github.com/taiki-e/install-action">taiki-e/install-action</a> when a workflow runs celq in scripts or invokes it multiple times:</p>
 
-If you are going to use `celq` in scripts or for multiple calls, we recommend using [taiki-e/install-action](https://github.com/taiki-e/install-action):
-
-```yaml
-- uses: taiki-e/install-action@v2
+<pre><code class="language-yaml">- uses: taiki-e/install-action@v2
   with:
-    tool: celq
-```
+    tool: celq</code></pre>
+</div>
+</details>
+</div>
 
 ### Nix
 
-`celq` is available for [Nix](https://github.com/NixOS/nix). To run it as a flake:
+`celq` is available for [Nix](https://github.com/NixOS/nix) with and without flakes:
 
-```bash
-nix run github:IvanIsCoding/celq -- -n '"Hello World"'
-```
+<div class="installation-tabs" style="--arity: 2">
+<details name="nix-installation" style="--n: 1" open>
+<summary><h4>Flakes</h4></summary>
+<div class="installation-tab-content">
+<p>Run the stable version fetched from crates.io:</p>
 
-By default, Nix fetches the stable version from crates.io. If you want to run the code from HEAD, use the `dev` derivation:
+<pre><code class="language-bash">nix run github:IvanIsCoding/celq -- -n '"Hello World"'</code></pre>
 
-```bash
-nix run github:IvanIsCoding/celq#dev -- -n '"Hello World"'
-```
+<p>To run the code from HEAD, use the <code>dev</code> package:</p>
 
-We also include a `default.nix` for non-Flake users:
+<pre><code class="language-bash">nix run github:IvanIsCoding/celq#dev -- -n '"Hello World"'</code></pre>
+</div>
+</details>
+<details name="nix-installation" style="--n: 2">
+<summary><h4>Without flakes</h4></summary>
+<div class="installation-tab-content">
+<p>Clone the repository and build its <code>default.nix</code>:</p>
 
-```bash
-git clone https://github.com/IvanIsCoding/celq
+<pre><code class="language-bash">git clone https://github.com/IvanIsCoding/celq
 cd celq
 nix-build
-./result/bin/celq -n '"Hello World"'
-```
+./result/bin/celq -n '"Hello World"'</code></pre>
+</div>
+</details>
+</div>
 
-### FreeBSD
+### BSDs
 
-FreeBSD builds are tested in [Cirrus CI](https://cirrus-ci.org/) and cross-compiled with [Zig](https://github.com/rust-cross/cargo-zigbuild). Although `celq` is not yet in the ports tree, it does publish pre-built binaries that can be installed manually:
+<div class="installation-tabs" style="--arity: 3">
+<details name="bsd-installation" style="--n: 1" open>
+<summary><h4>FreeBSD</h4></summary>
+<div class="installation-tab-content">
+<p>FreeBSD builds are tested in <a href="https://cirrus-ci.org/">Cirrus CI</a> and cross-compiled with <a href="https://github.com/rust-cross/cargo-zigbuild">Zig</a>. Although celq is not yet in the ports tree, pre-built binaries can be installed manually:</p>
 
-```bash
-VERSION=v0.2.0
+<pre><code class="language-bash">VERSION=v0.2.0
 RELEASE_URL=https://github.com/IvanIsCoding/celq/releases/download/${VERSION}
 PLATFORM=x86_64 # or aarch64
 
 fetch ${RELEASE_URL}/celq-freebsd-${PLATFORM}.tar.gz
 
 tar xzf celq-freebsd-${PLATFORM}.tar.gz
-su root -c 'install -m 755 celq /usr/local/bin/'
-```
+su root -c 'install -m 755 celq /usr/local/bin/'</code></pre>
 
-`celq` can also be installed from source following the [Cargo](#cargo) section. We strive to always compile with the Rust version provided in the ports tree.
-
-### OpenBSD
-
-OpenBSD builds are tested in CI using the latest stable release. `celq` strives to always compile with the Rust version provided in the ports tree. Refer to the [Cargo](#cargo) section for installation instructions.
-
-### NetBSD
-
-NetBSD builds are tested in CI against the latest stable release. `celq` aims to remain compatible with the Rust version provided by the NetBSD pkgsrc quarterly branch. See the [Cargo](#cargo) section for installation instructions.
+<p>celq can also be installed from source following the <a href="#cargo">Cargo</a> section. We strive to always compile with the Rust version provided in the ports tree.</p>
+</div>
+</details>
+<details name="bsd-installation" style="--n: 2">
+<summary><h4>OpenBSD</h4></summary>
+<div class="installation-tab-content">
+<p>OpenBSD builds are tested in CI using the latest stable release. celq strives to always compile with the Rust version provided in the ports tree. Refer to the <a href="#cargo">Cargo</a> section for installation instructions.</p>
+</div>
+</details>
+<details name="bsd-installation" style="--n: 3">
+<summary><h4>NetBSD</h4></summary>
+<div class="installation-tab-content">
+<p>NetBSD builds are tested in CI against the latest stable release. celq aims to remain compatible with the Rust version provided by the NetBSD pkgsrc quarterly branch. See the <a href="#cargo">Cargo</a> section for installation instructions.</p>
+</div>
+</details>
+</div>
 
 ### NPM (Node.js/JavaScript)
 
@@ -198,30 +245,32 @@ npx celq -n '"Hello World"'
 
 ### Python
 
-celq is packaged for [PyPI](https://pypi.org/project/celq/). Python users can install it with `pip`:
+<div class="installation-tabs" style="--arity: 2">
+<details name="python-installation" style="--n: 1" open>
+<summary><h4>PyPI</h4></summary>
+<div class="installation-tab-content">
+<p>Install celq from <a href="https://pypi.org/project/celq/">PyPI</a> with <code>pip</code>:</p>
 
-```bash
-pip install celq
-```
+<pre><code class="language-bash">pip install celq</code></pre>
 
-If you have [uv](https://github.com/astral-sh/uv) installed, `celq` can be used as a tool:
-```bash
-uvx celq -n '"Hello World"'
-```
+<p>With <a href="https://github.com/astral-sh/uv">uv</a>, run celq as a tool without installing it permanently:</p>
 
-### Conda Forge
+<pre><code class="language-bash">uvx celq -n '"Hello World"'</code></pre>
+</div>
+</details>
+<details name="python-installation" style="--n: 2">
+<summary><h4>Conda Forge</h4></summary>
+<div class="installation-tab-content">
+<p>The <a href="https://anaconda.org/channels/conda-forge/packages/celq/overview">conda-forge package</a> works with <code>conda</code>, <code>mamba</code>, <code>micromamba</code>, and <code>pixi</code>:</p>
 
-celq is available on [conda-forge](https://anaconda.org/channels/conda-forge/packages/celq/overview) and can be installed with `conda`, `mamba`, `micromamba`, and `pixi`:
+<pre><code class="language-bash">conda install -c conda-forge celq</code></pre>
 
-```bash
-conda install -c conda-forge celq
-```
+<p>With <a href="https://pixi.prefix.dev/latest/">pixi</a>, run celq in a temporary environment:</p>
 
-If you have [pixi](https://pixi.prefix.dev/latest/), you can run celq in a temporary environment with:
-
-```bash
-pixi exec celq -n '"Hello World"'
-```
+<pre><code class="language-bash">pixi exec celq -n '"Hello World"'</code></pre>
+</div>
+</details>
+</div>
 
 ### Mise
 

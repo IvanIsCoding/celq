@@ -61,6 +61,7 @@ codegen-units = 1
 
 [package.metadata.docs.rs]
 all-features = true
+rustdoc-args = ["--extend-css", "docs/rustdoc.css"]
 
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-{ target }{ archive-suffix }"

@@ -1,0 +1,93 @@
+.installation-tabs {
+    display: grid;
+    grid-template-columns: repeat(var(--arity), minmax(0, 1fr));
+    grid-template-rows: auto 1fr;
+    column-gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.installation-tabs:not(:has(> details[open]))::after {
+    grid-column: 1 / -1;
+    content: "Click one of the above headers to expand its contents.";
+    font-size: small;
+    font-style: italic;
+    text-align: center;
+}
+
+.installation-tabs > details {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-row: 1 / span 2;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+}
+
+.installation-tabs > details > summary {
+    display: grid;
+    grid-column: var(--n);
+    grid-row: 1;
+    z-index: 1;
+    padding: 0 0.75rem;
+    border-bottom: 2px solid var(--headings-border-bottom-color);
+    cursor: pointer;
+}
+
+.installation-tabs > details[open] > summary {
+    background-color: var(--code-block-background-color);
+    border-bottom-color: var(--target-border-color);
+}
+
+.installation-tabs > details > summary h4,
+.installation-tabs > details > summary h5 {
+    margin: 0.75rem 0;
+    text-align: center;
+}
+
+.installation-tabs > details::details-content {
+    grid-column: 1 / -1;
+    grid-row: 2;
+}
+
+.installation-tabs > details:not([open])::details-content {
+    display: none;
+}
+
+.installation-tabs > details > .installation-tab-content {
+    padding-top: 0.5rem;
+}
+
+/* The guide modules are linked by their reader-friendly headings above. */
+#rustdoc-toc h3:has(a[href="#modules"]),
+#rustdoc-toc h3:has(a[href="#modules"]) + ul,
+#rustdoc-toc a[href="#modules"] {
+    display: none;
+}
+
+/* Make the guide group label read like rustdoc's "Sections" heading. */
+#rustdoc-toc a[href="#guides"] {
+    color: var(--main-color);
+    font-weight: 600;
+}
+
+/* The crate page is a guide landing page; omit rustdoc's broad item index. */
+.sidebar-elems > ul:has(> li > #all-types) {
+    display: none;
+}
+
+/* The guide links in the main sidebar replace rustdoc's module navigation. */
+#rustdoc-modnav {
+    display: none;
+}
+
+/* These headings exist to create the useful sidebar links, not body content. */
+.docblock #guides,
+main h2#modules,
+main h2#modules + dl {
+    display: none;
+}
+
+/* A module page already has a meaningful guide title in its content. */
+body.mod #rustdoc-toc h2.location,
+body.mod rustdoc-topbar {
+    display: none;
+}
