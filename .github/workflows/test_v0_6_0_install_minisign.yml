@@ -2,7 +2,7 @@
 name: Test v0.6.0 Minisign installer
 
 on:
-  pull_request:
+  workflow_dispatch:
 
 defaults:
   run:
