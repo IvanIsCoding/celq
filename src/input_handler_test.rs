@@ -1,5 +1,8 @@
 use super::*;
 use cel::Program;
+use cel::objects::Key;
+use std::collections::HashMap;
+use std::sync::Arc;
 
 fn default_params() -> InputParameters {
     InputParameters {
@@ -129,6 +132,39 @@ fn test_handle_json_truthiness_empty_string() {
 }
 
 #[test]
+fn test_uint_truthiness() {
+    assert!(!is_cel_value_truthy(&CelValue::UInt(0)));
+    assert!(is_cel_value_truthy(&CelValue::UInt(1)));
+}
+
+#[test]
+fn test_float_truthiness() {
+    assert!(!is_cel_value_truthy(&CelValue::Float(0.0)));
+    assert!(!is_cel_value_truthy(&CelValue::Float(f64::NAN)));
+    assert!(is_cel_value_truthy(&CelValue::Float(1.0)));
+}
+
+#[test]
+fn test_list_truthiness() {
+    assert!(!is_cel_value_truthy(&CelValue::List(Arc::new(vec![]))));
+    assert!(is_cel_value_truthy(&CelValue::List(Arc::new(vec![
+        CelValue::Null,
+    ]))));
+}
+
+#[test]
+fn test_map_and_null_truthiness() {
+    let empty_map = HashMap::<Key, CelValue>::new().into();
+    assert!(!is_cel_value_truthy(&CelValue::Map(empty_map)));
+
+    let mut populated_map = HashMap::new();
+    populated_map.insert(Key::String(Arc::new("key".to_string())), CelValue::Null);
+    assert!(is_cel_value_truthy(&CelValue::Map(populated_map.into())));
+
+    assert!(!is_cel_value_truthy(&CelValue::Null));
+}
+
+#[test]
 fn test_handle_json_raw_output_for_string() {
     let program = Program::compile(r#""hello""#).unwrap();
     let args = BTreeMap::new();
@@ -156,6 +192,23 @@ fn test_handle_json_sorted_pretty_output() {
         "{\n  \"a\": 0,\n  \"z\": {\n    \"a\": 1,\n    \"b\": 2\n  }\n}"
     );
     assert!(is_truthy);
+}
+
+#[test]
+fn test_sort_keys_recursive_descends_into_arrays() {
+    let mut value = serde_json::json!({
+        "items": [
+            { "b": 2, "a": 1 },
+            [{ "d": 4, "c": 3 }]
+        ]
+    });
+
+    sort_keys_recursive(&mut value);
+
+    assert_eq!(
+        value.to_string(),
+        r#"{"items":[{"a":1,"b":2},[{"c":3,"d":4}]]}"#
+    );
 }
 
 #[test]
