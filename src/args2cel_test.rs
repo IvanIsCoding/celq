@@ -106,3 +106,30 @@ fn test_parse_error() {
     let err_msg = result.unwrap_err().to_string();
     assert!(err_msg.contains("Failed to parse argument 'x'"));
 }
+
+#[test]
+fn test_parse_errors_for_each_numeric_and_boolean_type() {
+    let cases = [
+        ("uint", "-1", "cannot parse '-1' as uint"),
+        (
+            "float",
+            "not-a-float",
+            "cannot parse 'not-a-float' as float",
+        ),
+        ("bool", "yes", "cannot parse 'yes' as bool"),
+    ];
+
+    for (type_name, value, expected) in cases {
+        let args = vec![(
+            "value".to_string(),
+            type_name.to_string(),
+            value.to_string(),
+        )];
+
+        let error = args_to_cel_variables(&args).unwrap_err().to_string();
+        assert!(
+            error.contains(expected),
+            "expected {error:?} to contain {expected:?}"
+        );
+    }
+}

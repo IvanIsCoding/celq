@@ -165,6 +165,12 @@ fn test_map_and_null_truthiness() {
 }
 
 #[test]
+fn test_bytes_truthiness() {
+    assert!(is_cel_value_truthy(&CelValue::Bytes(Arc::new(vec![]))));
+    assert!(is_cel_value_truthy(&CelValue::Bytes(Arc::new(vec![0]))));
+}
+
+#[test]
 fn test_handle_json_raw_output_for_string() {
     let program = Program::compile(r#""hello""#).unwrap();
     let args = BTreeMap::new();

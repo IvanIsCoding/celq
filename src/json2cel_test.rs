@@ -18,6 +18,22 @@ fn test_number() {
 }
 
 #[test]
+fn test_unsigned_number_above_i64_max() {
+    let vars = json_to_cel_variables(
+        "18446744073709551615",
+        ROOT_VAR,
+        InputFormat::Json,
+        DEFAULT_PARALLELISM,
+    )
+    .unwrap();
+
+    assert!(matches!(
+        vars.get("this").unwrap(),
+        CelValue::UInt(u64::MAX)
+    ));
+}
+
+#[test]
 fn test_string() {
     let vars = json_to_cel_variables(
         r#""hello""#,
