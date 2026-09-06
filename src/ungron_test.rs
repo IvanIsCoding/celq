@@ -82,6 +82,53 @@ json.nothing = null;"#;
 }
 
 #[test]
+fn test_rejects_malformed_gron_inputs() {
+    let cases = [
+        ("missing assignment", "json.foo", "Expected assignment"),
+        (
+            "invalid root",
+            "root.foo = 1;",
+            "Path root must be 'json', found 'root'",
+        ),
+        ("missing root", ".foo = 1;", "Path root must be 'json'"),
+        (
+            "unexpected path character",
+            "json? = 1;",
+            "Unexpected character in path: '?'",
+        ),
+        (
+            "missing semicolon",
+            "json.foo = 1",
+            "Expected assignment to end with ';'",
+        ),
+        (
+            "unterminated quoted path",
+            r#"json["foo] = 1;"#,
+            "Expected assignment",
+        ),
+        (
+            "unterminated quoted value",
+            r#"json.foo = "value;"#,
+            "Expected assignment to end with ';'",
+        ),
+        (
+            "extra content after single-quoted value",
+            "json.foo = 'value' trailing;",
+            "Unexpected characters after string value",
+        ),
+    ];
+
+    for (case, input, expected_error) in cases {
+        let error = gron_to_json(input).unwrap_err();
+        let full_error = format!("{error:#}");
+        assert!(
+            full_error.contains(expected_error),
+            "{case}: expected error containing {expected_error:?}, got {full_error}"
+        );
+    }
+}
+
+#[test]
 fn test_empty_container_assignments_do_not_overwrite_existing_values() {
     let input = r#"json = {};
 json.user = {};
