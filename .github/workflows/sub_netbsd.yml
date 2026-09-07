@@ -29,10 +29,19 @@ jobs:
               - '.cirrus.star'
               - '.github/workflows/main.yml'
               - '.github/workflows/sub_netbsd.yml'
+              - '.github/actions/restore-cargo-downloads/**'
               - '.cargo/**'
               - 'src/**'
               - 'tests/**'
               - '.github/scripts/smoke-test.sh'
+
+      - name: Restore Cargo downloads
+        if: steps.filter.outputs.rust == 'true'
+        uses: $/.github/actions/restore-cargo-downloads
+
+      - name: Pack Cargo registry for the VM
+        if: steps.filter.outputs.rust == 'true'
+        run: tar -czf cargo-registry-cache.tar.gz -C "$HOME/.cargo" registry
 
       - name: Test on NetBSD
         if: steps.filter.outputs.rust == 'true'
@@ -43,5 +52,7 @@ jobs:
           prepare: |
             /usr/sbin/pkg_add rust
           run: |
+            mkdir -p "$HOME/.cargo"
+            tar -xzf cargo-registry-cache.tar.gz -C "$HOME/.cargo"
             cargo build --locked
             cargo test --locked
