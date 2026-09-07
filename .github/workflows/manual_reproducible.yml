@@ -1,0 +1,151 @@
+name: Reproducible builds (Manual)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  zigbuild:
+    name: Zigbuild (${{ matrix.runner }}, ${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+        build: &targets
+          - target: x86_64-unknown-linux-gnu
+            zigtargetsuffix: .2.28
+    env:
+      TARGET: ${{ matrix.build.target }}
+      ZIGTARGETSUFFIX: ${{ matrix.build.zigtargetsuffix }}
+    steps:
+      # Every host builds the same HEAD captured by the manual dispatch.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Configure reproducible builds
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          echo "RUSTFLAGS=--remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: ${{ matrix.build.target }}
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: "false"
+
+      - name: Build with Zig
+        run: cargo auditable zigbuild --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
+
+      - name: Create release archive
+        run: |
+          mkdir -p artifacts
+          cp "target/${TARGET}/release/celq" artifacts/celq
+          tar czf artifacts/celq.tar.gz -C "target/${TARGET}/release" celq
+
+      - name: Upload archive and binary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }}-${{ matrix.runner }}
+          path: |
+            artifacts/celq
+            artifacts/celq.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+
+  freebsd:
+    name: Zigbuild (FreeBSD x86-64, ${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        build: *targets
+    env:
+      TARGET: ${{ matrix.build.target }}
+      ZIGTARGETSUFFIX: ${{ matrix.build.zigtargetsuffix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Capture commit timestamp
+        run: echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+
+      - name: Build on FreeBSD
+        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
+        with:
+          release: "14.4"
+          arch: x86_64
+          sync: rsync
+          copyback: true
+          envs: TARGET ZIGTARGETSUFFIX SOURCE_DATE_EPOCH
+          prepare: |
+            set -eu
+            pkg install -y ca_root_nss git devel/rustup-init
+
+            # Install the official FreeBSD Zig archive directly from ziglang.org.
+            cd /tmp
+            fetch https://ziglang.org/download/0.15.2/zig-x86_64-freebsd-0.15.2.tar.xz
+            test "$(sha256 -q zig-x86_64-freebsd-0.15.2.tar.xz)" = \
+              "5509ff57cd3f219165caed0da10221739af82742b9edfcda3f7bfaf4da7212dd"
+            tar -xf zig-x86_64-freebsd-0.15.2.tar.xz
+
+            rustup-init -y --profile minimal --default-toolchain 1.94.1
+            . "$HOME/.cargo/env"
+            rustup component add rust-src --toolchain 1.94.1
+
+            # Match setup-zigbuild's versions, compiling the tools from crates.io.
+            cargo +1.94.1 install cargo-zigbuild --version 0.23.2 --locked
+            cargo +1.94.1 install cargo-auditable --version 0.7.5 --locked
+          run: |
+            set -eu
+            . "$HOME/.cargo/env"
+            export PATH="/tmp/zig-x86_64-freebsd-0.15.2:$PATH"
+            rustup target add --toolchain 1.94.1 "$TARGET"
+
+            # Host job environment variables are not inherited by the VM.
+            export RUSTUP_TOOLCHAIN=1.94.1
+            export CARGO_TERM_COLOR=always TZ=UTC LC_ALL=C
+            export SOURCE_DATE_EPOCH
+            export RUSTFLAGS="--remap-path-prefix=$(pwd -P)=/src"
+            cargo auditable zigbuild --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
+
+            mkdir -p artifacts
+            cp "target/${TARGET}/release/celq" artifacts/celq
+            tar czf artifacts/celq.tar.gz -C "target/${TARGET}/release" celq
+
+      - name: Upload archive and binary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }}-freebsd-x86_64
+          path: |
+            artifacts/celq
+            artifacts/celq.tar.gz
+          if-no-files-found: error
+          compression-level: 0
+
+  hashes:
+    name: Print SHA-256 hashes
+    needs: [zigbuild, freebsd]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download all host artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          path: artifacts
+
+      - name: Print SHA-256 hashes
+        run: find artifacts -type f -exec sha256sum {} +
