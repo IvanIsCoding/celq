@@ -12,7 +12,7 @@ env:
 jobs:
   patched_cargo:
     name: Patched Cargo (${{ matrix.target }})
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -69,6 +69,53 @@ jobs:
         with:
           name: patched-cargo-${{ matrix.target }}
           path: cargo-source/target/${{ matrix.target }}/release/cargo
+          retention-days: 1
+          if-no-files-found: error
+
+  freebsd_tools:
+    name: Build FreeBSD tools
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: x86_64-unknown-freebsd
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: "false"
+
+      - name: Install cargo-clone
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-clone@1.2.4
+
+      - name: Download tool sources
+        run: cargo clone cargo-zigbuild@0.23.2 cargo-auditable@0.7.5 -- freebsd-tool-sources/
+
+      - name: Cross-compile cargo-zigbuild
+        run: |
+          cargo zigbuild --locked --release --bin cargo-zigbuild --target x86_64-unknown-freebsd \
+            --manifest-path freebsd-tool-sources/cargo-zigbuild/Cargo.toml \
+            --target-dir "$GITHUB_WORKSPACE/freebsd-tools-build"
+
+      - name: Cross-compile cargo-auditable
+        run: |
+          cargo zigbuild --locked --release --bin cargo-auditable --target x86_64-unknown-freebsd \
+            --manifest-path freebsd-tool-sources/cargo-auditable/Cargo.toml \
+            --target-dir "$GITHUB_WORKSPACE/freebsd-tools-build"
+
+      - name: Upload FreeBSD tools
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: freebsd-tools-x86_64
+          path: |
+            freebsd-tools-build/x86_64-unknown-freebsd/release/cargo-zigbuild
+            freebsd-tools-build/x86_64-unknown-freebsd/release/cargo-auditable
           retention-days: 1
           if-no-files-found: error
 
@@ -154,7 +201,7 @@ jobs:
 
   freebsd:
     name: Zigbuild (FreeBSD x86-64, ${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }})
-    needs: patched_cargo
+    needs: [patched_cargo, freebsd_tools]
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -177,6 +224,12 @@ jobs:
         with:
           name: patched-cargo-x86_64-unknown-freebsd
           path: patched-cargo
+
+      - name: Download FreeBSD tools
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: freebsd-tools-x86_64
+          path: freebsd-tools
 
       - name: Build on FreeBSD
         uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
@@ -201,12 +254,10 @@ jobs:
             . "$HOME/.cargo/env"
             rustup component add rust-src --toolchain 1.94.1
 
-            # Match setup-zigbuild's versions, compiling the tools from crates.io.
-            cargo +1.94.1 install cargo-zigbuild --version 0.23.2 --locked
-            cargo +1.94.1 install cargo-auditable --version 0.7.5 --locked
           run: |
             set -eu
             . "$HOME/.cargo/env"
+            install -m 755 freebsd-tools/cargo-zigbuild freebsd-tools/cargo-auditable "$HOME/.cargo/bin/"
             export PATH="/tmp/zig-x86_64-freebsd-0.15.2:$PATH"
             rustup target add --toolchain 1.94.1 "$TARGET"
 
