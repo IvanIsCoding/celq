@@ -1,7 +1,138 @@
 diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/cargo/core/compiler/build_runner/compilation_files.rs
 --- a/src/cargo/core/compiler/build_runner/compilation_files.rs
 +++ b/src/cargo/core/compiler/build_runner/compilation_files.rs
-@@ -864,6 +864,12 @@
+@@ -688,6 +688,15 @@ fn metadata_of<'a>(
+     &metas[unit]
+ }
+
++fn trace_metadata(unit: &Unit, stage: &str, hasher: &StableHasher, input: impl fmt::Debug) {
++    if unit.pkg.name().as_str() == "unicode-ident" {
++        eprintln!(
++            "cargo-metadata-trace: crate={} kind={:?} stage={} hash={:016x} input={:?}",
++            unit.pkg.name(), unit.kind, stage, Hasher::finish(hasher), input,
++        );
++    }
++}
++
+ /// Computes the metadata hash for the given [`Unit`].
+ fn compute_metadata(
+     unit: &Unit,
+@@ -706,6 +715,7 @@ fn compute_metadata(
+     let mut shared_hasher = StableHasher::new();
+
+     METADATA_VERSION.hash(&mut shared_hasher);
++    trace_metadata(unit, "metadata-version", &shared_hasher, &METADATA_VERSION);
+
+     let ws_root = if unit.is_std {
+         // SourceId for stdlib crates is an absolute path inside the sysroot.
+@@ -722,17 +732,22 @@ fn compute_metadata(
+         .package_id()
+         .stable_hash(ws_root)
+         .hash(&mut shared_hasher);
++    trace_metadata(unit, "package", &shared_hasher, (unit.pkg.package_id(), ws_root));
+
+     // Also mix in enabled features to our metadata. This'll ensure that
+     // when changing feature sets each lib is separately cached.
+     unit.features.hash(&mut shared_hasher);
++    trace_metadata(unit, "features", &shared_hasher, &unit.features);
+
+     // Throw in the profile we're compiling with. This helps caching
+     // `panic=abort` and `panic=unwind` artifacts, additionally with various
+     // settings like debuginfo and whatnot.
+     unit.profile.hash(&mut shared_hasher);
++    trace_metadata(unit, "profile", &shared_hasher, &unit.profile);
+     unit.mode.hash(&mut shared_hasher);
++    trace_metadata(unit, "mode", &shared_hasher, &unit.mode);
+     build_runner.lto[unit].hash(&mut shared_hasher);
++    trace_metadata(unit, "lto", &shared_hasher, &build_runner.lto[unit]);
+
+     // Artifacts compiled for the host should have a different
+     // metadata piece than those compiled for the target, so make sure
+@@ -740,13 +755,17 @@ fn compute_metadata(
+     // so that the StableHash doesn't change based on the pathnames
+     // of the custom target JSON spec files.
+     unit.kind.fingerprint_hash().hash(&mut shared_hasher);
++    trace_metadata(unit, "compile-kind", &shared_hasher, &unit.kind.fingerprint_hash());
+
+     // Finally throw in the target name/kind. This ensures that concurrent
+     // compiles of targets in the same crate don't collide.
+     unit.target.name().hash(&mut shared_hasher);
++    trace_metadata(unit, "target-name", &shared_hasher, &unit.target.name());
+     unit.target.kind().hash(&mut shared_hasher);
++    trace_metadata(unit, "target-kind", &shared_hasher, &unit.target.kind());
+
+     hash_rustc_version(bcx, &mut shared_hasher, unit);
++    trace_metadata(unit, "rustc-version-complete", &shared_hasher, &bcx.rustc().version);
+
+     if build_runner.bcx.ws.is_member(&unit.pkg) {
+         // This is primarily here for clippy. This ensures that the clippy
+@@ -756,6 +775,11 @@ fn compute_metadata(
+         }
+     }
+
++    trace_metadata(
++        unit, "workspace-wrapper", &shared_hasher,
++        (bcx.ws.is_member(&unit.pkg), &bcx.rustc().workspace_wrapper),
++    );
++
+     // Seed the contents of `__CARGO_DEFAULT_LIB_METADATA` to the hasher if present.
+     // This should be the release channel, to get a different hash for each channel.
+     if let Ok(ref channel) = build_runner
+@@ -764,8 +788,14 @@ fn compute_metadata(
+         .get_env("__CARGO_DEFAULT_LIB_METADATA")
+     {
+         channel.hash(&mut shared_hasher);
++        trace_metadata(unit, "channel-seed", &shared_hasher, channel);
+     }
+
++    trace_metadata(
++        unit, "channel-seed-complete", &shared_hasher,
++        bcx.gctx.get_env("__CARGO_DEFAULT_LIB_METADATA").ok(),
++    );
++
+     // std units need to be kept separate from user dependencies. std crates
+     // are differentiated in the Unit with `is_std` (for things like
+     // `-Zforce-unstable-if-unmarked`), so they are always built separately.
+@@ -774,6 +804,7 @@ fn compute_metadata(
+     // `is_std` to false for build dependencies so that they can be shared
+     // with user dependencies.
+     unit.is_std.hash(&mut shared_hasher);
++    trace_metadata(unit, "is-std", &shared_hasher, &unit.is_std);
+
+     // While we don't hash RUSTFLAGS because it may contain absolute paths that
+     // hurts reproducibility, we track whether a unit's RUSTFLAGS is from host
+@@ -793,8 +824,13 @@ fn compute_metadata(
+                 .links_overrides
+                 != unit.links_overrides;
+         target_configs_are_different.hash(&mut shared_hasher);
++        trace_metadata(unit, "host-config-discriminator", &shared_hasher, target_configs_are_different);
+     }
+
++    trace_metadata(
++        unit, "shared-complete", &shared_hasher,
++        (bcx.gctx.target_applies_to_host().ok(), &unit.rustflags, &unit.rustdocflags),
++    );
+     let mut c_metadata_hasher = shared_hasher.clone();
+     // Mix in the target-metadata of all the dependencies of this target.
+     let mut dep_c_metadata_hashes = deps_metadata
+@@ -803,6 +839,7 @@ fn compute_metadata(
+         .collect::<Vec<_>>();
+     dep_c_metadata_hashes.sort();
+     dep_c_metadata_hashes.hash(&mut c_metadata_hasher);
++    trace_metadata(unit, "dependencies-final-metadata", &c_metadata_hasher, &dep_c_metadata_hashes);
+
+     let mut unit_id_hasher = shared_hasher.clone();
+     // Mix in the target-metadata of all the dependencies of this target.
+@@ -854,6 +891,7 @@ fn has_remap_path_prefix(args: &[String]) -> bool {
+
+ /// Hash the version of rustc being used during the build process.
+ fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, unit: &Unit) {
++    trace_metadata(unit, "rustc-version-raw", hasher, &bcx.rustc().verbose_version);
+     let vers = &bcx.rustc().version;
+     if vers.pre.is_empty() || bcx.gctx.cli_unstable().separate_nightlies {
+         // For stable, keep the artifacts separate. This helps if someone is
+@@ -863,7 +901,14 @@ fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, uni
+         // regardless of the host.
          for line in bcx.rustc().verbose_version.lines() {
              if unit.kind.is_host() || !line.starts_with("host: ") {
 +                // Normalize hash input only; keep the real host for compilation.
@@ -11,11 +142,16 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
 +                    line
 +                };
                  line.hash(hasher);
++                trace_metadata(unit, "rustc-version-line", hasher, line);
              }
          }
          return;
-@@ -881,3 +887,3 @@
+@@ -879,7 +924,7 @@ fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, uni
+     // targets, (like gnu vs musl or gnu vs msvc). In the future, we may want
+     // to consider hashing `unit.kind.short_name()` instead.
      if unit.kind.is_host() {
 -        bcx.rustc().host.hash(hasher);
 +        "x86_64-unknown-linux-gnu".hash(hasher);
      }
+     // None of the other lines are important. Currently they are:
+     // binary: rustc  <-- or "rustdoc"
