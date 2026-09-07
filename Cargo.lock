@@ -165,6 +165,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde-saphyr",
+ "serde_greppable",
  "serde_json",
  "tempfile",
  "toml",
@@ -717,6 +718,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.3",
+]
+
+[[package]]
+name = "serde_greppable"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "69f69314e0b619d08ee2a4ba70cb2028c47fe00da394565c6983a858514a95cd"
+dependencies = [
+ "anyhow",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]

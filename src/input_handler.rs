@@ -231,7 +231,8 @@ fn handle_json_output(result: &CelValue, input_params: &InputParameters) -> Resu
     if input_params.greppable {
         #[cfg(feature = "greppable")]
         {
-            let gron_output = crate::gron::json_to_gron(&json_value);
+            let gron_output = serde_greppable::to_string(&json_value)
+                .context("Failed to serialize result to greppable format")?;
             return Ok(gron_output);
         }
 

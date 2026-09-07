@@ -78,7 +78,7 @@ pub fn json_to_cel_variables(
         InputFormat::Gron => {
             #[cfg(feature = "greppable")]
             {
-                crate::gron_to_json(json_str).map_err(serde_json::Error::custom)?
+                serde_greppable::from_str(json_str).map_err(serde_json::Error::custom)?
             }
 
             #[cfg(not(feature = "greppable"))]
