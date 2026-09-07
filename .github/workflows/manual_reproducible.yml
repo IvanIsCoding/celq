@@ -46,7 +46,7 @@ jobs:
           use_cache: "false"
 
       - name: Build with Zig
-        run: cargo auditable zigbuild --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
+        run: cargo auditable zigbuild --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
 
       - name: Create release archive
         run: |
@@ -58,6 +58,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: reproducible-${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }}-${{ matrix.runner }}
+          retention-days: 1
           path: |
             artifacts/celq
             artifacts/celq.tar.gz
@@ -120,7 +121,7 @@ jobs:
             export CARGO_TERM_COLOR=always TZ=UTC LC_ALL=C
             export SOURCE_DATE_EPOCH
             export RUSTFLAGS="--remap-path-prefix=$(pwd -P)=/src"
-            cargo auditable zigbuild --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
+            cargo auditable zigbuild --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
 
             mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/celq
@@ -130,6 +131,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: reproducible-${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }}-freebsd-x86_64
+          retention-days: 1
           path: |
             artifacts/celq
             artifacts/celq.tar.gz
