@@ -16,13 +16,43 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
-    name: Build (Linux x86-64)
+  cargo-cache:
+    name: Fetch Cargo dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      - name: Install Rust MSRV
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+
+      - name: Restore Cargo downloads
+        id: cargo-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-downloads-linux-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            cargo-downloads-linux-
+
+      - name: Fetch locked dependencies
+        if: steps.cargo-cache.outputs.cache-hit != 'true'
+        run: cargo fetch --locked
+
+  build:
+    name: Build (Linux x86-64)
+    needs: cargo-cache
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Restore Cargo downloads
+        uses: $/.github/actions/restore-cargo-downloads
       
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
@@ -52,11 +82,15 @@ jobs:
 
   clippy:
     name: Clippy
+    needs: cargo-cache
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      - name: Restore Cargo downloads
+        uses: $/.github/actions/restore-cargo-downloads
       
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
@@ -99,6 +133,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      - name: Restore Cargo downloads
+        if: runner.os == 'Linux'
+        uses: $/.github/actions/restore-cargo-downloads
       
       - name: Install Rust ${{ matrix.rust }}
         uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
@@ -133,6 +171,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      - name: Restore Cargo downloads
+        uses: $/.github/actions/restore-cargo-downloads
 
       - name: Install Rust MSRV
         uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
@@ -186,6 +227,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      - name: Restore Cargo downloads
+        uses: $/.github/actions/restore-cargo-downloads
 
       - name: Setup Zigbuild
         uses: $/.github/actions/setup-zigbuild

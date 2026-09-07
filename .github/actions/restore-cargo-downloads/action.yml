@@ -1,0 +1,14 @@
+name: Restore Cargo downloads
+description: Restore the Linux Cargo dependency cache for the current lockfile
+
+runs:
+  using: composite
+  steps:
+    - name: Restore Cargo downloads
+      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+        key: cargo-downloads-linux-${{ hashFiles('Cargo.lock') }}
+        fail-on-cache-miss: true
