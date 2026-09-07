@@ -101,11 +101,16 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
 
      // While we don't hash RUSTFLAGS because it may contain absolute paths that
      // hurts reproducibility, we track whether a unit's RUSTFLAGS is from host
-@@ -793,8 +824,13 @@ fn compute_metadata(
+@@ -793,8 +824,18 @@ fn compute_metadata(
                  .links_overrides
                  != unit.links_overrides;
          target_configs_are_different.hash(&mut shared_hasher);
 +        trace_metadata(unit, "host-config-discriminator", &shared_hasher, target_configs_are_different);
++    } else if unit.kind.is_host() {
++        // Reproducible fix: match the Linux x86-64 zigbuild baseline's discriminator.
++        // Change hash input only, not the actual host configuration or compiler flags.
++        false.hash(&mut shared_hasher);
++        trace_metadata(unit, "host-config-discriminator-reproducible", &shared_hasher, false);
      }
 
 +    trace_metadata(
@@ -115,7 +120,7 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
      let mut c_metadata_hasher = shared_hasher.clone();
      // Mix in the target-metadata of all the dependencies of this target.
      let mut dep_c_metadata_hashes = deps_metadata
-@@ -803,6 +839,7 @@ fn compute_metadata(
+@@ -803,6 +844,7 @@ fn compute_metadata(
          .collect::<Vec<_>>();
      dep_c_metadata_hashes.sort();
      dep_c_metadata_hashes.hash(&mut c_metadata_hasher);
@@ -123,7 +128,7 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
 
      let mut unit_id_hasher = shared_hasher.clone();
      // Mix in the target-metadata of all the dependencies of this target.
-@@ -854,6 +891,7 @@ fn has_remap_path_prefix(args: &[String]) -> bool {
+@@ -854,6 +896,7 @@ fn has_remap_path_prefix(args: &[String]) -> bool {
 
  /// Hash the version of rustc being used during the build process.
  fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, unit: &Unit) {
@@ -131,7 +136,7 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
      let vers = &bcx.rustc().version;
      if vers.pre.is_empty() || bcx.gctx.cli_unstable().separate_nightlies {
          // For stable, keep the artifacts separate. This helps if someone is
-@@ -863,7 +901,14 @@ fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, uni
+@@ -863,7 +906,14 @@ fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, uni
          // regardless of the host.
          for line in bcx.rustc().verbose_version.lines() {
              if unit.kind.is_host() || !line.starts_with("host: ") {
@@ -146,7 +151,7 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
              }
          }
          return;
-@@ -879,7 +924,7 @@ fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, uni
+@@ -879,7 +929,7 @@ fn hash_rustc_version(bcx: &BuildContext<'_, '_>, hasher: &mut StableHasher, uni
      // targets, (like gnu vs musl or gnu vs msvc). In the future, we may want
      // to consider hashing `unit.kind.short_name()` instead.
      if unit.kind.is_host() {
