@@ -47,7 +47,10 @@ jobs:
           echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
 
       - name: Build with Zig
-        run: cargo auditable zigbuild --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
+        run: |
+          rustc -vV
+          cargo -vV
+          cargo auditable zigbuild -vv --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
 
       - name: Create release archive
         run: |
@@ -123,7 +126,9 @@ jobs:
             export SOURCE_DATE_EPOCH
             RUST_SYSROOT=$(rustc --print sysroot)
             export RUSTFLAGS="--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=$(pwd -P)=/src"
-            cargo auditable zigbuild --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
+            rustc -vV
+            cargo -vV
+            cargo auditable zigbuild -vv --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
 
             mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/celq
