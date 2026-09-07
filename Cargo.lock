@@ -161,7 +161,6 @@ dependencies = [
  "clap",
  "json5",
  "mimalloc",
- "quick-xml",
  "rayon",
  "serde",
  "serde-saphyr",
@@ -169,6 +168,7 @@ dependencies = [
  "serde_json",
  "tempfile",
  "toml",
+ "two_xml2json",
 ]
 
 [[package]]
@@ -872,6 +872,16 @@ name = "toml_writer"
 version = "1.1.2+spec-1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
+
+[[package]]
+name = "two_xml2json"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e813ee2b98417f4cebbdd26bdcc098136567931e52d76d52c464269e67302b0c"
+dependencies = [
+ "quick-xml",
+ "serde_json",
+]
 
 [[package]]
 name = "typed-arena"
