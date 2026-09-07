@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu, x86_64-unknown-freebsd]
+        target: [aarch64-unknown-linux-gnu, x86_64-unknown-freebsd]
     env:
       TARGET: ${{ matrix.target }}
     steps:
@@ -141,9 +141,10 @@ jobs:
           persist-credentials: false
 
       - name: Download patched Cargo
+        if: matrix.runner == 'ubuntu-24.04-arm'
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: patched-cargo-${{ matrix.runner == 'ubuntu-24.04-arm' && 'aarch64-unknown-linux-gnu' || 'x86_64-unknown-linux-gnu' }}
+          name: patched-cargo-aarch64-unknown-linux-gnu
           path: patched-cargo
 
       - name: Setup Zigbuild
@@ -155,12 +156,14 @@ jobs:
           use_cache: "false"
 
       - name: Select patched Cargo
+        if: matrix.runner == 'ubuntu-24.04-arm'
         run: |
           chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
           echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
           echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
 
       - name: Verify patched Cargo selection
+        if: matrix.runner == 'ubuntu-24.04-arm'
         run: |
           test "$(command -v cargo)" = "$CARGO"
           echo "Using patched Cargo: $CARGO"
@@ -183,67 +186,17 @@ jobs:
         run: |
           mkdir -p artifacts
           cp "target/${TARGET}/release/celq" artifacts/celq
-          tar czf artifacts/celq.tar.gz -C "target/${TARGET}/release" celq
+          tar --version
+          gzip --version
+          tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
+          gzip -n -9 artifacts/celq.tar
 
       - name: Upload archive and binary
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: reproducible-${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }}-${{ matrix.runner }}
-          retention-days: 1
-          path: |
-            artifacts/celq
-            artifacts/celq.tar.gz
-          if-no-files-found: error
-          compression-level: 0
-
-  zigbuild_unpatched:
-    name: Zigbuild unpatched (ubuntu-24.04, ${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }})
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        build: *targets
-    env:
-      TARGET: ${{ matrix.build.target }}
-      ZIGTARGETSUFFIX: ${{ matrix.build.zigtargetsuffix }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Setup Zigbuild
-        uses: $/.github/actions/setup-zigbuild
-        with:
-          target: ${{ matrix.build.target }}
-          rust_components: rust-src
-          install_target: "true"
-          use_cache: "false"
-
-      - name: Configure reproducible builds
-        run: |
-          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
-          echo "TZ=UTC" >> "$GITHUB_ENV"
-          echo "LC_ALL=C" >> "$GITHUB_ENV"
-          RUST_SYSROOT=$(rustc --print sysroot)
-          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
-
-      - name: Build with Zig
-        run: |
-          rustc -vV
-          cargo -vV
-          cargo zigbuild -vv --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
-
-      - name: Create release archive
-        run: |
-          mkdir -p artifacts
-          cp "target/${TARGET}/release/celq" artifacts/celq
-          tar czf artifacts/celq.tar.gz -C "target/${TARGET}/release" celq
-
-      - name: Upload archive and binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: reproducible-${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }}-ubuntu-24.04-unpatched
           retention-days: 1
           path: |
             artifacts/celq
@@ -293,7 +246,7 @@ jobs:
           envs: TARGET ZIGTARGETSUFFIX SOURCE_DATE_EPOCH
           prepare: |
             set -eu
-            pkg install -y ca_root_nss git devel/rustup-init
+            pkg install -y ca_root_nss git devel/rustup-init archivers/gtar archivers/gzip
 
             # Install the official FreeBSD Zig archive directly from ziglang.org.
             cd /tmp
@@ -330,7 +283,12 @@ jobs:
 
             mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/celq
-            tar czf artifacts/celq.tar.gz -C "target/${TARGET}/release" celq
+            gtar --version
+            /usr/local/bin/gzip --version
+            gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+              --owner=0 --group=0 --numeric-owner --mode=0755 \
+              -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
+            /usr/local/bin/gzip -n -9 artifacts/celq.tar
 
       - name: Upload archive and binary
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -345,7 +303,7 @@ jobs:
 
   hashes:
     name: Print SHA-256 hashes
-    needs: [zigbuild, zigbuild_unpatched, freebsd]
+    needs: [zigbuild, freebsd]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
