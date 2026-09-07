@@ -1,0 +1,21 @@
+diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/cargo/core/compiler/build_runner/compilation_files.rs
+--- a/src/cargo/core/compiler/build_runner/compilation_files.rs
++++ b/src/cargo/core/compiler/build_runner/compilation_files.rs
+@@ -864,6 +864,12 @@
+         for line in bcx.rustc().verbose_version.lines() {
+             if unit.kind.is_host() || !line.starts_with("host: ") {
++                // Normalize hash input only; keep the real host for compilation.
++                let line = if line.starts_with("host: ") {
++                    "host: x86_64-unknown-linux-gnu"
++                } else {
++                    line
++                };
+                 line.hash(hasher);
+             }
+         }
+         return;
+@@ -881,3 +887,3 @@
+     if unit.kind.is_host() {
+-        bcx.rustc().host.hash(hasher);
++        "x86_64-unknown-linux-gnu".hash(hasher);
+     }

@@ -10,8 +10,71 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  patched_cargo:
+    name: Patched Cargo (${{ matrix.target }})
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64-unknown-linux-gnu, x86_64-unknown-freebsd]
+    env:
+      TARGET: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Checkout Cargo source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: rust-lang/cargo
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          path: cargo-source
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: |
+            src
+            crates
+            credential
+            benches/benchsuite
+            benches/capture
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: ${{ matrix.target }}
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: "false"
+
+      - name: Patch Cargo
+        working-directory: cargo-source
+        run: |
+          git apply --check ../.github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
+          git apply ../.github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
+
+      - name: Build patched Cargo with Zig
+        working-directory: cargo-source
+        env:
+          CFG_RELEASE: 1.94.1
+          CFG_RELEASE_CHANNEL: stable
+          CFG_VER_DESCRIPTION: linux-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+        run: |
+          cargo zigbuild --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
+
+      - name: Upload patched Cargo
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: patched-cargo-${{ matrix.target }}
+          path: cargo-source/target/${{ matrix.target }}/release/cargo
+          retention-days: 1
+          if-no-files-found: error
+
   zigbuild:
     name: Zigbuild (${{ matrix.runner }}, ${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }})
+    needs: patched_cargo
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -30,6 +93,13 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
+      - name: Download patched Cargo
+        if: matrix.runner == 'ubuntu-24.04-arm'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-aarch64-unknown-linux-gnu
+          path: patched-cargo
+
       - name: Setup Zigbuild
         uses: $/.github/actions/setup-zigbuild
         with:
@@ -37,6 +107,19 @@ jobs:
           rust_components: rust-src
           install_target: "true"
           use_cache: "false"
+
+      - name: Select patched Cargo
+        if: matrix.runner == 'ubuntu-24.04-arm'
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
+          echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
+          echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
+
+      - name: Verify patched Cargo selection
+        if: matrix.runner == 'ubuntu-24.04-arm'
+        run: |
+          test "$(command -v cargo)" = "$CARGO"
+          echo "Using patched Cargo: $CARGO"
 
       - name: Configure reproducible builds
         run: |
@@ -71,6 +154,7 @@ jobs:
 
   freebsd:
     name: Zigbuild (FreeBSD x86-64, ${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }})
+    needs: patched_cargo
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -87,6 +171,12 @@ jobs:
 
       - name: Capture commit timestamp
         run: echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-x86_64-unknown-freebsd
+          path: patched-cargo
 
       - name: Build on FreeBSD
         uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
@@ -126,9 +216,14 @@ jobs:
             export SOURCE_DATE_EPOCH
             RUST_SYSROOT=$(rustc --print sysroot)
             export RUSTFLAGS="--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=$(pwd -P)=/src"
+            export CARGO="$(pwd -P)/patched-cargo/cargo"
+            chmod +x "$CARGO"
+            export PATH="$(pwd -P)/patched-cargo:$PATH"
+            test "$(command -v cargo)" = "$CARGO"
+            echo "Using patched Cargo: $CARGO"
             rustc -vV
-            cargo -vV
-            cargo auditable zigbuild -vv --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
+            "$CARGO" -vV
+            "$CARGO" auditable zigbuild -vv --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
 
             mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/celq
@@ -154,6 +249,7 @@ jobs:
       - name: Download all host artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
+          pattern: reproducible-*
           path: artifacts
 
       - name: Print SHA-256 hashes
