@@ -10,5 +10,5 @@ runs:
         path: |
           ~/.cargo/registry
           ~/.cargo/git
-        key: cargo-downloads-linux-${{ hashFiles('Cargo.lock') }}
+        key: cargo-downloads-linux-targets-v2-${{ hashFiles('Cargo.lock') }}
         fail-on-cache-miss: true

@@ -34,13 +34,22 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: cargo-downloads-linux-${{ hashFiles('Cargo.lock') }}
+          key: cargo-downloads-linux-targets-v2-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
+            cargo-downloads-linux-targets-v2-
+            cargo-downloads-linux-targets-
             cargo-downloads-linux-
 
       - name: Fetch locked dependencies
         if: steps.cargo-cache.outputs.cache-hit != 'true'
-        run: cargo fetch --locked
+        run: >-
+          cargo fetch --locked
+          --target x86_64-unknown-linux-gnu
+          --target aarch64-unknown-linux-gnu
+          --target x86_64-unknown-linux-musl
+          --target aarch64-unknown-linux-musl
+          --target x86_64-unknown-freebsd
+          --target aarch64-unknown-freebsd
 
   build:
     name: Build (Linux x86-64)
@@ -65,6 +74,7 @@ jobs:
 
   format:
     name: Format Check
+    needs: cargo-cache
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -272,6 +282,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Restore Cargo downloads
+        uses: $/.github/actions/restore-cargo-downloads
+
       - name: Setup Xwin
         id: setup-xwin
         uses: $/.github/actions/setup-xwin
@@ -345,6 +358,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      - name: Restore Cargo downloads
+        uses: $/.github/actions/restore-cargo-downloads
 
       - name: Setup Maturin
         id: setup-maturin
