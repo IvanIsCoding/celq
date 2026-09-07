@@ -1,18 +1,22 @@
 diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/cargo/core/compiler/build_runner/compilation_files.rs
 --- a/src/cargo/core/compiler/build_runner/compilation_files.rs
 +++ b/src/cargo/core/compiler/build_runner/compilation_files.rs
-@@ -793,6 +793,10 @@
+@@ -793,6 +793,14 @@
                  .links_overrides
                  != unit.links_overrides;
          target_configs_are_different.hash(&mut shared_hasher);
-+    } else if unit.kind.is_host() {
-+        // Reproducible fix: match the Linux x86-64 zigbuild baseline's discriminator.
++    } else if unit.kind.is_host()
++        && bcx.build_config.requested_kinds.iter().any(|kind| {
++            matches!(kind, CompileKind::Target(target) if target.short_name() == "x86_64-unknown-linux-gnu")
++        })
++    {
++        // Reproducible fix: only GNU matches the Linux x86-64 baseline host, not musl.
 +        // Change hash input only, not the actual host configuration or compiler flags.
 +        false.hash(&mut shared_hasher);
      }
 
      let mut c_metadata_hasher = shared_hasher.clone();
-@@ -864,6 +868,12 @@
+@@ -864,6 +872,12 @@
          for line in bcx.rustc().verbose_version.lines() {
              if unit.kind.is_host() || !line.starts_with("host: ") {
 +                // Normalize hash input only; keep the real host for compilation.
@@ -25,7 +29,7 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
              }
          }
          return;
-@@ -881,3 +891,3 @@
+@@ -881,3 +895,3 @@
      if unit.kind.is_host() {
 -        bcx.rustc().host.hash(hasher);
 +        "x86_64-unknown-linux-gnu".hash(hasher);
