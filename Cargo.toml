@@ -48,8 +48,8 @@ serde_json = { version = "1", features = ["preserve_order"] }
 rayon = "1.12"
 mimalloc = { version = ">=0.1.40, <0.2.0", default-features = false, optional = true }
 json5 = "1.3"
-toml = { version = "=1.1.4", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
-serde-saphyr = { version = "=1.1.0", default-features = false, features = ["deserialize"], optional = true }
+toml = { version = "=1.1.5", default-features = false, features = ["parse", "serde", "preserve_order"], optional = true }
+serde-saphyr = { version = "=1.2.0", default-features = false, features = ["deserialize"], optional = true }
 serde_greppable = { version = "=0.0.1", optional = true }
 two_xml2json = { version = "=0.0.1", optional = true }
 
