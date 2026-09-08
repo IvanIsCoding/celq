@@ -272,7 +272,10 @@ jobs:
   xwin:
     name: Xwin Build (${{ matrix.target }})
     needs: [build, format, clippy]
-    runs-on: ubuntu-24.04
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: bash
     strategy:
       fail-fast: false
       matrix:
@@ -283,9 +286,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
-
-      - name: Restore Cargo downloads
-        uses: $/.github/actions/restore-cargo-downloads
 
       - name: Setup Xwin
         id: setup-xwin
@@ -344,7 +344,7 @@ jobs:
 
   test-maturin-auditable:
     name: Test Maturin with cargo-auditable (${{ matrix.name }})
-    needs: [zigbuild, xwin]
+    needs: zigbuild
     strategy:
       fail-fast: false
       matrix:
@@ -352,9 +352,6 @@ jobs:
           - name: Linux x86-64
             os: ubuntu-24.04
             target: x86_64-unknown-linux-gnu
-          - name: Windows x86-64
-            os: ubuntu-24.04
-            target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -370,13 +367,12 @@ jobs:
         with:
           target: ${{ matrix.target }}
           rust_components: llvm-tools
-          use_xwin: ${{ matrix.target == 'x86_64-pc-windows-msvc' }}
-          use_zigbuild: ${{ matrix.target == 'x86_64-unknown-linux-gnu' }}
+          use_xwin: "false"
+          use_zigbuild: "true"
           cache_directory: ${{ github.workspace }}/.xwin-cache
           use_cache: "true"
 
       - name: Build Python wheel with Maturin (Linux)
-        if: matrix.target == 'x86_64-unknown-linux-gnu'
         working-directory: pypi
         env:
           CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
@@ -385,19 +381,6 @@ jobs:
           uvx --from maturin==1.15.0 maturin build --release \
             --target "${TARGET}" --zig \
             --compatibility manylinux_2_28 --out dist
-
-      - name: Build Python wheel with Maturin (Windows)
-        if: matrix.target == 'x86_64-pc-windows-msvc'
-        working-directory: pypi
-        env:
-          CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
-          MATURIN_USE_XWIN: "1"
-          TARGET: ${{ matrix.target }}
-          XWIN_CACHE_DIR: ${{ steps.setup-maturin.outputs.xwin_cache_directory }}
-          XWIN_CRT_VERSION: ${{ steps.setup-maturin.outputs.xwin_crt_version }}
-          XWIN_SDK_VERSION: ${{ steps.setup-maturin.outputs.xwin_sdk_version }}
-          XWIN_VERSION: ${{ steps.setup-maturin.outputs.xwin_version }}
-        run: uvx --from maturin==1.15.0 maturin build --release --target "${TARGET}" --out dist
 
   test-debian-oldoldstable:
     name: Test on Debian Oldoldstable

@@ -96,7 +96,7 @@ jobs:
 
   build_xwin:
     name: ${{ matrix.target }}
-    runs-on: ubuntu-24.04
+    runs-on: windows-2025
     environment: github_release
     permissions:
       contents: write
