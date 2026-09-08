@@ -96,7 +96,7 @@ jobs:
 
   build_xwin:
     name: ${{ matrix.target }}
-    runs-on: ubuntu-24.04
+    runs-on: windows-2025
     environment: github_release
     permissions:
       contents: write
@@ -251,7 +251,10 @@ jobs:
           
           # Archive name uses pretty target name
           ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.tar.gz"
-          tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}/release" "${BIN_NAME}"
+          tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf "${ARCHIVE_NAME%.gz}" -C "target/${{ matrix.target }}/release" "${BIN_NAME}"
+          gzip -n -9 "${ARCHIVE_NAME%.gz}"
           
           echo "BIN_PATH=${BIN_PATH}" >> $GITHUB_OUTPUT
           echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
