@@ -281,8 +281,11 @@ jobs:
           run: |
             set -eu
             . "$HOME/.cargo/env"
-            install -m 755 freebsd-tools/cargo-zigbuild freebsd-tools/cargo-auditable "$HOME/.cargo/bin/"
-            export PATH="/tmp/zig-x86_64-freebsd-0.15.2:$PATH"
+            install -m 755 freebsd-tools/cargo-zigbuild "$HOME/.cargo/bin/"
+            mkdir -p /home/runner/.cargo/bin
+            install -m 755 freebsd-tools/cargo-auditable /home/runner/.cargo/bin/cargo-auditable
+            export PATH="/home/runner/.cargo/bin:/tmp/zig-x86_64-freebsd-0.15.2:$PATH"
+            test "$(command -v cargo-auditable)" = /home/runner/.cargo/bin/cargo-auditable
             rustup target add --toolchain 1.94.1 "$TARGET"
 
             # Host job environment variables are not inherited by the VM.
