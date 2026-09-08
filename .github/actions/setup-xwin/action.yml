@@ -60,10 +60,16 @@ runs:
         components: ${{ inputs.rust_components }}
 
     - name: Install cargo-xwin
+      if: runner.os != 'Windows' || runner.arch != 'ARM64'
       uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
       with:
         tool: cargo-xwin@0.23.1
-        fallback: ${{ runner.os == 'Windows' && runner.arch == 'ARM64' && 'cargo-install' || 'none' }}
+        fallback: none
+
+    - name: Compile cargo-xwin for Windows ARM64
+      if: runner.os == 'Windows' && runner.arch == 'ARM64'
+      shell: bash
+      run: cargo install --locked --version 0.23.1 --target aarch64-pc-windows-msvc --force cargo-xwin
 
     - name: Install cargo-auditable
       uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
