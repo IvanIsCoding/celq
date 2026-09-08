@@ -335,7 +335,6 @@ jobs:
         runner: [ubuntu-24.04, windows-2025]
         target: &xwin_targets
           - x86_64-pc-windows-msvc
-          - aarch64-pc-windows-msvc
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -349,7 +348,7 @@ jobs:
           target: ${{ matrix.target }}
           rust_components: llvm-tools
           cache_directory: ${{ github.workspace }}/.xwin-cache
-          use_cache: "false"
+          use_cache: "true"
 
       - name: Configure reproducible builds
         run: |
@@ -362,6 +361,7 @@ jobs:
       - name: Build with Xwin
         env:
           TARGET: ${{ matrix.target }}
+          XWIN_CACHE_DIR: ${{ steps.setup-xwin.outputs.cache_directory }}
           XWIN_CRT_VERSION: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
           XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
           XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
