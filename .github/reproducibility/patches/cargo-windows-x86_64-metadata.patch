@@ -14,7 +14,7 @@ diff --git a/src/cargo/core/compiler/build_runner/compilation_files.rs b/src/car
              }
          }
          return;
-@@ -881,3 +895,3 @@
+@@ -881,3 +887,3 @@
      if unit.kind.is_host() {
 -        bcx.rustc().host.hash(hasher);
 +        "x86_64-pc-windows-msvc".hash(hasher);

@@ -129,7 +129,7 @@ jobs:
           echo "TZ=UTC" >> "$GITHUB_ENV"
           echo "LC_ALL=C" >> "$GITHUB_ENV"
           RUST_SYSROOT=$(rustc --print sysroot)
-          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src -C link-arg=/DEBUG:NONE" >> "$GITHUB_ENV"
 
       - name: Build with Xwin
         env:
@@ -151,7 +151,7 @@ jobs:
         run: |
           BIN_PATH="target/${TARGET}/release/${NAME}.exe"
           ARCHIVE_NAME="${NAME}-${PRETTY_TARGET}.zip"
-          7z a "${ARCHIVE_NAME}" "./${BIN_PATH}"
+          7z a -mtm=off -mtc=off -mta=off "${ARCHIVE_NAME}" "./${BIN_PATH}"
           7z rn "${ARCHIVE_NAME}" "target/${TARGET}/release/${NAME}.exe" "${NAME}.exe"
 
           echo "BIN_PATH=${BIN_PATH}" >> "$GITHUB_OUTPUT"
