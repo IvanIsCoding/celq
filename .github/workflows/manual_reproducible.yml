@@ -172,8 +172,9 @@ jobs:
         run: |
           BIN_PATH="target/${TARGET}/release/${NAME}.exe"
           ARCHIVE_NAME="${NAME}-${PRETTY_TARGET}.zip"
-          7z a "${ARCHIVE_NAME}" "./${BIN_PATH}"
+          7z a -mtm=off -mtc=off -mta=off "${ARCHIVE_NAME}" "./${BIN_PATH}"
           7z rn "${ARCHIVE_NAME}" "target/${TARGET}/release/${NAME}.exe" "${NAME}.exe"
+          7z l -slt "${ARCHIVE_NAME}"
 
           mkdir -p artifacts
           cp "${BIN_PATH}" "${ARCHIVE_NAME}" artifacts/
