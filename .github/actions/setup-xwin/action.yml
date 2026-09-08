@@ -36,6 +36,7 @@ runs:
       uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
       with:
         version: "21.1.8"
+        arch: ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
 
     - name: Calculate seven-day cache bucket
       if: inputs.use_cache == 'true'

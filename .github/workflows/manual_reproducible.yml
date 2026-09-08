@@ -193,16 +193,12 @@ jobs:
 
       - name: Build with Zig
         run: |
-          rustc -vV
-          cargo -vV
-          cargo auditable zigbuild -vv --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
+          cargo auditable zigbuild --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
 
       - name: Create release archive
         run: |
           mkdir -p artifacts
           cp "target/${TARGET}/release/celq" artifacts/celq
-          tar --version
-          gzip --version
           tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
             --owner=0 --group=0 --numeric-owner --mode=0755 \
             -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
@@ -299,14 +295,10 @@ jobs:
             export PATH="$(pwd -P)/patched-cargo:$PATH"
             test "$(command -v cargo)" = "$CARGO"
             echo "Using patched Cargo: $CARGO"
-            rustc -vV
-            "$CARGO" -vV
-            "$CARGO" auditable zigbuild -vv --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
+            "$CARGO" auditable zigbuild --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
 
             mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/celq
-            gtar --version
-            /usr/local/bin/gzip --version
             gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
               --owner=0 --group=0 --numeric-owner --mode=0755 \
               -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
@@ -362,4 +354,198 @@ jobs:
           find artifacts -type f -exec sha256sum {} +
           (cd "artifacts/$ORIGINAL" && sha256sum celq celq.tar.gz) > original.sha256
           (cd "artifacts/$VERIFY" && sha256sum celq celq.tar.gz) > verification.sha256
+          diff -u original.sha256 verification.sha256
+
+  patched_cargo_windows:
+    name: Patched Cargo (Windows ARM64)
+    runs-on: windows-2025
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Preserve LF line endings for Cargo patching
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Checkout Cargo source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: rust-lang/cargo
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          path: cargo-source
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: |
+            src
+            crates
+            credential
+            benches/benchsuite
+            benches/capture
+
+      - name: Install Rust 1.94.1 with Windows ARM64 target
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: aarch64-pc-windows-msvc
+
+      - name: Patch Cargo metadata
+        working-directory: cargo-source
+        run: |
+          git apply --check ../.github/reproducibility/patches/cargo-windows-x86_64-metadata.patch
+          git apply ../.github/reproducibility/patches/cargo-windows-x86_64-metadata.patch
+
+      - name: Cross-compile patched Cargo for Windows ARM64
+        working-directory: cargo-source
+        env:
+          CFG_RELEASE: 1.94.1
+          CFG_RELEASE_CHANNEL: stable
+          CFG_VER_DESCRIPTION: windows-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+        run: >-
+          cargo build --locked --release --package cargo --bin cargo
+          --features all-static --target aarch64-pc-windows-msvc
+
+      - name: Upload patched Cargo
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: patched-cargo-aarch64-pc-windows-msvc
+          path: cargo-source/target/aarch64-pc-windows-msvc/release/cargo.exe
+          retention-days: 1
+          if-no-files-found: error
+
+  xwin:
+    name: Xwin (${{ matrix.runner }}, ${{ matrix.target }})
+    needs: patched_cargo_windows
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2025, windows-11-vs2026-arm]
+        target: &xwin_targets
+          - x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Select native Windows ARM64 Rust host
+        if: runner.arch == 'ARM64'
+        run: |
+          rustup set default-host aarch64-pc-windows-msvc
+          echo "RUSTUP_TOOLCHAIN=1.94.1-aarch64-pc-windows-msvc" >> "$GITHUB_ENV"
+
+      - name: Setup Xwin
+        id: setup-xwin
+        uses: $/.github/actions/setup-xwin
+        with:
+          target: ${{ matrix.target }}
+          rust_components: llvm-tools
+          cache_directory: ${{ github.workspace }}/.xwin-cache
+          use_cache: "true"
+
+      - name: Verify native Windows ARM64 compiler
+        if: runner.arch == 'ARM64'
+        run: |
+          test "$(rustc -vV | sed -n 's/^host: //p' | tr -d '\r')" = aarch64-pc-windows-msvc
+
+      - name: Download patched Cargo
+        if: runner.arch == 'ARM64'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-aarch64-pc-windows-msvc
+          path: patched-cargo
+
+      - name: Select patched Cargo
+        if: runner.arch == 'ARM64'
+        run: |
+          echo "$(cygpath -aw "$GITHUB_WORKSPACE/patched-cargo")" >> "$GITHUB_PATH"
+          echo "CARGO=$(cygpath -aw "$GITHUB_WORKSPACE/patched-cargo/cargo.exe")" >> "$GITHUB_ENV"
+
+      - name: Verify patched Cargo selection
+        if: runner.arch == 'ARM64'
+        run: |
+          test "$(cygpath -aw "$(command -v cargo)")" = "$CARGO"
+          echo "Using patched Cargo: $CARGO"
+
+      - name: Configure reproducible builds
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src -C link-arg=/DEBUG:NONE" >> "$GITHUB_ENV"
+
+      - name: Build with Xwin
+        env:
+          TARGET: ${{ matrix.target }}
+          XWIN_CACHE_DIR: ${{ steps.setup-xwin.outputs.cache_directory }}
+          XWIN_CRT_VERSION: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
+          XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
+          XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
+        run: >-
+          cargo xwin build --locked --release --target "${TARGET}"
+          --no-default-features --features from-toml,from-yaml,greppable,from-xml
+          --xwin-version "${XWIN_VERSION}"
+          --xwin-sdk-version "${XWIN_SDK_VERSION}"
+          --xwin-crt-version "${XWIN_CRT_VERSION}"
+
+      - name: Create release archive
+        env:
+          NAME: celq
+          PRETTY_TARGET: windows-x86_64
+          TARGET: ${{ matrix.target }}
+        run: |
+          BIN_PATH="target/${TARGET}/release/${NAME}.exe"
+          ARCHIVE_NAME="${NAME}-${PRETTY_TARGET}.zip"
+          7z a -mtm=off -mtc=off -mta=off "${ARCHIVE_NAME}" "./${BIN_PATH}"
+          7z rn "${ARCHIVE_NAME}" "target/${TARGET}/release/${NAME}.exe" "${NAME}.exe"
+
+          mkdir -p artifacts
+          cp "${BIN_PATH}" "${ARCHIVE_NAME}" artifacts/
+
+      - name: Upload Windows binary and archive
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-xwin-${{ matrix.target }}-${{ matrix.runner }}
+          path: |
+            artifacts/celq.exe
+            artifacts/celq-windows-x86_64.zip
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+
+  xwin_hashes:
+    name: Xwin SHA-256 (${{ matrix.target }}, Windows x86-64 vs ARM64)
+    needs: xwin
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: *xwin_targets
+    steps:
+      - name: Download Windows x86-64 artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: reproducible-xwin-${{ matrix.target }}-windows-2025
+          path: artifacts/windows-2025
+
+      - name: Download Windows ARM64 artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: reproducible-xwin-${{ matrix.target }}-windows-11-vs2026-arm
+          path: artifacts/windows-11-vs2026-arm
+
+      - name: Print and compare SHA-256 hashes
+        run: |
+          find artifacts -type f -exec sha256sum {} +
+          (cd artifacts/windows-2025 && sha256sum celq.exe celq-windows-x86_64.zip) > original.sha256
+          (cd artifacts/windows-11-vs2026-arm && sha256sum celq.exe celq-windows-x86_64.zip) > verification.sha256
           diff -u original.sha256 verification.sha256
