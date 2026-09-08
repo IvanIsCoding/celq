@@ -323,6 +323,93 @@ jobs:
           if-no-files-found: error
           compression-level: 0
 
+  xwin:
+    name: Xwin (${{ matrix.runner }}, ${{ matrix.target }})
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-24.04, windows-2025]
+        target: &xwin_targets
+          - x86_64-pc-windows-msvc
+          - aarch64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Setup Xwin
+        id: setup-xwin
+        uses: $/.github/actions/setup-xwin
+        with:
+          target: ${{ matrix.target }}
+          rust_components: llvm-tools
+          cache_directory: ${{ github.workspace }}/.xwin-cache
+          use_cache: "false"
+
+      - name: Configure reproducible builds
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+
+      - name: Build with Xwin
+        env:
+          TARGET: ${{ matrix.target }}
+          XWIN_CRT_VERSION: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
+          XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
+          XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
+        run: >-
+          cargo xwin build --locked --release --target "${TARGET}"
+          --no-default-features --features from-toml,from-yaml,greppable,from-xml
+          --xwin-version "${XWIN_VERSION}"
+          --xwin-sdk-version "${XWIN_SDK_VERSION}"
+          --xwin-crt-version "${XWIN_CRT_VERSION}"
+
+      - name: Upload Windows binary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-xwin-${{ matrix.target }}-${{ matrix.runner }}
+          path: target/${{ matrix.target }}/release/celq.exe
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+
+  xwin_hashes:
+    name: Xwin SHA-256 (${{ matrix.target }}, Windows vs Linux)
+    needs: xwin
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: *xwin_targets
+    steps:
+      - name: Download Windows-built binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: reproducible-xwin-${{ matrix.target }}-windows-2025
+          path: artifacts/windows-2025
+
+      - name: Download Linux-built binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: reproducible-xwin-${{ matrix.target }}-ubuntu-24.04
+          path: artifacts/ubuntu-24.04
+
+      - name: Print and compare SHA-256 hashes
+        run: |
+          sha256sum artifacts/windows-2025/celq.exe artifacts/ubuntu-24.04/celq.exe
+          (cd artifacts/windows-2025 && sha256sum celq.exe) > original.sha256
+          (cd artifacts/ubuntu-24.04 && sha256sum celq.exe) > verification.sha256
+          diff -u original.sha256 verification.sha256
+
   hashes:
     name: SHA-256 (${{ matrix.pair.target }}, ${{ matrix.original }} vs ${{ matrix.pair.verify }})
     needs: [zigbuild, freebsd]
