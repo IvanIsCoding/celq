@@ -135,7 +135,7 @@ jobs:
           echo "TZ=UTC" >> "$GITHUB_ENV"
           echo "LC_ALL=C" >> "$GITHUB_ENV"
           RUST_SYSROOT=$(rustc --print sysroot)
-          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src -C link-arg=/DEBUG:NONE" >> "$GITHUB_ENV"
 
       - name: Print Xwin toolchain diagnostics
         run: |
@@ -164,13 +164,11 @@ jobs:
           --xwin-sdk-version "${XWIN_SDK_VERSION}"
           --xwin-crt-version "${XWIN_CRT_VERSION}"
 
-      - name: Upload Windows binary and PDB
+      - name: Upload Windows binary
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: reproducible-xwin-${{ matrix.target }}-${{ matrix.runner }}
-          path: |
-            target/${{ matrix.target }}/release/celq.exe
-            target/${{ matrix.target }}/release/celq.pdb
+          path: target/${{ matrix.target }}/release/celq.exe
           retention-days: 1
           if-no-files-found: error
           compression-level: 0
