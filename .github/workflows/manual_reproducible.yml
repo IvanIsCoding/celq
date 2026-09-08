@@ -370,6 +370,18 @@ jobs:
           RUST_SYSROOT=$(rustc --print sysroot)
           echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
 
+      - name: Print Xwin toolchain diagnostics
+        run: |
+          rustc -vV
+          cargo -vV
+          rustup show active-toolchain
+          command -v cargo-xwin
+          cargo xwin --version
+          command -v clang-cl
+          clang-cl --version
+          command -v lld-link
+          lld-link --version
+
       - name: Build with Xwin
         env:
           TARGET: ${{ matrix.target }}
@@ -378,7 +390,7 @@ jobs:
           XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
           XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
         run: >-
-          cargo xwin build --locked --release --target "${TARGET}"
+          cargo xwin build -vv --locked --release --target "${TARGET}"
           --no-default-features --features from-toml,from-yaml,greppable,from-xml
           --xwin-version "${XWIN_VERSION}"
           --xwin-sdk-version "${XWIN_SDK_VERSION}"
