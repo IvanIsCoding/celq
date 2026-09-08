@@ -195,7 +195,7 @@ jobs:
         run: |
           rustc -vV
           cargo -vV
-          cargo auditable zigbuild -vv --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
+          cargo auditable zigbuild -vv --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
 
       - name: Create release archive
         run: |
@@ -301,7 +301,7 @@ jobs:
             echo "Using patched Cargo: $CARGO"
             rustc -vV
             "$CARGO" -vV
-            "$CARGO" auditable zigbuild -vv --locked --release --no-default-features --features from-toml,from-yaml,greppable,from-xml --target "${TARGET}${ZIGTARGETSUFFIX}"
+            "$CARGO" auditable zigbuild -vv --locked --release --target "${TARGET}${ZIGTARGETSUFFIX}"
 
             mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/celq
