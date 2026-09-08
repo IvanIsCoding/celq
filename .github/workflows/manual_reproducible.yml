@@ -332,7 +332,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [ubuntu-24.04, windows-2025]
+        runner: [windows-2025, windows-11-vs2026-arm]
         target: &xwin_targets
           - x86_64-pc-windows-msvc
     steps:
@@ -340,6 +340,12 @@ jobs:
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+
+      - name: Select native Windows ARM64 Rust host
+        if: runner.arch == 'ARM64'
+        run: |
+          rustup set default-host aarch64-pc-windows-msvc
+          echo "RUSTUP_TOOLCHAIN=1.94.1-aarch64-pc-windows-msvc" >> "$GITHUB_ENV"
 
       - name: Setup Xwin
         id: setup-xwin
@@ -349,6 +355,12 @@ jobs:
           rust_components: llvm-tools
           cache_directory: ${{ github.workspace }}/.xwin-cache
           use_cache: "true"
+
+      - name: Verify native Windows ARM64 compiler
+        if: runner.arch == 'ARM64'
+        run: |
+          rustc -vV
+          test "$(rustc -vV | sed -n 's/^host: //p' | tr -d '\r')" = aarch64-pc-windows-msvc
 
       - name: Configure reproducible builds
         run: |
@@ -382,7 +394,7 @@ jobs:
           compression-level: 0
 
   xwin_hashes:
-    name: Xwin SHA-256 (${{ matrix.target }}, Windows vs Linux)
+    name: Xwin SHA-256 (${{ matrix.target }}, Windows x86-64 vs ARM64)
     needs: xwin
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
@@ -391,23 +403,23 @@ jobs:
       matrix:
         target: *xwin_targets
     steps:
-      - name: Download Windows-built binary
+      - name: Download Windows x86-64-built binary
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: reproducible-xwin-${{ matrix.target }}-windows-2025
           path: artifacts/windows-2025
 
-      - name: Download Linux-built binary
+      - name: Download Windows ARM64-built binary
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          name: reproducible-xwin-${{ matrix.target }}-ubuntu-24.04
-          path: artifacts/ubuntu-24.04
+          name: reproducible-xwin-${{ matrix.target }}-windows-11-vs2026-arm
+          path: artifacts/windows-11-vs2026-arm
 
       - name: Print and compare SHA-256 hashes
         run: |
-          sha256sum artifacts/windows-2025/celq.exe artifacts/ubuntu-24.04/celq.exe
+          sha256sum artifacts/windows-2025/celq.exe artifacts/windows-11-vs2026-arm/celq.exe
           (cd artifacts/windows-2025 && sha256sum celq.exe) > original.sha256
-          (cd artifacts/ubuntu-24.04 && sha256sum celq.exe) > verification.sha256
+          (cd artifacts/windows-11-vs2026-arm && sha256sum celq.exe) > verification.sha256
           diff -u original.sha256 verification.sha256
 
   hashes:
