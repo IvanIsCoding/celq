@@ -54,7 +54,9 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bas
 
 To prevent rate limits from GitHub, set the `$GITHUB_TOKEN` with a valid token. The limit for logged in users is considerably higher. You might also find the [GitHub Actions](#github-actions) section valuable if running in that environment.
 
-If you are interested in the checksums and the attestations for the pre-built binaries and the installer, [see the Integrity and Authenticity section](#integrity-and-authenticity).
+#### Supply Chain Security & More
+
+If you are interested in the checksums, signatures, and attestations for the pre-built binaries and the installer, [see the Integrity and Authenticity section](#integrity-and-authenticity).
 
 Lastly, see [the quirks for the shell script installer](#shell-script-installer-quirks) for how it chooses what binary to install on Linux and the path it chooses.
 
@@ -115,7 +117,7 @@ cargo install celq --locked
 If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) installed, you can install pre-built binaries directly:
 
 ```bash
-cargo binstall celq
+cargo binstall celq --only-signed
 ```
 
 ### GitHub Actions
@@ -298,6 +300,14 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
     bash -s -- --verify-checksum
 ```
 
+`celq` releases are [signed](https://github.com/get-celq/signatures/releases) with [minisign](https://jedisct1.github.io/minisign/). Passing the `--verify-minisign` flag checks that the pre-built binaries were
+signed with private key that matches the public key embedded in the installer:
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | \
+    bash -s -- --verify-minisign
+```
+
 `celq` also generates [artifact attestations](https://github.com/IvanIsCoding/celq/attestations) for each file in the Releases page, including the installer. To verify the authenticity of a file, use the [GitHub CLI](https://cli.github.com/) with the following command:
 
 ```bash
@@ -319,7 +329,11 @@ bash install.sh --verify-attestation
 
 This way, you can guarantee that both the installer and the downloaded binaries are authentic.
 
+#### Requirements
+
 Running the installer with the `--verify-checksum` requires either `sha256sum` or `shasum` to be available. If none of these tools is available, the installer will fail. 
+
+Running the installer with the `--verify-minisign` requires `minisign` to be installed. `minisign` is available for many Linux distributions and for macOS. Run `apt install minisign`/`dnf install minisign`/`brew install minisign` to fulfill the pre-requisite.
 
 Running the installer with the `--verify-attestation` requires the GitHub CLI (`gh`). If `gh` is not found, the script will fail. If the user is not authenticated (`gh auth login`), the option will also fail. For scripts and non-interactive environments like CI, `gh auth login --with-token $GITHUB` is an option for authenticaitng when using this installer feature.
 
