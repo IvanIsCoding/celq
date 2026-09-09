@@ -548,3 +548,183 @@ jobs:
           (cd artifacts/windows-2025 && sha256sum celq.exe celq-windows-x86_64.zip) > original.sha256
           (cd artifacts/windows-11-vs2026-arm && sha256sum celq.exe celq-windows-x86_64.zip) > verification.sha256
           diff -u original.sha256 verification.sha256
+
+  patched_cargo_mac:
+    name: Patched Cargo (x86_64-apple-darwin)
+    runs-on: macos-15
+    defaults:
+      run:
+        shell: bash
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      TARGET: x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Checkout Cargo source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: rust-lang/cargo
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          path: cargo-source
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: |
+            src
+            crates
+            credential
+            benches/benchsuite
+            benches/capture
+
+      - name: Select pinned macOS SDK
+        run: echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Patch Cargo
+        working-directory: cargo-source
+        run: |
+          git apply --check ../.github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
+          git apply ../.github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
+
+      - name: Cross-compile patched Cargo
+        working-directory: cargo-source
+        env:
+          CFG_RELEASE: 1.94.1
+          CFG_RELEASE_CHANNEL: stable
+          CFG_VER_DESCRIPTION: macos-aarch64-metadata-patch
+        run: cargo build --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
+
+      - name: Upload patched Cargo
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: patched-cargo-x86_64-apple-darwin
+          path: cargo-source/target/x86_64-apple-darwin/release/cargo
+          retention-days: 1
+          if-no-files-found: error
+
+  macos:
+    name: macOS (${{ matrix.runner }}, ${{ matrix.target }})
+    needs: patched_cargo_mac
+    runs-on: ${{ matrix.runner }}
+    defaults:
+      run:
+        shell: bash
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [macos-15, macos-15-intel]
+        target: [aarch64-apple-darwin]
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      NAME: celq
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Select pinned macOS SDK
+        run: |
+          xcodebuild -version
+          echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
+      - name: Download patched Cargo
+        if: matrix.runner == 'macos-15-intel'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-x86_64-apple-darwin
+          path: patched-cargo
+
+      - name: Select patched Cargo
+        if: matrix.runner == 'macos-15-intel'
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
+          echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
+          echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
+          echo "RUSTC=$(rustup which rustc)" >> "$GITHUB_ENV"
+          echo "RUSTDOC=$(rustup which rustdoc)" >> "$GITHUB_ENV"
+
+      - name: Configure reproducible builds
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: cargo auditable build --locked --release --target ${{ matrix.target }}
+
+      - name: Install GNU tar
+        run: brew install gnu-tar
+
+      - name: Create release archive
+        env:
+          TARGET: ${{ matrix.target }}
+          PRETTY_TARGET: macos-aarch64
+        run: |
+          BIN_PATH="target/${TARGET}/release/${NAME}"
+          ARCHIVE_NAME="${NAME}-${PRETTY_TARGET}.tar.gz"
+          gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf "${ARCHIVE_NAME%.gz}" -C "target/${TARGET}/release" "${NAME}"
+          gzip -n -9 "${ARCHIVE_NAME%.gz}"
+
+          mkdir -p artifacts
+          cp "${BIN_PATH}" "${ARCHIVE_NAME}" artifacts/
+
+      - name: Upload archive and binary
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-aarch64-apple-darwin-${{ matrix.runner }}
+          path: |
+            artifacts/celq
+            artifacts/celq-macos-aarch64.tar.gz
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+
+  macos_hashes:
+    name: SHA-256 (macOS ARM64 vs Intel hosts)
+    needs: macos
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download ARM64-host artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: reproducible-aarch64-apple-darwin-macos-15
+          path: artifacts/macos-15
+
+      - name: Download Intel-host artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: reproducible-aarch64-apple-darwin-macos-15-intel
+          path: artifacts/macos-15-intel
+
+      - name: Print and compare SHA-256 hashes
+        run: |
+          find artifacts -type f -exec sha256sum {} +
+          (cd artifacts/macos-15 && sha256sum celq celq-macos-aarch64.tar.gz) > original.sha256
+          (cd artifacts/macos-15-intel && sha256sum celq celq-macos-aarch64.tar.gz) > verification.sha256
+          diff -u original.sha256 verification.sha256

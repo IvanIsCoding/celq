@@ -4,10 +4,10 @@ rules:
   template-injection:
     ignore:
       - release_choco.yml
-      - release_github.yml:95
-      - release_github.yml:275
-      - release_github.yml:302
-      - release_github.yml:340
+      - release_github.yml:107
+      - release_github.yml:287
+      - release_github.yml:314
+      - release_github.yml:352
       - release_sub_homebrew.yml:29
       - release_sub_homebrew.yml:56
       - release_sub_homebrew.yml:69

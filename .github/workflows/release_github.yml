@@ -27,6 +27,9 @@ jobs:
     name: ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
     environment: github_release
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
     permissions:
       contents: write
       id-token: write
@@ -46,6 +49,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+
+      - name: Select pinned macOS SDK
+        run: echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
@@ -69,15 +75,21 @@ jobs:
       - name: Build
         run: cargo auditable build --locked --release --target ${{ matrix.target }}
 
+      - name: Install GNU tar
+        run: brew install gnu-tar
+
       - name: Create release archive
         id: archive
         run: |
           BIN_PATH="target/${{ matrix.target }}/release/${NAME}"
           ARCHIVE_NAME="${NAME}-${{ matrix.pretty_target }}.tar.gz"
-          tar czf "${ARCHIVE_NAME}" -C "target/${{ matrix.target }}/release" "${NAME}"
+          gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf "${ARCHIVE_NAME%.gz}" -C "target/${{ matrix.target }}/release" "${NAME}"
+          gzip -n -9 "${ARCHIVE_NAME%.gz}"
           
-          echo "BIN_PATH=${BIN_PATH}" >> $GITHUB_OUTPUT
-          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> $GITHUB_OUTPUT
+          echo "BIN_PATH=${BIN_PATH}" >> "$GITHUB_OUTPUT"
+          echo "ARCHIVE_NAME=${ARCHIVE_NAME}" >> "$GITHUB_OUTPUT"
 
       - name: Generate attestation for release binary
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
@@ -92,7 +104,7 @@ jobs:
       - name: Upload release archive
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload ${VERSION} ${{ steps.archive.outputs.ARCHIVE_NAME }}
+        run: gh release upload "${VERSION}" "${{ steps.archive.outputs.ARCHIVE_NAME }}"
 
   build_xwin:
     name: ${{ matrix.target }}

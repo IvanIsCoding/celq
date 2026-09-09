@@ -149,6 +149,15 @@ jobs:
       - name: Restore Cargo downloads
         if: runner.os == 'Linux'
         uses: $/.github/actions/restore-cargo-downloads
+
+      - name: Select pinned macOS SDK
+        if: runner.os == 'macOS'
+        env:
+          DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+        run: |
+          echo "DEVELOPER_DIR=${DEVELOPER_DIR}" >> "$GITHUB_ENV"
+          echo "MACOSX_DEPLOYMENT_TARGET=11.0" >> "$GITHUB_ENV"
+          echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
       
       - name: Install Rust ${{ matrix.rust }}
         uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
