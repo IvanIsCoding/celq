@@ -491,7 +491,6 @@ jobs:
           XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
         run: >-
           cargo xwin build --locked --release --target "${TARGET}"
-          --no-default-features --features from-toml,from-yaml,greppable,from-xml
           --xwin-version "${XWIN_VERSION}"
           --xwin-sdk-version "${XWIN_SDK_VERSION}"
           --xwin-crt-version "${XWIN_CRT_VERSION}"
