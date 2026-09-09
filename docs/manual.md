@@ -157,7 +157,6 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [Pretty Printing](#pretty-printing)
   * [Raw Output](#raw-output)
   * [Grep friendly output](#grep-friendly-output)
-  * [Reverting filtered grep output](#reverting-filtered-grep-output)
 
 ### Reading Files
 
@@ -530,59 +529,56 @@ grocery_list_cli --item $FRUIT --quantity 5
 
 ### Grep friendly output
 
-`celq` has a `--greppable` flag that is inspired by [gron](https://github.com/tomnomnom/gron). If you pass `-g` or `--greppable`, the usual JSON output is converted to a format that can be more easily queried by grep or [ripgrep](https://github.com/BurntSushi/ripgrep).
+<div class="installation-tabs" style="--arity: 2">
+<details name="grep-friendly-output" style="--n: 1" open>
+<summary><h4>gron</h4></summary>
+<div class="installation-tab-content">
+<p><code>celq</code> has a <code>--greppable</code> flag that is inspired by <a href="https://github.com/tomnomnom/gron">gron</a>. If you pass <code>-g</code> or <code>--greppable</code>, the usual JSON output is converted to a format that can be more easily queried by grep or <a href="https://github.com/BurntSushi/ripgrep">ripgrep</a>.</p>
 
-For example, to chain `celq` with ripgrep to find all fields containing `regularMarket`:
-```bash
-celq -g  < yfinance.json | rg '\bregularMarket\w*'
-```
+<p>For example, to chain <code>celq</code> with ripgrep to find all fields containing <code>regularMarket</code>:</p>
 
-Outputs:
-```none
-json.chart.result[0].meta.regularMarketDayHigh = 277.825;
+<pre><code class="language-bash">celq -g  &lt; yfinance.json | rg '\bregularMarket\w*'</code></pre>
+
+<p>Outputs:</p>
+
+<pre><code class="language-none">json.chart.result[0].meta.regularMarketDayHigh = 277.825;
 json.chart.result[0].meta.regularMarketDayLow = 269.02;
 json.chart.result[0].meta.regularMarketPrice = 271.01;
-json.chart.result[0].meta.regularMarketTime = 1767387600;
-```
+json.chart.result[0].meta.regularMarketTime = 1767387600;</code></pre>
 
-One interesting property about `--greppable` is that the output is valid JavaScript code. This unlocks use cases such as embedding TOML, YAML, and JSON5 configs as JavaScript source code. For example:
+<p>One interesting property about <code>--greppable</code> is that the output is valid JavaScript code. This unlocks use cases such as embedding TOML, YAML, and JSON5 configs as JavaScript source code. For example:</p>
 
-```bash
-celq --from-toml -g -S  < Cargo.toml > cargo_toml.js
-```
+<pre><code class="language-bash">celq --from-toml -g -S  &lt; Cargo.toml &gt; cargo_toml.js</code></pre>
 
-Writes the following to `cargo_toml.js`:
+<p>Writes the following to <code>cargo_toml.js</code>:</p>
 
-```javascript
-json = {};
+<pre><code class="language-javascript">json = {};
 json.bin = [];
 json.bin[0] = {};
 json.bin[0].name = "celq";
 json.bin[0].path = "src/main.rs";
-/* Many lines follow */
-```
+/* Many lines follow */</code></pre>
 
-If you need deterministic outputs, we recommend using the `-S` flag for sorting the output.
+<p>If you need deterministic outputs, we recommend using the <code>-S</code> flag for sorting the output.</p>
 
-For NDJSON inputs, `--greppable` outputs only the last line. This happens to prevent redefinitions of the `json` variable. If you are dealing with NDJSON and want this feature, consider using the `--slurp` flag.
+<p>For NDJSON inputs, <code>--greppable</code> outputs only the last line. This happens to prevent redefinitions of the <code>json</code> variable. If you are dealing with NDJSON and want this feature, consider using the <code>--slurp</code> flag.</p>
+</div>
+</details>
+<details name="grep-friendly-output" style="--n: 2">
+<summary><h4>ungron</h4></summary>
+<div class="installation-tab-content">
+<p><code>celq</code> also has a <code>--from-gron</code> flag that parses the output of <code>gron</code> and <code>celq --greppable</code>. It is equivalent to <code>gron -u</code>. That can be useful for converting output filtered by grep back to JSON.</p>
 
-### Reverting filtered grep output
+<p>For example:</p>
 
-`celq` also has a `--from-gron` flag that parses the output of `gron` and `celq --greppable`. It is equivalent to `gron -u`. That can be useful for converting output filtered by grep back to JSON.
+<pre><code class="language-bash">celq -g  &lt; yfinance.json | rg '\bregularMarket\w*' | celq --from-gron -S -p </code></pre>
 
-For example:
-
-```bash
-celq -g  < yfinance.json | rg '\bregularMarket\w*' | celq --from-gron -S -p 
-```
-
-Outputs:
+<p>Outputs:</p>
 
 <details>
 <summary>ripgrep output back to JSON</summary>
 
-```json
-{
+<pre><code class="language-json">{
   "chart": {
     "result": [
       {
@@ -595,10 +591,11 @@ Outputs:
       }
     ]
   }
-}
-```
-
+}</code></pre>
 </details>
+</div>
+</details>
+</div>
 
 ## Quirks
 
