@@ -120,6 +120,21 @@ If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) insta
 cargo binstall celq --only-signed
 ```
 
+### Mise
+
+celq can be used with [mise](https://mise.jdx.dev/). To install celq, use the Conda back-end:
+
+```bash
+mise use -g conda:celq
+```
+
+Alternatively, add this to `mise.toml`:
+
+```toml
+[tools]
+"conda:celq" = "latest"
+```
+
 ### GitHub Actions
 
 <div class="installation-tabs" style="--arity: 2">
@@ -273,21 +288,6 @@ npx celq -n '"Hello World"'
 </div>
 </details>
 </div>
-
-### Mise
-
-celq can be used with [mise](https://mise.jdx.dev/). To install celq, use the Conda back-end:
-
-```bash
-mise use -g conda:celq
-```
-
-Alternatively, add this to `mise.toml`:
-
-```toml
-[tools]
-"conda:celq" = "latest"
-```
 
 ## Integrity and Authenticity
 

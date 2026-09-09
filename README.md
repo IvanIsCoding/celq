@@ -106,6 +106,21 @@ If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) insta
 cargo binstall celq
 ```
 
+### Mise
+
+celq can be used with [mise](https://mise.jdx.dev/). To install celq, use the Conda back-end:
+
+```bash
+mise use -g conda:celq
+```
+
+Alternatively, add this to `mise.toml`:
+
+```toml
+[tools]
+"conda:celq" = "latest"
+```
+
 ### GitHub Actions
 
 `celq` can be used in GitHub actions. For one-off commands, the [get-celq/celq-action](https://github.com/get-celq/celq-action) is the quickest way:
@@ -211,21 +226,6 @@ If you have [pixi](https://pixi.prefix.dev/latest/), you can run celq in a tempo
 
 ```bash
 pixi exec celq -n '"Hello World"'
-```
-
-### Mise
-
-celq can be used with [mise](https://mise.jdx.dev/). To install celq, use the Conda back-end:
-
-```bash
-mise use -g conda:celq
-```
-
-Alternatively, add this to `mise.toml`:
-
-```toml
-[tools]
-"conda:celq" = "latest"
 ```
 
 ## Limitations

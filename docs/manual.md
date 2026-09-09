@@ -29,7 +29,7 @@ cargo install celq --locked
 
 ### Other Methods
 
-See the [installation guide](`crate::installation_guide`) for installation instructions with Homebrew, PyPI, NPM, binstall, and more.
+See the [installation guide](`crate::installation_guide`) for installation instructions with Homebrew, Scoop, mise, and more.
 
 ## Overview
 
@@ -153,11 +153,7 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [Renaming the root variable](#renaming-the-root-variable)
   * [Boolean output](#boolean-output)
   * [Chaining](#chaining)
-  * [JSON5 Support](#json5-support)
-  * [TOML Support](#toml-support)
-  * [YAML Support](#yaml-support)
-  * [YAML with multiple documents](#yaml-with-multiple-documents)
-  * [XML Support](#xml-support)
+  * [File Formats Support](#file-formats-support)
   * [Pretty Printing](#pretty-printing)
   * [Raw Output](#raw-output)
   * [Grep friendly output](#grep-friendly-output)
@@ -373,108 +369,103 @@ cat yfinance.json | \
 
 Also works as a way to output `"AAPL"` in the command, just like in the first example. When combined with arguments and more elaborate scripts, that can make up for data pipelines.
 
-### JSON5 Support
+### File Formats Support
 
-`celq` supports [JSON5](https://json5.org/), a popular JSON extension among config files. It also indirectly supports [JSONC](https://jsonc.org/), because JSON5 is a superset of JSONC but don't quote me on that.
+<div class="installation-tabs" style="--arity: 5">
+<details name="file-formats" style="--n: 1" open>
+<summary><h4>JSON5 Support</h4></summary>
+<div class="installation-tab-content">
+<p><code>celq</code> supports <a href="https://json5.org/">JSON5</a>, a popular JSON extension among config files. It also indirectly supports <a href="https://jsonc.org/">JSONC</a>, because JSON5 is a superset of JSONC but don't quote me on that.</p>
 
-To enable the JSON5 parser, pass the `--from-json5` flag. For example:
+<p>To enable the JSON5 parser, pass the <code>--from-json5</code> flag. For example:</p>
 
-```bash
-echo "[1, 2, 3, 4,]" | celq --from-json5 'this.map(x, x*2)'
-```
+<pre><code class="language-bash">echo "[1, 2, 3, 4,]" | celq --from-json5 'this.map(x, x*2)'</code></pre>
 
-Outputs: `[2,4,6,8]`. If the `--from-json5` flag is not passed, the command will fail because of the trailing comma on the list. JSON5 is more lenient than JSON and allows for trailing commas and comments.
+<p>Outputs: <code>[2,4,6,8]</code>. If the <code>--from-json5</code> flag is not passed, the command will fail because of the trailing comma on the list. JSON5 is more lenient than JSON and allows for trailing commas and comments.</p>
 
-Notice that passing the `--from-json5` clashes with the `--slurp` flag and with the NDJSON detection.
+<p>Notice that passing the <code>--from-json5</code> clashes with the <code>--slurp</code> flag and with the NDJSON detection.</p>
+</div>
+</details>
+<details name="file-formats" style="--n: 2">
+<summary><h4>TOML Support</h4></summary>
+<div class="installation-tab-content">
+<p><code>celq</code> supports <a href="https://toml.io/en/">TOML</a>, another popular configuration format. For example, <code>celq</code> can query its own manifest file:</p>
 
-### TOML Support
+<pre><code class="language-bash">celq --from-toml 'this.package.version' &lt; Cargo.toml</code></pre>
 
-`celq` supports [TOML](https://toml.io/en/), another popular configuration format. For example, `celq` can query its own manifest file:
+<p>The output is <code>celq</code>'s development version.</p>
+</div>
+</details>
+<details name="file-formats" style="--n: 3">
+<summary><h4>YAML Support</h4></summary>
+<div class="installation-tab-content">
+<p><code>celq</code> supports <a href="https://yaml.org/">YAML</a>, another popular configuration format. For example, <code>celq</code> can query <a href="https://web.archive.org/web/20251108093453/https://blog.howardjohn.info/posts/cel-is-good/">CEL expressions commonly defined in YAML files</a> and evaluate them!</p>
 
-```bash
-celq --from-toml 'this.package.version' < Cargo.toml
-```
+<p>Take for example <code>config.yaml</code> with:</p>
 
-The output is `celq`'s development version.
-
-### YAML Support
-
-`celq` supports [YAML](https://yaml.org/), another popular configuration format. For example, `celq` can query [CEL expressions commonly defined in YAML files](https://web.archive.org/web/20251108093453/https://blog.howardjohn.info/posts/cel-is-good/) and evaluate them!
-
-Take for example `config.yaml` with:
-
-```yaml
-environment: prod
+<pre><code class="language-yaml">environment: prod
 validation: |
-  spec.replicas >= 3 && 
-  spec.replicas <= 10
-```
+  spec.replicas &gt;= 3 &amp;&amp; 
+  spec.replicas &lt;= 10</code></pre>
 
-The `validation` field stores a CEL expression. We can query it when we pass the `--from-yaml` flag to `celq`:
+<p>The <code>validation</code> field stores a CEL expression. We can query it when we pass the <code>--from-yaml</code> flag to <code>celq</code>:</p>
 
-```bash
-celq --from-yaml --raw-output 'this.validation' < config.yaml
-```
+<pre><code class="language-bash">celq --from-yaml --raw-output 'this.validation' &lt; config.yaml</code></pre>
 
-After, we can chain it with arguments to evaluate the expression:
+<p>After, we can chain it with arguments to evaluate the expression:</p>
 
-```bash
-CEL_EXPR=$(celq --from-yaml --raw-output  'this.validation' < config.yaml)
-echo '{"replicas": 5}' | celq -b --root-var "spec" "$CEL_EXPR"
-```
+<pre><code class="language-bash">CEL_EXPR=$(celq --from-yaml --raw-output  'this.validation' &lt; config.yaml)
+echo '{"replicas": 5}' | celq -b --root-var "spec" "$CEL_EXPR"</code></pre>
 
-The output is `true` and the return code is 0. We validated that the number of replicas was between 3 and 10.
+<p>The output is <code>true</code> and the return code is 0. We validated that the number of replicas was between 3 and 10.</p>
+</div>
+</details>
+<details name="file-formats" style="--n: 4">
+<summary><h4>YAML Multi-doc</h4></summary>
+<div class="installation-tab-content">
+<p>Some YAML files contain multiple documents separated by <code>---</code>. For example, in <code>multi.yaml</code>:</p>
 
-### YAML with multiple documents
-
-Some YAML files contain multiple documents separated by `---`. For example, in `multi.yaml`:
-
-```yaml
-author: "Example Author"
+<pre><code class="language-yaml">author: "Example Author"
 title: "Example"
 ---
 content: |
   This is an example document.
 tags:
   - a
-  - b
-```
+  - b</code></pre>
 
-The document gets parsed as a list of documents. To access the `tags` field of the second document, the command would be:
+<p>The document gets parsed as a list of documents. To access the <code>tags</code> field of the second document, the command would be:</p>
 
-```bash
-celq --from-yaml 'this[1].tags' < multi.yaml
-```
-
-### XML Support
-
-`celq` supports XML via the `--from-xml` flag. Take `example.xml`:
+<pre><code class="language-bash">celq --from-yaml 'this[1].tags' &lt; multi.yaml</code></pre>
+</div>
+</details>
+<details name="file-formats" style="--n: 5">
+<summary><h4>XML Support</h4></summary>
+<div class="installation-tab-content">
+<p><code>celq</code> supports XML via the <code>--from-xml</code> flag. Take <code>example.xml</code>:</p>
 
 <details>
 <summary>example.xml</summary>
 
-```xml
-<?xml version="1.0"?>
-<items>
-  <item id="1">
-    <name>apple</name>
-    <price>1.25</price>
-  </item>
-  <item id="2">
-    <name>banana</name>
-    <price>0.75</price>
-  </item>
-</items>
-```
+<pre><code class="language-xml">&lt;?xml version="1.0"?&gt;
+&lt;items&gt;
+  &lt;item id="1"&gt;
+    &lt;name&gt;apple&lt;/name&gt;
+    &lt;price&gt;1.25&lt;/price&gt;
+  &lt;/item&gt;
+  &lt;item id="2"&gt;
+    &lt;name&gt;banana&lt;/name&gt;
+    &lt;price&gt;0.75&lt;/price&gt;
+  &lt;/item&gt;
+&lt;/items&gt;</code></pre>
 </details>
 
-Running `celq --from-xml -S < example.xml` converts it to the following:
+<p>Running <code>celq --from-xml -S &lt; example.xml</code> converts it to the following:</p>
 
 <details>
 <summary>example_xml.json</summary>
 
-```json
-{
+<pre><code class="language-json">{
   "items": {
     "item": [
       {
@@ -493,11 +484,13 @@ Running `celq --from-xml -S < example.xml` converts it to the following:
       }
     ]
   }
-}
-```
+}</code></pre>
 </details>
 
-`celq`'s XML parser does not try to convert types and puts attributes in the `$` field.
+<p><code>celq</code>'s XML parser does not try to convert types and puts attributes in the <code>$</code> field.</p>
+</div>
+</details>
+</div>
 
 ### Pretty Printing
 
