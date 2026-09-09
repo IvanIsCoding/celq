@@ -11,8 +11,70 @@ env:
   NAME: celq
 
 jobs:
+  patched_cargo:
+    name: Patched Cargo (x86_64-apple-darwin)
+    runs-on: macos-15
+    defaults:
+      run:
+        shell: bash
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      TARGET: x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Checkout Cargo source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: rust-lang/cargo
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          path: cargo-source
+          persist-credentials: false
+          fetch-depth: 1
+          sparse-checkout: |
+            src
+            crates
+            credential
+            benches/benchsuite
+            benches/capture
+
+      - name: Select pinned macOS SDK
+        run: echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Patch Cargo
+        working-directory: cargo-source
+        run: |
+          git apply --check ../.github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
+          git apply ../.github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
+
+      - name: Cross-compile patched Cargo
+        working-directory: cargo-source
+        env:
+          CFG_RELEASE: 1.94.1
+          CFG_RELEASE_CHANNEL: stable
+          CFG_VER_DESCRIPTION: macos-aarch64-metadata-patch
+        run: cargo build --locked --release --package cargo --bin cargo --target "$TARGET"
+
+      - name: Upload patched Cargo
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: patched-cargo-x86_64-apple-darwin
+          path: cargo-source/target/x86_64-apple-darwin/release/cargo
+          retention-days: 1
+          if-no-files-found: error
+
   build_mac:
     name: macOS (${{ matrix.runner }}, ${{ matrix.target }})
+    needs: patched_cargo
     runs-on: ${{ matrix.runner }}
     defaults:
       run:
@@ -46,6 +108,20 @@ jobs:
         with:
           tool: cargo-auditable@0.7.5
           fallback: none
+
+      - name: Download patched Cargo
+        if: matrix.runner == 'macos-15-intel'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-x86_64-apple-darwin
+          path: patched-cargo
+
+      - name: Select patched Cargo
+        if: matrix.runner == 'macos-15-intel'
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
+          echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
+          echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
 
       - name: Configure reproducible builds
         run: |
