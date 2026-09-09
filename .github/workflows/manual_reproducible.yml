@@ -122,6 +122,8 @@ jobs:
           chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
           echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
           echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
+          echo "RUSTC=$(rustup which rustc)" >> "$GITHUB_ENV"
+          echo "RUSTDOC=$(rustup which rustdoc)" >> "$GITHUB_ENV"
 
       - name: Configure reproducible builds
         run: |
