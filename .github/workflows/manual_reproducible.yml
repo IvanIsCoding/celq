@@ -490,7 +490,7 @@ jobs:
           XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
           XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
         run: >-
-          cargo xwin build --locked --release --target "${TARGET}"
+          cargo auditable xwin build --locked --release --target "${TARGET}"
           --xwin-version "${XWIN_VERSION}"
           --xwin-sdk-version "${XWIN_SDK_VERSION}"
           --xwin-crt-version "${XWIN_CRT_VERSION}"
