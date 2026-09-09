@@ -56,7 +56,7 @@ jobs:
           echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
 
       - name: Build
-        run: cargo auditable build --locked --release --target ${{ matrix.target }}
+        run: cargo auditable build -vv --locked --release --target ${{ matrix.target }}
 
       - name: Create release archive
         env:
