@@ -62,7 +62,7 @@ jobs:
           CFG_RELEASE: 1.94.1
           CFG_RELEASE_CHANNEL: stable
           CFG_VER_DESCRIPTION: macos-aarch64-metadata-patch
-        run: cargo build --locked --release --package cargo --bin cargo --target "$TARGET"
+        run: cargo build --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
 
       - name: Upload patched Cargo
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
