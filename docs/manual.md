@@ -96,13 +96,6 @@ Want to try `celq` without installing anything? Visit the [celq-playground](http
 - [cel-rust](https://github.com/cel-rust/cel-rust): the Rust implementation of CEL powering `celq`
 - [Comparison with other tools](`crate::comparison_with_other_tools`)
 
-## Inspiration
-
-`celq` is heavily inspired by:
-1. [jq](https://jqlang.org/): the most popular command-line utility for dealing with JSON
-2. [cel-python](https://github.com/cloud-custodian/cel-python): a Python library with a CLI that heavily influenced `celq` (there are discrepancies, however)
-3. [jaq](https://github.com/01mf02/jaq): a `jq` clone written in Rust
-
 ## Recipes
 
 We provide recipes with concrete examples for `celq`. During the recipes, we might refer to `yfinance.json`:
@@ -142,7 +135,7 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
 ### Table of Contents
 
   * [Reading Files](#reading-files)
-  * [this keyword](#this-keyword)
+  * [this keyword & root naming](#this-keyword--root-naming)
   * [Writing Files](#writing-files)
   * [Output JSON](#output-json)
   * [Reading CEL from a file](#reading-cel-from-a-file)
@@ -150,7 +143,6 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [Dealing with NDJSON](#dealing-with-ndjson)
   * [Slurping](#slurping)
   * [Logical Calculator](#logical-calculator)
-  * [Renaming the root variable](#renaming-the-root-variable)
   * [Boolean output](#boolean-output)
   * [Chaining](#chaining)
   * [File Formats Support](#file-formats-support)
@@ -173,23 +165,40 @@ cat yfinance.json | celq "this.chart.result[0].meta.symbol"
 
 Both command outputs: `"AAPL"`.
 
-### this keyword
+### this keyword & root naming
 
-`celq` can access the input in CEL expressions with the `this` keyword. For example:
+<div class="installation-tabs" style="--arity: 2">
+<details name="this-keyword-root-naming" style="--n: 1" open>
+<summary><h4>this</h4></summary>
+<div class="installation-tab-content">
+<p><code>celq</code> can access the input in CEL expressions with the <code>this</code> keyword. For example:</p>
 
-```bash
-echo '["apples", "bananas", "blueberry"]' | celq 'this[1]'
-# Outputs: "bananas"
-```
+<pre><code class="language-bash">echo '["apples", "bananas", "blueberry"]' | celq 'this[1]'
+# Outputs: "bananas"</code></pre>
 
-If we take the array of fruits is the input, `this[1]` refers to the element in index 1 of the input. In this case, `"bananas"`.
+<p>If we take the array of fruits is the input, <code>this[1]</code> refers to the element in index 1 of the input. In this case, <code>"bananas"</code>.</p>
 
-If no CEL expression is provided, `celq` outputs the input:
+<p>If no CEL expression is provided, <code>celq</code> outputs the input:</p>
 
-```bash
-echo '["apples", "bananas", "blueberry"]' | celq
-# Outputs: ["apples", "bananas", "blueberry"]
-```
+<pre><code class="language-bash">echo '["apples", "bananas", "blueberry"]' | celq
+# Outputs: ["apples", "bananas", "blueberry"]</code></pre>
+</div>
+</details>
+<details name="this-keyword-root-naming" style="--n: 2">
+<summary><h4>Renamed root</h4></summary>
+<div class="installation-tab-content">
+<p>In contrast to <code>jq</code> and <code>cel-python</code>, <code>celq</code> names its root variable <code>this</code>. The root <code>.</code> is an operator for CEL and leads to invalid expressions.</p>
+
+<p>The root variable can be tweaked through the <code>--root-var</code> argument:</p>
+
+<p>For example:</p>
+
+<pre><code class="language-bash">cat yfinance.json | celq --root-var=request "request.chart.result[0].meta.longName"</code></pre>
+
+<p>Outputs: <code>"Apple Inc."</code>. This feature can be handy when reusing CEL snippets across different environments, as they will not use <code>this</code> as a variable. That becomes particularly useful with the <code>--from-file</code> feature.</p>
+</div>
+</details>
+</div>
 
 ### Writing Files
 
@@ -309,20 +318,6 @@ celq -n --arg="x:bool=true" --arg="y:bool=false" '(x || y) && !(x && y)'
 ```
 
 The command outputs: `true`.
-
-### Renaming the root variable
-
-In contrast to `jq` and `cel-python`, `celq` names its root variable `this`. The root `.` is an operator for CEL and leads to invalid expressions.
-
-The root variable can be tweaked through the `--root-var` argument:
-
-For example:
-
-```bash
-cat yfinance.json | celq --root-var=request "request.chart.result[0].meta.longName"
-```
-
-Outputs: `"Apple Inc."`. This feature can be handy when reusing CEL snippets across different environments, as they will not use `this` as a variable. That becomes particularly useful with the `--from-file` feature.
 
 ### Boolean output
 
@@ -605,6 +600,13 @@ json.bin[0].path = "src/main.rs";
 4. `.` does not work as a root variable name
 5. Pretty-printing can break chaining. `celq` is more limited than `jq` when parsing NDJSON, as it relies heavily on the new-line delimiters. If you pipe the output of a `celq -p` to `celq` again and the original input was NDJSON with multiple lines, things will break.
 6. Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
+
+## Inspiration
+
+`celq` is heavily inspired by:
+1. [jq](https://jqlang.org/): the most popular command-line utility for dealing with JSON
+2. [cel-python](https://github.com/cloud-custodian/cel-python): a Python library with a CLI that heavily influenced `celq` (there are discrepancies, however)
+3. [jaq](https://github.com/01mf02/jaq): a `jq` clone written in Rust
 
 ## Pronunciation
 
