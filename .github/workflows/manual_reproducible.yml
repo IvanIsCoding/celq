@@ -136,6 +136,9 @@ jobs:
       - name: Build
         run: cargo auditable build -vv --locked --release --target ${{ matrix.target }}
 
+      - name: Install GNU tar
+        run: brew install gnu-tar
+
       - name: Create release archive
         env:
           TARGET: ${{ matrix.target }}
@@ -143,7 +146,10 @@ jobs:
         run: |
           BIN_PATH="target/${TARGET}/release/${NAME}"
           ARCHIVE_NAME="${NAME}-${PRETTY_TARGET}.tar.gz"
-          tar czf "${ARCHIVE_NAME}" -C "target/${TARGET}/release" "${NAME}"
+          gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf "${ARCHIVE_NAME%.gz}" -C "target/${TARGET}/release" "${NAME}"
+          gzip -n -9 "${ARCHIVE_NAME%.gz}"
 
           mkdir -p artifacts
           cp "${BIN_PATH}" "${ARCHIVE_NAME}" artifacts/
