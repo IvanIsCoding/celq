@@ -1,0 +1,710 @@
+name: Attest reproducible release builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing non-draft GitHub release tag to reproduce
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+  RELEASE_TAG: ${{ inputs.tag }}
+
+jobs:
+  resolve_tag:
+    name: Resolve release tag
+    runs-on: ubuntu-24.04
+    outputs:
+      commit: ${{ steps.tag.outputs.commit }}
+    steps:
+      - name: Check out verification workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Check out celq at release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          path: source
+          persist-credentials: false
+
+      - name: Install Node.js for pinned celq
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Verify tag and published release
+        id: tag
+        working-directory: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag_commit=$(git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}")
+          test "$(git rev-parse HEAD)" = "$tag_commit"
+          release=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isDraft)
+          printf '%s\n' "$release" | npx -y celq@0.6.0 \
+            --arg="tag:string=$RELEASE_TAG" \
+            'this.tagName == tag && !this.isDraft' --boolean --void
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  patched_cargo_linux:
+    name: Patched Cargo (Linux ARM64 host)
+    needs: resolve_tag
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: aarch64-unknown-linux-gnu
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: "false"
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: aarch64-unknown-linux-gnu
+          patch-file: .github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
+          build-command: zigbuild
+        env:
+          CFG_VER_DESCRIPTION: linux-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+
+  linux:
+    name: Reproduce ${{ matrix.archive }} on Ubuntu ARM64
+    needs: [resolve_tag, patched_cargo_linux]
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            target_suffix: .2.28
+            archive: celq-linux-x86_64-gnu.tar.gz
+          - target: x86_64-unknown-linux-musl
+            target_suffix: ""
+            archive: celq-linux-x86_64-musl.tar.gz
+    env:
+      TARGET: ${{ matrix.target }}
+      TARGET_SUFFIX: ${{ matrix.target_suffix }}
+      ARCHIVE: ${{ matrix.archive }}
+    steps:
+      - name: Check out verification workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Check out celq at release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          path: source
+          persist-credentials: false
+
+      - name: Verify release commit
+        working-directory: source
+        env:
+          EXPECTED_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-aarch64-unknown-linux-gnu
+          path: patched-cargo
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: ${{ matrix.target }}
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: "false"
+
+      - name: Install Node.js for pinned celq
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Select patched Cargo
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
+          echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
+          echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
+
+      - name: Configure reproducible build
+        working-directory: source
+        run: |
+          test "$(command -v cargo)" = "$CARGO"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}/source=/src" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        working-directory: source
+        run: cargo auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
+
+      - name: Create release archive
+        run: |
+          mkdir -p rebuilt
+          tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf rebuilt/celq.tar -C "source/target/${TARGET}/release" celq
+          gzip -n -9 rebuilt/celq.tar
+          mv rebuilt/celq.tar.gz "rebuilt/${ARCHIVE}"
+
+      - name: Download published release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p published
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$ARCHIVE" --dir published
+
+      - name: Compare and create SCAI predicate
+        env:
+          SCAI_ARCHIVE: ${{ matrix.archive }}
+          SCAI_PUBLISHED: published/${{ matrix.archive }}
+          SCAI_REBUILT: rebuilt/${{ matrix.archive }}
+          SCAI_TAG: ${{ env.RELEASE_TAG }}
+          SCAI_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+          SCAI_TARGET: ${{ matrix.target }}${{ matrix.target_suffix }}
+          SCAI_RELEASE_HOST: ubuntu-24.04 (X64)
+          SCAI_RELEASE_TOOLS: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
+          SCAI_REBUILD_HOST: ubuntu-24.04-arm (ARM64)
+          SCAI_BUILD_COMMAND: cargo auditable zigbuild --locked --release
+        run: |
+          export SCAI_RUSTC="$(rustc -vV)"
+          export SCAI_CARGO="$(cargo --version --verbose)"
+          export SCAI_AUX_TOOLS="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; node $(node --version); npm $(npm --version)"
+          bash .github/reproducibility/create-scai-predicate.sh
+
+      - name: Attest reproducible release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: published/${{ matrix.archive }}
+          predicate-type: https://in-toto.io/attestation/scai/v0.3
+          predicate-path: scai-predicate.json
+
+  freebsd_tools:
+    name: Build FreeBSD tools
+    uses: $/.github/workflows/sub_reproducible_freebsd_tooling.yml
+
+  patched_cargo_freebsd:
+    name: Patched Cargo (FreeBSD x86-64 host)
+    needs: resolve_tag
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: x86_64-unknown-freebsd
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: "false"
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: x86_64-unknown-freebsd
+          patch-file: .github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
+          build-command: zigbuild
+        env:
+          CFG_VER_DESCRIPTION: linux-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+
+  freebsd:
+    name: Reproduce ${{ matrix.archive }} on FreeBSD x86-64
+    needs: [resolve_tag, freebsd_tools, patched_cargo_freebsd]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            target_suffix: .2.28
+            archive: celq-linux-aarch64-gnu.tar.gz
+          - target: aarch64-unknown-linux-musl
+            target_suffix: ""
+            archive: celq-linux-aarch64-musl.tar.gz
+    env:
+      TARGET: ${{ matrix.target }}
+      TARGET_SUFFIX: ${{ matrix.target_suffix }}
+      ARCHIVE: ${{ matrix.archive }}
+    steps:
+      - name: Check out verification workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Check out celq at release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          path: source
+          persist-credentials: false
+
+      - name: Verify release commit and capture timestamp
+        working-directory: source
+        env:
+          EXPECTED_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-x86_64-unknown-freebsd
+          path: patched-cargo
+
+      - name: Download FreeBSD tools
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: freebsd-tools-x86_64
+          path: freebsd-tools
+
+      - name: Download published release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p published
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$ARCHIVE" --dir published
+
+      - name: Install Node.js for pinned celq
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Build from source on FreeBSD
+        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
+        with:
+          release: "14.4"
+          arch: x86_64
+          sync: rsync
+          copyback: true
+          envs: TARGET TARGET_SUFFIX ARCHIVE SOURCE_DATE_EPOCH
+          prepare: |
+            set -eu
+            pkg install -y ca_root_nss git devel/rustup-init archivers/gtar archivers/gzip
+            cd /tmp
+            fetch https://ziglang.org/download/0.15.2/zig-x86_64-freebsd-0.15.2.tar.xz
+            test "$(sha256 -q zig-x86_64-freebsd-0.15.2.tar.xz)" = \
+              "5509ff57cd3f219165caed0da10221739af82742b9edfcda3f7bfaf4da7212dd"
+            tar -xf zig-x86_64-freebsd-0.15.2.tar.xz
+            rustup-init -y --profile minimal --default-toolchain 1.94.1
+            . "$HOME/.cargo/env"
+            rustup component add rust-src --toolchain 1.94.1
+
+          run: |
+            set -eu
+            ROOT=$(pwd -P)
+            . "$HOME/.cargo/env"
+            install -m 755 "$ROOT/freebsd-tools/cargo-zigbuild" "$HOME/.cargo/bin/"
+            mkdir -p /home/runner/.cargo/bin
+            install -m 755 "$ROOT/freebsd-tools/cargo-auditable" /home/runner/.cargo/bin/
+            export PATH="/home/runner/.cargo/bin:/tmp/zig-x86_64-freebsd-0.15.2:$PATH"
+            rustup target add --toolchain 1.94.1 "$TARGET"
+            export RUSTUP_TOOLCHAIN=1.94.1
+            export CARGO_TERM_COLOR=always TZ=UTC LC_ALL=C SOURCE_DATE_EPOCH
+            cd "$ROOT/source"
+            RUST_SYSROOT=$(rustc --print sysroot)
+            export RUSTFLAGS="--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=$(pwd -P)=/src"
+            export CARGO="$ROOT/patched-cargo/cargo"
+            chmod +x "$CARGO"
+            export PATH="$ROOT/patched-cargo:$PATH"
+            test "$(command -v cargo)" = "$CARGO"
+            "$CARGO" auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
+
+            mkdir -p "$ROOT/rebuilt"
+            gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+              --owner=0 --group=0 --numeric-owner --mode=0755 \
+              -cf "$ROOT/rebuilt/celq.tar" -C "target/${TARGET}/release" celq
+            /usr/local/bin/gzip -n -9 "$ROOT/rebuilt/celq.tar"
+            mv "$ROOT/rebuilt/celq.tar.gz" "$ROOT/rebuilt/$ARCHIVE"
+            rustc -vV > "$ROOT/rebuilt/rustc.txt"
+            cargo --version --verbose > "$ROOT/rebuilt/cargo.txt"
+            zig version > "$ROOT/rebuilt/zig.txt"
+
+      - name: Compare and create SCAI predicate
+        env:
+          SCAI_ARCHIVE: ${{ matrix.archive }}
+          SCAI_PUBLISHED: published/${{ matrix.archive }}
+          SCAI_REBUILT: rebuilt/${{ matrix.archive }}
+          SCAI_TAG: ${{ env.RELEASE_TAG }}
+          SCAI_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+          SCAI_TARGET: ${{ matrix.target }}${{ matrix.target_suffix }}
+          SCAI_RELEASE_HOST: ubuntu-24.04 (X64)
+          SCAI_RELEASE_TOOLS: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
+          SCAI_REBUILD_HOST: FreeBSD 14.4 VM (x86_64) on ubuntu-24.04
+          SCAI_BUILD_COMMAND: cargo auditable zigbuild --locked --release
+        run: |
+          export SCAI_RUSTC="$(cat rebuilt/rustc.txt)"
+          export SCAI_CARGO="$(cat rebuilt/cargo.txt)"
+          export SCAI_AUX_TOOLS="zig $(cat rebuilt/zig.txt); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; node $(node --version); npm $(npm --version)"
+          bash .github/reproducibility/create-scai-predicate.sh
+
+      - name: Attest reproducible release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: published/${{ matrix.archive }}
+          predicate-type: https://in-toto.io/attestation/scai/v0.3
+          predicate-path: scai-predicate.json
+
+  patched_cargo_windows:
+    name: Patched Cargo (Windows ARM64 host)
+    needs: resolve_tag
+    runs-on: windows-2025
+    steps:
+      - name: Preserve LF line endings for Cargo patching
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Install Rust 1.94.1 with Windows ARM64 target
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: aarch64-pc-windows-msvc
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: aarch64-pc-windows-msvc
+          patch-file: .github/reproducibility/patches/cargo-windows-x86_64-metadata.patch
+        env:
+          CFG_VER_DESCRIPTION: windows-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+
+  windows:
+    name: Reproduce celq-windows-x86_64.zip on Windows ARM64
+    needs: [resolve_tag, patched_cargo_windows]
+    runs-on: windows-11-vs2026-arm
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    env:
+      TARGET: x86_64-pc-windows-msvc
+      ARCHIVE: celq-windows-x86_64.zip
+    steps:
+      - name: Select native Windows ARM64 Rust host
+        run: |
+          rustup set default-host aarch64-pc-windows-msvc
+          echo "RUSTUP_TOOLCHAIN=1.94.1-aarch64-pc-windows-msvc" >> "$GITHUB_ENV"
+
+      - name: Check out verification workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Check out celq at release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          path: source
+          persist-credentials: false
+
+      - name: Verify release commit
+        working-directory: source
+        env:
+          EXPECTED_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+
+      - name: Setup Xwin
+        id: setup-xwin
+        uses: $/.github/actions/setup-xwin
+        with:
+          target: ${{ env.TARGET }}
+          rust_components: llvm-tools
+          cache_directory: ${{ github.workspace }}/.xwin-cache
+          use_cache: "false"
+
+      - name: Install Node.js for pinned celq
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Verify native compiler
+        run: |
+          test "$(rustc -vV | sed -n 's/^host: //p' | tr -d '\r')" = aarch64-pc-windows-msvc
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-aarch64-pc-windows-msvc
+          path: patched-cargo
+
+      - name: Select patched Cargo
+        run: |
+          echo "$(cygpath -aw "$GITHUB_WORKSPACE/patched-cargo")" >> "$GITHUB_PATH"
+          echo "CARGO=$(cygpath -aw "$GITHUB_WORKSPACE/patched-cargo/cargo.exe")" >> "$GITHUB_ENV"
+
+      - name: Configure reproducible build
+        working-directory: source
+        run: |
+          test "$(cygpath -aw "$(command -v cargo)")" = "$CARGO"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}/source=/src -C link-arg=/DEBUG:NONE" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        working-directory: source
+        env:
+          XWIN_CACHE_DIR: ${{ steps.setup-xwin.outputs.cache_directory }}
+          XWIN_CRT_VERSION: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
+          XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
+          XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
+        run: >-
+          cargo auditable xwin build --locked --release --target "${TARGET}"
+          --xwin-version "${XWIN_VERSION}"
+          --xwin-sdk-version "${XWIN_SDK_VERSION}"
+          --xwin-crt-version "${XWIN_CRT_VERSION}"
+
+      - name: Create release archive
+        working-directory: source
+        run: |
+          7z a -mtm=off -mtc=off -mta=off "$ARCHIVE" "./target/${TARGET}/release/celq.exe"
+          7z rn "$ARCHIVE" "target/${TARGET}/release/celq.exe" celq.exe
+          mkdir -p ../rebuilt
+          mv "$ARCHIVE" "../rebuilt/$ARCHIVE"
+
+      - name: Download published release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p published
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$ARCHIVE" --dir published
+
+      - name: Compare and create SCAI predicate
+        env:
+          SCAI_ARCHIVE: celq-windows-x86_64.zip
+          SCAI_PUBLISHED: published/celq-windows-x86_64.zip
+          SCAI_REBUILT: rebuilt/celq-windows-x86_64.zip
+          SCAI_TAG: ${{ env.RELEASE_TAG }}
+          SCAI_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+          SCAI_TARGET: x86_64-pc-windows-msvc
+          SCAI_RELEASE_HOST: windows-2025 (X64)
+          SCAI_RELEASE_TOOLS: rustc/cargo 1.94.1; cargo-xwin 0.23.1; cargo-auditable 0.7.5; LLVM 21.1.8; MSVC 17; SDK 10.0.26100; CRT 14.44.17.14
+          SCAI_REBUILD_HOST: windows-11-vs2026-arm (ARM64)
+          SCAI_BUILD_COMMAND: cargo auditable xwin build --locked --release
+        run: |
+          export SCAI_RUSTC="$(rustc -vV)"
+          export SCAI_CARGO="$(cargo --version --verbose)"
+          export SCAI_AUX_TOOLS="cargo-xwin 0.23.1; cargo-auditable 0.7.5; LLVM 21.1.8; MSVC 17; SDK 10.0.26100; CRT 14.44.17.14; node $(node --version); npm $(npm --version)"
+          bash .github/reproducibility/create-scai-predicate.sh
+
+      - name: Attest reproducible release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: published/celq-windows-x86_64.zip
+          predicate-type: https://in-toto.io/attestation/scai/v0.3
+          predicate-path: scai-predicate.json
+
+  patched_cargo_macos:
+    name: Patched Cargo (Intel macOS host)
+    needs: resolve_tag
+    runs-on: macos-15
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      TARGET: x86_64-apple-darwin
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Select pinned macOS SDK
+        run: echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: ${{ env.TARGET }}
+          patch-file: .github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
+        env:
+          CFG_VER_DESCRIPTION: macos-aarch64-metadata-patch
+
+  macos:
+    name: Reproduce celq-macos-aarch64.tar.gz on Intel macOS
+    needs: [resolve_tag, patched_cargo_macos]
+    runs-on: macos-15-intel
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+      TARGET: aarch64-apple-darwin
+      ARCHIVE: celq-macos-aarch64.tar.gz
+    steps:
+      - name: Check out verification workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Check out celq at release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          path: source
+          persist-credentials: false
+
+      - name: Verify release commit
+        working-directory: source
+        env:
+          EXPECTED_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+
+      - name: Select pinned macOS SDK
+        run: |
+          xcodebuild -version
+          echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
+      - name: Install Node.js for pinned celq
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Download and select patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-x86_64-apple-darwin
+          path: patched-cargo
+
+      - name: Select patched Cargo
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
+          echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
+          echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
+          echo "RUSTC=$(rustup which rustc)" >> "$GITHUB_ENV"
+          echo "RUSTDOC=$(rustup which rustdoc)" >> "$GITHUB_ENV"
+
+      - name: Configure reproducible build
+        working-directory: source
+        run: |
+          test "$(command -v cargo)" = "$CARGO"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}/source=/src" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        working-directory: source
+        run: cargo auditable build --locked --release --target "$TARGET"
+
+      - name: Install GNU tar and create release archive
+        run: |
+          brew install gnu-tar
+          mkdir -p rebuilt
+          gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf rebuilt/celq.tar -C "source/target/${TARGET}/release" celq
+          gzip -n -9 rebuilt/celq.tar
+          mv rebuilt/celq.tar.gz "rebuilt/$ARCHIVE"
+
+      - name: Download published release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p published
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$ARCHIVE" --dir published
+
+      - name: Compare and create SCAI predicate
+        env:
+          SCAI_ARCHIVE: celq-macos-aarch64.tar.gz
+          SCAI_PUBLISHED: published/celq-macos-aarch64.tar.gz
+          SCAI_REBUILT: rebuilt/celq-macos-aarch64.tar.gz
+          SCAI_TAG: ${{ env.RELEASE_TAG }}
+          SCAI_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+          SCAI_TARGET: aarch64-apple-darwin
+          SCAI_RELEASE_HOST: macos-15 (ARM64)
+          SCAI_RELEASE_TOOLS: rustc/cargo 1.94.1; cargo-auditable 0.7.5; Xcode 16.4; macOS SDK 15.5
+          SCAI_REBUILD_HOST: macos-15-intel (X64)
+          SCAI_BUILD_COMMAND: cargo auditable build --locked --release
+        run: |
+          export SCAI_RUSTC="$(rustc -vV)"
+          export SCAI_CARGO="$(cargo --version --verbose)"
+          export SCAI_AUX_TOOLS="cargo-auditable 0.7.5; Xcode 16.4; macOS SDK 15.5; node $(node --version); npm $(npm --version)"
+          bash .github/reproducibility/create-scai-predicate.sh
+
+      - name: Attest reproducible release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: published/celq-macos-aarch64.tar.gz
+          predicate-type: https://in-toto.io/attestation/scai/v0.3
+          predicate-path: scai-predicate.json
