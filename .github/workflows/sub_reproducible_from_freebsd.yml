@@ -102,13 +102,10 @@ jobs:
           envs: TARGET TARGET_SUFFIX SOURCE_DATE_EPOCH
           prepare: |
             set -eu
-            pkg install -y ca_root_nss git devel/rustup-init archivers/gtar archivers/gzip
-            cd /tmp
-            fetch https://ziglang.org/download/0.15.2/zig-x86_64-freebsd-0.15.2.tar.xz
-            test "$(sha256 -q zig-x86_64-freebsd-0.15.2.tar.xz)" = \
-              "5509ff57cd3f219165caed0da10221739af82742b9edfcda3f7bfaf4da7212dd"
-            tar -xf zig-x86_64-freebsd-0.15.2.tar.xz
+            pkg install -y ca_root_nss git sysutils/mise devel/rustup-init archivers/gtar archivers/gzip
+            mise use --global zig@0.15.2
 
+            cd /tmp
             mkdir -p /tmp/celq-evidence
             fetch https://github.com/IvanIsCoding/celq/releases/download/v0.6.0/celq-freebsd-x86_64.tar.gz
             test "$(sha256 -q celq-freebsd-x86_64.tar.gz)" = \
@@ -127,7 +124,8 @@ jobs:
             install -m 755 freebsd-tools/cargo-zigbuild "$HOME/.cargo/bin/"
             mkdir -p /home/runner/.cargo/bin
             install -m 755 freebsd-tools/cargo-auditable /home/runner/.cargo/bin/
-            export PATH="/home/runner/.cargo/bin:/tmp/zig-x86_64-freebsd-0.15.2:$PATH"
+            export PATH="/home/runner/.cargo/bin:$PATH"
+            test "$(mise exec -- zig version)" = 0.15.2
             rustup target add --toolchain 1.94.1 "$TARGET"
             export RUSTUP_TOOLCHAIN=1.94.1
             export CARGO_TERM_COLOR=always TZ=UTC LC_ALL=C SOURCE_DATE_EPOCH
@@ -137,7 +135,7 @@ jobs:
             chmod +x "$CARGO"
             export PATH="$ROOT/patched-cargo:$PATH"
             test "$(command -v cargo)" = "$CARGO"
-            "$CARGO" auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
+            mise exec -- "$CARGO" auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
 
             mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/binary
@@ -150,7 +148,7 @@ jobs:
             export EVIDENCE_HOST='FreeBSD 14.4 VM (x86_64) on ubuntu-24.04'
             export EVIDENCE_RUSTC='1.94.1'
             export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
-            export EVIDENCE_AUXILIARY="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.6.0"
+            export EVIDENCE_AUXILIARY="zig $(mise exec -- zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.6.0"
             celq -n \
               --arg="host:string=$EVIDENCE_HOST" \
               --arg="rustc:string=$EVIDENCE_RUSTC" \
