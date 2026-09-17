@@ -87,6 +87,7 @@ jobs:
   attest:
     name: Attest ${{ matrix.archive }}
     needs: [resolve_tag, linux, freebsd, windows, macos]
+    if: ${{ !cancelled() && needs.resolve_tag.result == 'success' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
