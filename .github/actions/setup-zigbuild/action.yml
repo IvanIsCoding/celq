@@ -22,7 +22,6 @@ runs:
       if: inputs.install_target == 'true'
       uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
       with:
-        toolchain: 1.94.1
         targets: ${{ inputs.target }}
         components: ${{ inputs.rust_components }}
 
@@ -30,7 +29,6 @@ runs:
       if: inputs.install_target == 'false'
       uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
       with:
-        toolchain: 1.94.1
         components: ${{ inputs.rust_components }}
 
     - name: Install Zig
