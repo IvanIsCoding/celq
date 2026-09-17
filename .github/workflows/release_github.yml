@@ -286,9 +286,76 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload ${VERSION} ${{ steps.archive.outputs.ARCHIVE_NAME }}
 
+  create-zstd-archives:
+    name: Zstandard (${{ matrix.pretty_target }})
+    needs: [build, build_mac]
+    runs-on: ubuntu-24.04
+    environment: github_release
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { pretty_target: macos-aarch64 }
+          - { pretty_target: linux-x86_64-gnu }
+          - { pretty_target: linux-aarch64-gnu }
+          - { pretty_target: linux-x86_64-musl }
+          - { pretty_target: linux-aarch64-musl }
+    steps:
+      - name: Install pinned zstd
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          cache: false
+          experimental: true
+          minimum_release_age: 2d
+          mise_toml: |
+            [tools]
+            "conda:zstd" = "1.5.7"
+          version: 2026.9.9
+
+      - name: Download gzip release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_ARCHIVE: ${{ env.NAME }}-${{ matrix.pretty_target }}.tar.gz
+        run: |
+          mkdir -p "${RUNNER_TEMP}/release-assets"
+          gh release download "${VERSION}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern "${SOURCE_ARCHIVE}" \
+            --dir "${RUNNER_TEMP}/release-assets"
+
+      - name: Create reproducible zstd release archive
+        id: archive
+        env:
+          SOURCE_ARCHIVE: ${{ env.NAME }}-${{ matrix.pretty_target }}.tar.gz
+        run: |
+          SOURCE_PATH="${RUNNER_TEMP}/release-assets/${SOURCE_ARCHIVE}"
+          TAR_PATH="${SOURCE_PATH%.gz}"
+          ZSTD_PATH="${TAR_PATH}.zst"
+
+          gzip --decompress --keep "${SOURCE_PATH}"
+          zstd -19 -T1 --no-progress "${TAR_PATH}" -o "${ZSTD_PATH}"
+
+          echo "ZSTD_PATH=${ZSTD_PATH}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate attestation for zstd release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: ${{ steps.archive.outputs.ZSTD_PATH }}
+
+      - name: Upload zstd release archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ZSTD_PATH: ${{ steps.archive.outputs.ZSTD_PATH }}
+        run: gh release upload "${VERSION}" "${ZSTD_PATH}" --repo "${GITHUB_REPOSITORY}"
+
   update-install-script:
     name: Update install script on GitHub Pages
-    needs: [build, build_mac, build_xwin]
+    needs: [build, build_mac, build_xwin, create-zstd-archives]
     permissions:
       contents: write
       id-token: write
@@ -299,7 +366,7 @@ jobs:
   generate-checksums:
     name: Generate SHA256 checksums
     runs-on: ubuntu-latest
-    needs: [build, build_mac, build_xwin, update-install-script]
+    needs: [build, build_mac, build_xwin, create-zstd-archives, update-install-script]
     environment: github_release
     permissions:
       contents: write
@@ -321,6 +388,7 @@ jobs:
           gh release download "${VERSION}" \
             --repo ${{ github.repository }} \
             --pattern "celq-*.tar.gz" \
+            --pattern "celq-*.tar.zst" \
             --pattern "celq-*.zip" \
             --pattern "install.sh"
           
@@ -387,13 +455,18 @@ jobs:
       matrix:
         include:
           - { target: aarch64-apple-darwin, archive: celq-macos-aarch64.tar.gz, archive_suffix: tar.gz }
+          - { target: aarch64-apple-darwin, archive: celq-macos-aarch64.tar.zst, archive_suffix: tar.zst }
           - { target: x86_64-apple-darwin, archive: celq-macos-x86_64.tar.gz, archive_suffix: tar.gz }
           - { target: x86_64-pc-windows-msvc, archive: celq-windows-x86_64.zip, archive_suffix: zip }
           - { target: aarch64-pc-windows-msvc, archive: celq-windows-arm64.zip, archive_suffix: zip }
           - { target: x86_64-unknown-linux-musl, archive: celq-linux-x86_64-musl.tar.gz, archive_suffix: tar.gz }
+          - { target: x86_64-unknown-linux-musl, archive: celq-linux-x86_64-musl.tar.zst, archive_suffix: tar.zst }
           - { target: aarch64-unknown-linux-musl, archive: celq-linux-aarch64-musl.tar.gz, archive_suffix: tar.gz }
+          - { target: aarch64-unknown-linux-musl, archive: celq-linux-aarch64-musl.tar.zst, archive_suffix: tar.zst }
           - { target: x86_64-unknown-linux-gnu, archive: celq-linux-x86_64-gnu.tar.gz, archive_suffix: tar.gz }
+          - { target: x86_64-unknown-linux-gnu, archive: celq-linux-x86_64-gnu.tar.zst, archive_suffix: tar.zst }
           - { target: aarch64-unknown-linux-gnu, archive: celq-linux-aarch64-gnu.tar.gz, archive_suffix: tar.gz }
+          - { target: aarch64-unknown-linux-gnu, archive: celq-linux-aarch64-gnu.tar.zst, archive_suffix: tar.zst }
           - { target: riscv64gc-unknown-linux-musl, archive: celq-linux-riscv64-musl.tar.gz, archive_suffix: tar.gz }
           - { target: riscv64gc-unknown-linux-gnu, archive: celq-linux-riscv64-gnu.tar.gz, archive_suffix: tar.gz }
           - { target: x86_64-unknown-freebsd, archive: celq-freebsd-x86_64.tar.gz, archive_suffix: tar.gz }
@@ -515,7 +588,7 @@ jobs:
 
   update-homebrew-formula:
     name: Update Homebrew formula
-    needs: [build, build_mac, build_xwin]
+    needs: [build, build_mac, build_xwin, create-zstd-archives]
     permissions:
       contents: read
     uses: $/.github/workflows/release_sub_homebrew.yml

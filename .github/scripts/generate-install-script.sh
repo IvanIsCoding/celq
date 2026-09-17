@@ -28,12 +28,17 @@ echo "Downloading releases for $VERSION..."
 # Download the archives (excluding FreeBSD)
 declare -A DOWNLOADS=(
   ["macos-aarch64"]="celq-macos-aarch64.tar.gz"
+  ["macos-aarch64-zstd"]="celq-macos-aarch64.tar.zst"
   ["macos-x86_64"]="celq-macos-x86_64.tar.gz"
   ["windows-x86_64"]="celq-windows-x86_64.zip"
   ["linux-x86_64-musl"]="celq-linux-x86_64-musl.tar.gz"
+  ["linux-x86_64-musl-zstd"]="celq-linux-x86_64-musl.tar.zst"
   ["linux-aarch64-musl"]="celq-linux-aarch64-musl.tar.gz"
+  ["linux-aarch64-musl-zstd"]="celq-linux-aarch64-musl.tar.zst"
   ["linux-x86_64-gnu"]="celq-linux-x86_64-gnu.tar.gz"
+  ["linux-x86_64-gnu-zstd"]="celq-linux-x86_64-gnu.tar.zst"
   ["linux-aarch64-gnu"]="celq-linux-aarch64-gnu.tar.gz"
+  ["linux-aarch64-gnu-zstd"]="celq-linux-aarch64-gnu.tar.zst"
   ["linux-riscv64-musl"]="celq-linux-riscv64-musl.tar.gz"
   ["linux-riscv64-gnu"]="celq-linux-riscv64-gnu.tar.gz"
 )
@@ -78,12 +83,17 @@ fi
 sed -e "s/{{CELQ_VERSION}}/${VERSION}/g" \
     -e "s|{{MINISIGN_PUBLIC_KEY}}|${MINISIGN_PUBLIC_KEY}|g" \
     -e "s/{{CHECKSUM_MACOS_AARCH64}}/${CHECKSUMS[macos-aarch64]}/g" \
+    -e "s/{{CHECKSUM_MACOS_AARCH64_ZSTD}}/${CHECKSUMS[macos-aarch64-zstd]}/g" \
     -e "s/{{CHECKSUM_MACOS_X86_64}}/${CHECKSUMS[macos-x86_64]}/g" \
     -e "s/{{CHECKSUM_WINDOWS_X86_64}}/${CHECKSUMS[windows-x86_64]}/g" \
     -e "s/{{CHECKSUM_LINUX_X86_64_MUSL}}/${CHECKSUMS[linux-x86_64-musl]}/g" \
+    -e "s/{{CHECKSUM_LINUX_X86_64_MUSL_ZSTD}}/${CHECKSUMS[linux-x86_64-musl-zstd]}/g" \
     -e "s/{{CHECKSUM_LINUX_AARCH64_MUSL}}/${CHECKSUMS[linux-aarch64-musl]}/g" \
+    -e "s/{{CHECKSUM_LINUX_AARCH64_MUSL_ZSTD}}/${CHECKSUMS[linux-aarch64-musl-zstd]}/g" \
     -e "s/{{CHECKSUM_LINUX_X86_64_GNU}}/${CHECKSUMS[linux-x86_64-gnu]}/g" \
+    -e "s/{{CHECKSUM_LINUX_X86_64_GNU_ZSTD}}/${CHECKSUMS[linux-x86_64-gnu-zstd]}/g" \
     -e "s/{{CHECKSUM_LINUX_AARCH64_GNU}}/${CHECKSUMS[linux-aarch64-gnu]}/g" \
+    -e "s/{{CHECKSUM_LINUX_AARCH64_GNU_ZSTD}}/${CHECKSUMS[linux-aarch64-gnu-zstd]}/g" \
     -e "s/{{CHECKSUM_LINUX_RISCV64_MUSL}}/${CHECKSUMS[linux-riscv64-musl]}/g" \
     -e "s/{{CHECKSUM_LINUX_RISCV64_GNU}}/${CHECKSUMS[linux-riscv64-gnu]}/g" \
     "$TEMPLATE_FILE" > "$OUTPUT_FILE"
