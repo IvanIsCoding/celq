@@ -228,6 +228,22 @@ If you have [pixi](https://pixi.prefix.dev/latest/), you can run celq in a tempo
 pixi exec celq -n '"Hello World"'
 ```
 
+## Skills
+
+To teach agents how to use celq, we provide a skill at [`get-celq/agent-skills`](https://github.com/get-celq/agent-skills).
+
+Install it with the `skills` CLI:
+
+```bash
+npx skills add get-celq/agent-skills --skill celq
+```
+
+Or install it with the GitHub CLI:
+
+```bash
+gh skill install get-celq/agent-skills celq
+```
+
 ## Limitations
 
 ### Eager JSON Parsing
