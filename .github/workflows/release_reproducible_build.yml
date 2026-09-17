@@ -178,13 +178,10 @@ jobs:
           SCAI_TARGET: ${{ matrix.target }}
           SCAI_RELEASE_HOST: ${{ matrix.release_host }}
           SCAI_RELEASE_TOOLS: ${{ matrix.release_tools }}
+          SCAI_BUILD_EVIDENCE: rebuilt/evidence.json
           SCAI_BUILD_WORKFLOW: ${{ matrix.build_workflow }}
           SCAI_BUILD_COMMAND: ${{ matrix.build_command }}
         run: |
-          export SCAI_REBUILD_HOST="$(cat rebuilt/evidence/host.txt)"
-          export SCAI_RUSTC="$(cat rebuilt/evidence/rustc.txt)"
-          export SCAI_CARGO="$(cat rebuilt/evidence/cargo.txt)"
-          export SCAI_AUX_TOOLS="$(cat rebuilt/evidence/auxiliary.txt); node $(node --version); npm $(npm --version)"
           bash .github/reproducibility/create-scai-predicate.sh
 
       - name: Attest reproducible release archive

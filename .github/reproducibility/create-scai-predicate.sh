@@ -10,12 +10,9 @@ set -euo pipefail
 : "${SCAI_TARGET:?SCAI_TARGET is required}"
 : "${SCAI_RELEASE_HOST:?SCAI_RELEASE_HOST is required}"
 : "${SCAI_RELEASE_TOOLS:?SCAI_RELEASE_TOOLS is required}"
-: "${SCAI_REBUILD_HOST:?SCAI_REBUILD_HOST is required}"
+: "${SCAI_BUILD_EVIDENCE:?SCAI_BUILD_EVIDENCE must point to build evidence JSON}"
 : "${SCAI_BUILD_WORKFLOW:?SCAI_BUILD_WORKFLOW is required}"
 : "${SCAI_BUILD_COMMAND:?SCAI_BUILD_COMMAND is required}"
-: "${SCAI_RUSTC:?SCAI_RUSTC is required}"
-: "${SCAI_CARGO:?SCAI_CARGO is required}"
-: "${SCAI_AUX_TOOLS:?SCAI_AUX_TOOLS is required}"
 
 if command -v sha256sum >/dev/null 2>&1; then
   published_digest=$(sha256sum "$SCAI_PUBLISHED" | cut -d ' ' -f 1)
@@ -36,7 +33,7 @@ workflow_path=".github/workflows/release_reproducible_build.yml"
 workflow_uri="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_WORKFLOW_SHA}/${workflow_path}"
 release_workflow_uri="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${SCAI_COMMIT}/.github/workflows/release_github.yml"
 
-npx -y celq@0.6.0 -n \
+npx -y celq@0.6.0 \
   --arg="archive:string=$SCAI_ARCHIVE" \
   --arg="digest:string=$published_digest" \
   --arg="release_uri:string=$release_uri" \
@@ -47,12 +44,8 @@ npx -y celq@0.6.0 -n \
   --arg="release_host:string=$SCAI_RELEASE_HOST" \
   --arg="release_tools:string=$SCAI_RELEASE_TOOLS" \
   --arg="release_workflow_uri:string=$release_workflow_uri" \
-  --arg="rebuild_host:string=$SCAI_REBUILD_HOST" \
   --arg="build_workflow:string=$SCAI_BUILD_WORKFLOW" \
   --arg="build_command:string=$SCAI_BUILD_COMMAND" \
-  --arg="rustc:string=$SCAI_RUSTC" \
-  --arg="cargo:string=$SCAI_CARGO" \
-  --arg="auxiliary_tools:string=$SCAI_AUX_TOOLS" \
   --arg="workflow_name:string=$GITHUB_WORKFLOW" \
   --arg="workflow_path:string=$workflow_path" \
   --arg="workflow_ref:string=$GITHUB_WORKFLOW_REF" \
@@ -90,15 +83,11 @@ npx -y celq@0.6.0 -n \
           "attestationWorkflow": workflow_path,
           "workflowRef": workflow_ref,
           "workflowCommit": workflow_sha,
-          "host": rebuild_host,
+          "host": this.host,
           "target": target,
           "command": build_command,
-          "toolchain": {
-            "rustc": rustc,
-            "cargo": cargo,
-            "auxiliary": auxiliary_tools,
-            "predicateGenerator": "npx -y celq@0.6.0"
-          }
+          "toolchain": this.toolchain,
+          "predicateGenerator": "npx -y celq@0.6.0"
         }
       },
       "evidence": {
@@ -111,6 +100,4 @@ npx -y celq@0.6.0 -n \
       "name": workflow_name,
       "uri": workflow_uri
     }
-  }' > scai-predicate.json
-
-npx -y celq@0.6.0 'this' < scai-predicate.json
+  }' < "$SCAI_BUILD_EVIDENCE" > scai-predicate.json

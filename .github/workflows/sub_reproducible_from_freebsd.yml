@@ -108,6 +108,14 @@ jobs:
             test "$(sha256 -q zig-x86_64-freebsd-0.15.2.tar.xz)" = \
               "5509ff57cd3f219165caed0da10221739af82742b9edfcda3f7bfaf4da7212dd"
             tar -xf zig-x86_64-freebsd-0.15.2.tar.xz
+
+            mkdir -p /tmp/celq-evidence
+            fetch https://github.com/IvanIsCoding/celq/releases/download/v0.6.0/celq-freebsd-x86_64.tar.gz
+            test "$(sha256 -q celq-freebsd-x86_64.tar.gz)" = \
+              "77a65b6a848f7db1da48975598dd6e903030dc62e8c909bcd77944ca8a8f6fe7"
+            tar -xzf celq-freebsd-x86_64.tar.gz -C /tmp/celq-evidence
+            install -m 755 /tmp/celq-evidence/celq /usr/local/bin/celq
+
             rustup-init -y --profile minimal --default-toolchain 1.94.1
             . "$HOME/.cargo/env"
             rustup component add rust-src --toolchain 1.94.1
@@ -131,17 +139,25 @@ jobs:
             test "$(command -v cargo)" = "$CARGO"
             "$CARGO" auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
 
-            mkdir -p artifacts/evidence
+            mkdir -p artifacts
             cp "target/${TARGET}/release/celq" artifacts/binary
             gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
               --owner=0 --group=0 --numeric-owner --mode=0755 \
               -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
             /usr/local/bin/gzip -n -9 artifacts/celq.tar
             mv artifacts/celq.tar.gz artifacts/archive
-            rustc -vV > artifacts/evidence/rustc.txt
-            cargo --version --verbose > artifacts/evidence/cargo.txt
-            printf 'zig %s; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5\n' "$(zig version)" > artifacts/evidence/auxiliary.txt
-            printf 'FreeBSD 14.4 VM (x86_64) on ubuntu-24.04\n' > artifacts/evidence/host.txt
+
+            export EVIDENCE_HOST='FreeBSD 14.4 VM (x86_64) on ubuntu-24.04'
+            export EVIDENCE_RUSTC="$(rustc -vV)"
+            export EVIDENCE_CARGO="$(cargo --version --verbose)"
+            export EVIDENCE_AUXILIARY="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.6.0"
+            celq -n \
+              --arg="host:string=$EVIDENCE_HOST" \
+              --arg="rustc:string=$EVIDENCE_RUSTC" \
+              --arg="cargo:string=$EVIDENCE_CARGO" \
+              --arg="auxiliary:string=$EVIDENCE_AUXILIARY" \
+              '{"host": host, "toolchain": {"rustc": rustc, "cargo": cargo, "auxiliary": auxiliary}}' \
+              > artifacts/evidence.json
 
       - name: Upload reproducible build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

@@ -101,19 +101,15 @@ jobs:
       - name: Build from source
         run: cargo auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
 
-      - name: Package build and evidence
+      - name: Package build
         run: |
-          mkdir -p artifacts/evidence
+          mkdir -p artifacts
           cp "target/${TARGET}/release/celq" artifacts/binary
           tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
             --owner=0 --group=0 --numeric-owner --mode=0755 \
             -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
           gzip -n -9 artifacts/celq.tar
           mv artifacts/celq.tar.gz artifacts/archive
-          rustc -vV > artifacts/evidence/rustc.txt
-          cargo --version --verbose > artifacts/evidence/cargo.txt
-          printf 'zig %s; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5\n' "$(zig version)" > artifacts/evidence/auxiliary.txt
-          printf 'ubuntu-24.04 (X64)\n' > artifacts/evidence/host.txt
 
       - name: Upload reproducible build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -180,19 +176,29 @@ jobs:
       - name: Build from source
         run: cargo auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
 
-      - name: Package build and evidence
+      - name: Package build
         run: |
-          mkdir -p artifacts/evidence
+          mkdir -p artifacts
           cp "target/${TARGET}/release/celq" artifacts/binary
           tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
             --owner=0 --group=0 --numeric-owner --mode=0755 \
             -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
           gzip -n -9 artifacts/celq.tar
           mv artifacts/celq.tar.gz artifacts/archive
-          rustc -vV > artifacts/evidence/rustc.txt
-          cargo --version --verbose > artifacts/evidence/cargo.txt
-          printf 'zig %s; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5\n' "$(zig version)" > artifacts/evidence/auxiliary.txt
-          printf 'ubuntu-24.04-arm (ARM64)\n' > artifacts/evidence/host.txt
+
+      - name: Capture build evidence
+        run: |
+          export EVIDENCE_HOST='ubuntu-24.04-arm (ARM64)'
+          export EVIDENCE_RUSTC="$(rustc -vV)"
+          export EVIDENCE_CARGO="$(cargo --version --verbose)"
+          export EVIDENCE_AUXILIARY="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5"
+          npx -y celq@0.6.0 -n \
+            --arg="host:string=$EVIDENCE_HOST" \
+            --arg="rustc:string=$EVIDENCE_RUSTC" \
+            --arg="cargo:string=$EVIDENCE_CARGO" \
+            --arg="auxiliary:string=$EVIDENCE_AUXILIARY" \
+            '{"host": host, "toolchain": {"rustc": rustc, "cargo": cargo, "auxiliary": auxiliary}}' \
+            > artifacts/evidence.json
 
       - name: Upload reproducible build
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
