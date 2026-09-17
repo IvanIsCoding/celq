@@ -421,14 +421,16 @@ jobs:
           persist-credentials: false
 
       - name: Install celq via mise
-        uses: jdx/mise-action@5228313ee0372e111a38da051671ca30fc5a96db # v3
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           cache: false
           experimental: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          minimum_release_age: 2d
           mise_toml: |
             [tools]
             "conda:celq" = "latest"
+          version: 2026.9.9
 
       - name: Print celq version
         run: celq --version

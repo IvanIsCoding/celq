@@ -12,7 +12,7 @@ inputs:
     description: Whether rustup should install the prebuilt Rust target
     required: true
   use_cache:
-    description: Whether setup-zig should use its download cache
+    description: Whether mise should use its download cache
     required: true
 
 runs:
@@ -22,7 +22,6 @@ runs:
       if: inputs.install_target == 'true'
       uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
       with:
-        toolchain: 1.94.1
         targets: ${{ inputs.target }}
         components: ${{ inputs.rust_components }}
 
@@ -30,14 +29,17 @@ runs:
       if: inputs.install_target == 'false'
       uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
       with:
-        toolchain: 1.94.1
         components: ${{ inputs.rust_components }}
 
     - name: Install Zig
-      uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
+      uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
       with:
-        version: 0.15.2
-        use-cache: ${{ inputs.use_cache }}
+        cache: ${{ inputs.use_cache }}
+        minimum_release_age: 2d
+        mise_toml: |
+          [tools]
+          zig = "0.15.2"
+        version: 2026.9.9
 
     - name: Install cargo-zigbuild
       uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
