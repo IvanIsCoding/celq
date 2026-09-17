@@ -25,21 +25,6 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Checkout Cargo source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          repository: rust-lang/cargo
-          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
-          path: cargo-source
-          persist-credentials: false
-          fetch-depth: 1
-          sparse-checkout: |
-            src
-            crates
-            credential
-            benches/benchsuite
-            benches/capture
-
       - name: Setup Zigbuild
         uses: $/.github/actions/setup-zigbuild
         with:
@@ -48,76 +33,20 @@ jobs:
           install_target: "true"
           use_cache: "false"
 
-      - name: Patch Cargo
-        working-directory: cargo-source
-        run: |
-          git apply --check ../.github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
-          git apply ../.github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
-
-      - name: Build patched Cargo with Zig
-        working-directory: cargo-source
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: ${{ matrix.target }}
+          patch-file: .github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
+          build-command: zigbuild
         env:
-          CFG_RELEASE: 1.94.1
-          CFG_RELEASE_CHANNEL: stable
           CFG_VER_DESCRIPTION: linux-x86_64-metadata-patch
           LIBZ_SYS_STATIC: "1"
-        run: |
-          cargo zigbuild --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
-
-      - name: Upload patched Cargo
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: patched-cargo-${{ matrix.target }}
-          path: cargo-source/target/${{ matrix.target }}/release/cargo
-          retention-days: 1
-          if-no-files-found: error
 
   freebsd_tools:
     name: Build FreeBSD tools
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Setup Zigbuild
-        uses: $/.github/actions/setup-zigbuild
-        with:
-          target: x86_64-unknown-freebsd
-          rust_components: rust-src
-          install_target: "true"
-          use_cache: "false"
-
-      - name: Install cargo-clone
-        run: |
-          /home/linuxbrew/.linuxbrew/bin/brew install --force-bottle cargo-clone
-          echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
-
-      - name: Download tool sources
-        run: cargo clone cargo-zigbuild@0.23.2 cargo-auditable@0.7.5 -- freebsd-tool-sources/
-
-      - name: Cross-compile cargo-zigbuild
-        run: |
-          cargo zigbuild --locked --release --bin cargo-zigbuild --target x86_64-unknown-freebsd \
-            --manifest-path freebsd-tool-sources/cargo-zigbuild/Cargo.toml \
-            --target-dir "$GITHUB_WORKSPACE/freebsd-tools-build"
-
-      - name: Cross-compile cargo-auditable
-        run: |
-          cargo zigbuild --locked --release --bin cargo-auditable --target x86_64-unknown-freebsd \
-            --manifest-path freebsd-tool-sources/cargo-auditable/Cargo.toml \
-            --target-dir "$GITHUB_WORKSPACE/freebsd-tools-build"
-
-      - name: Upload FreeBSD tools
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: freebsd-tools-x86_64
-          path: |
-            freebsd-tools-build/x86_64-unknown-freebsd/release/cargo-zigbuild
-            freebsd-tools-build/x86_64-unknown-freebsd/release/cargo-auditable
-          retention-days: 1
-          if-no-files-found: error
+    uses: $/.github/workflows/sub_reproducible_freebsd_tooling.yml
 
   zigbuild:
     name: Zigbuild (${{ matrix.runner }}, ${{ matrix.build.target }}${{ matrix.build.zigtargetsuffix }})
@@ -371,50 +300,20 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Checkout Cargo source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          repository: rust-lang/cargo
-          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
-          path: cargo-source
-          persist-credentials: false
-          fetch-depth: 1
-          sparse-checkout: |
-            src
-            crates
-            credential
-            benches/benchsuite
-            benches/capture
-
       - name: Install Rust 1.94.1 with Windows ARM64 target
         uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
         with:
           targets: aarch64-pc-windows-msvc
 
-      - name: Patch Cargo metadata
-        working-directory: cargo-source
-        run: |
-          git apply --check ../.github/reproducibility/patches/cargo-windows-x86_64-metadata.patch
-          git apply ../.github/reproducibility/patches/cargo-windows-x86_64-metadata.patch
-
-      - name: Cross-compile patched Cargo for Windows ARM64
-        working-directory: cargo-source
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: aarch64-pc-windows-msvc
+          patch-file: .github/reproducibility/patches/cargo-windows-x86_64-metadata.patch
         env:
-          CFG_RELEASE: 1.94.1
-          CFG_RELEASE_CHANNEL: stable
           CFG_VER_DESCRIPTION: windows-x86_64-metadata-patch
           LIBZ_SYS_STATIC: "1"
-        run: >-
-          cargo build --locked --release --package cargo --bin cargo
-          --features all-static --target aarch64-pc-windows-msvc
-
-      - name: Upload patched Cargo
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: patched-cargo-aarch64-pc-windows-msvc
-          path: cargo-source/target/aarch64-pc-windows-msvc/release/cargo.exe
-          retention-days: 1
-          if-no-files-found: error
 
   xwin:
     name: Xwin (${{ matrix.runner }}, ${{ matrix.target }})
@@ -565,21 +464,6 @@ jobs:
           ref: ${{ github.sha }}
           persist-credentials: false
 
-      - name: Checkout Cargo source
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          repository: rust-lang/cargo
-          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
-          path: cargo-source
-          persist-credentials: false
-          fetch-depth: 1
-          sparse-checkout: |
-            src
-            crates
-            credential
-            benches/benchsuite
-            benches/capture
-
       - name: Select pinned macOS SDK
         run: echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
 
@@ -588,27 +472,14 @@ jobs:
         with:
           targets: ${{ env.TARGET }}
 
-      - name: Patch Cargo
-        working-directory: cargo-source
-        run: |
-          git apply --check ../.github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
-          git apply ../.github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
-
-      - name: Cross-compile patched Cargo
-        working-directory: cargo-source
-        env:
-          CFG_RELEASE: 1.94.1
-          CFG_RELEASE_CHANNEL: stable
-          CFG_VER_DESCRIPTION: macos-aarch64-metadata-patch
-        run: cargo build --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
-
-      - name: Upload patched Cargo
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
         with:
-          name: patched-cargo-x86_64-apple-darwin
-          path: cargo-source/target/x86_64-apple-darwin/release/cargo
-          retention-days: 1
-          if-no-files-found: error
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: ${{ env.TARGET }}
+          patch-file: .github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
+        env:
+          CFG_VER_DESCRIPTION: macos-aarch64-metadata-patch
 
   macos:
     name: macOS (${{ matrix.runner }}, ${{ matrix.target }})

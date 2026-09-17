@@ -1,0 +1,80 @@
+name: Setup patched Cargo
+description: Compile and upload pinned Cargo with a reproducibility metadata patch
+
+inputs:
+  ref:
+    description: Cargo source commit to compile
+    required: true
+  target:
+    description: Rust compilation target (toolchain and build tools must already be installed)
+    required: true
+  patch-file:
+    description: Patch file to apply, relative to the repository root
+    required: true
+  build-command:
+    description: Cargo compilation subcommand (build or zigbuild)
+    default: build
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout Cargo source
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        repository: rust-lang/cargo
+        ref: ${{ inputs.ref }}
+        path: cargo-source
+        persist-credentials: false
+        fetch-depth: 1
+        sparse-checkout: |
+          src
+          crates
+          credential
+          benches/benchsuite
+          benches/capture
+
+    - name: Patch Cargo metadata
+      shell: bash
+      working-directory: cargo-source
+      env:
+        PATCH: ${{ github.workspace }}/${{ inputs.patch-file }}
+      run: |
+        git apply --check "$PATCH"
+        git apply "$PATCH"
+
+    - name: Validate build command
+      if: inputs.build-command != 'build' && inputs.build-command != 'zigbuild'
+      shell: bash
+      env:
+        BUILD_COMMAND: ${{ inputs.build-command }}
+      run: |
+        echo "Unsupported Cargo build command: $BUILD_COMMAND" >&2
+        exit 1
+
+    - name: Compile patched Cargo
+      if: inputs.build-command == 'build'
+      shell: bash
+      working-directory: cargo-source
+      env:
+        TARGET: ${{ inputs.target }}
+        CFG_RELEASE: 1.94.1
+        CFG_RELEASE_CHANNEL: stable
+      run: cargo build --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
+
+    - name: Compile patched Cargo with Zig
+      if: inputs.build-command == 'zigbuild'
+      shell: bash
+      working-directory: cargo-source
+      env:
+        TARGET: ${{ inputs.target }}
+        CFG_RELEASE: 1.94.1
+        CFG_RELEASE_CHANNEL: stable
+      run: cargo zigbuild --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
+
+    - name: Upload patched Cargo
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      with:
+        name: patched-cargo-${{ inputs.target }}
+        path: cargo-source/target/${{ inputs.target }}/release/cargo${{ endsWith(inputs.target, '-windows-msvc') && '.exe' || '' }}
+        retention-days: 1
+        if-no-files-found: error
