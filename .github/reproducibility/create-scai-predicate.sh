@@ -11,6 +11,7 @@ set -euo pipefail
 : "${SCAI_RELEASE_HOST:?SCAI_RELEASE_HOST is required}"
 : "${SCAI_RELEASE_TOOLS:?SCAI_RELEASE_TOOLS is required}"
 : "${SCAI_REBUILD_HOST:?SCAI_REBUILD_HOST is required}"
+: "${SCAI_BUILD_WORKFLOW:?SCAI_BUILD_WORKFLOW is required}"
 : "${SCAI_BUILD_COMMAND:?SCAI_BUILD_COMMAND is required}"
 : "${SCAI_RUSTC:?SCAI_RUSTC is required}"
 : "${SCAI_CARGO:?SCAI_CARGO is required}"
@@ -47,6 +48,7 @@ npx -y celq@0.6.0 -n \
   --arg="release_tools:string=$SCAI_RELEASE_TOOLS" \
   --arg="release_workflow_uri:string=$release_workflow_uri" \
   --arg="rebuild_host:string=$SCAI_REBUILD_HOST" \
+  --arg="build_workflow:string=$SCAI_BUILD_WORKFLOW" \
   --arg="build_command:string=$SCAI_BUILD_COMMAND" \
   --arg="rustc:string=$SCAI_RUSTC" \
   --arg="cargo:string=$SCAI_CARGO" \
@@ -84,7 +86,8 @@ npx -y celq@0.6.0 -n \
           "toolchain": release_tools
         },
         "reproductionBuild": {
-          "workflow": workflow_path,
+          "workflow": build_workflow,
+          "attestationWorkflow": workflow_path,
           "workflowRef": workflow_ref,
           "workflowCommit": workflow_sha,
           "host": rebuild_host,

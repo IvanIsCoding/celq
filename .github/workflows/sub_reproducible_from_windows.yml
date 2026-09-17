@@ -1,0 +1,200 @@
+name: Reproducible builds from Windows (Subworkflow)
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Commit or tag to build
+        required: true
+        type: string
+      runner:
+        description: Windows runner label
+        required: true
+        type: string
+      use_cache:
+        description: Whether tool setup actions may use caches
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+  TARGET: x86_64-pc-windows-msvc
+
+jobs:
+  patched_cargo:
+    name: Patched Cargo for Windows ARM64
+    if: inputs.runner == 'windows-11-vs2026-arm'
+    runs-on: windows-2025
+    steps:
+      - name: Preserve LF line endings for Cargo patching
+        run: git config --global core.autocrlf false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Install Rust 1.94.1 with Windows ARM64 target
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: aarch64-pc-windows-msvc
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: aarch64-pc-windows-msvc
+          patch-file: .github/reproducibility/patches/cargo-windows-x86_64-metadata.patch
+        env:
+          CFG_VER_DESCRIPTION: windows-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+
+  native:
+    name: Windows x86-64 host
+    if: inputs.runner == 'windows-2025'
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Setup Xwin
+        id: setup-xwin
+        uses: $/.github/actions/setup-xwin
+        with:
+          target: ${{ env.TARGET }}
+          rust_components: llvm-tools
+          cache_directory: ${{ github.workspace }}/.xwin-cache
+          use_cache: ${{ inputs.use_cache }}
+
+      - name: Configure reproducible build
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src -C link-arg=/DEBUG:NONE" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        env:
+          XWIN_CACHE_DIR: ${{ steps.setup-xwin.outputs.cache_directory }}
+          XWIN_CRT_VERSION: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
+          XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
+          XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
+        run: >-
+          cargo auditable xwin build --locked --release --target "${TARGET}"
+          --xwin-version "${XWIN_VERSION}"
+          --xwin-sdk-version "${XWIN_SDK_VERSION}"
+          --xwin-crt-version "${XWIN_CRT_VERSION}"
+
+      - name: Package build and evidence
+        run: |
+          7z a -mtm=off -mtc=off -mta=off archive.zip "./target/${TARGET}/release/celq.exe"
+          7z rn archive.zip "target/${TARGET}/release/celq.exe" celq.exe
+          mkdir -p artifacts/evidence
+          cp "target/${TARGET}/release/celq.exe" artifacts/binary
+          mv archive.zip artifacts/archive
+          rustc -vV > artifacts/evidence/rustc.txt
+          cargo --version --verbose > artifacts/evidence/cargo.txt
+          printf 'cargo-xwin 0.23.1; cargo-auditable 0.7.5; LLVM 21.1.8; MSVC 17; SDK 10.0.26100; CRT 14.44.17.14\n' > artifacts/evidence/auxiliary.txt
+          printf 'windows-2025 (X64)\n' > artifacts/evidence/host.txt
+
+      - name: Upload reproducible build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-windows-x86_64-windows-2025
+          path: artifacts
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+
+  arm:
+    name: Windows ARM64 host
+    if: inputs.runner == 'windows-11-vs2026-arm'
+    needs: patched_cargo
+    runs-on: windows-11-vs2026-arm
+    steps:
+      - name: Select native Windows ARM64 Rust host
+        run: |
+          rustup set default-host aarch64-pc-windows-msvc
+          echo "RUSTUP_TOOLCHAIN=1.94.1-aarch64-pc-windows-msvc" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Setup Xwin
+        id: setup-xwin
+        uses: $/.github/actions/setup-xwin
+        with:
+          target: ${{ env.TARGET }}
+          rust_components: llvm-tools
+          cache_directory: ${{ github.workspace }}/.xwin-cache
+          use_cache: ${{ inputs.use_cache }}
+
+      - name: Verify native compiler
+        run: |
+          test "$(rustc -vV | sed -n 's/^host: //p' | tr -d '\r')" = aarch64-pc-windows-msvc
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-aarch64-pc-windows-msvc
+          path: patched-cargo
+
+      - name: Select patched Cargo
+        run: |
+          echo "$(cygpath -aw "$GITHUB_WORKSPACE/patched-cargo")" >> "$GITHUB_PATH"
+          echo "CARGO=$(cygpath -aw "$GITHUB_WORKSPACE/patched-cargo/cargo.exe")" >> "$GITHUB_ENV"
+
+      - name: Configure reproducible build
+        run: |
+          test "$(cygpath -aw "$(command -v cargo)")" = "$CARGO"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src -C link-arg=/DEBUG:NONE" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        env:
+          XWIN_CACHE_DIR: ${{ steps.setup-xwin.outputs.cache_directory }}
+          XWIN_CRT_VERSION: ${{ steps.setup-xwin.outputs.xwin_crt_version }}
+          XWIN_SDK_VERSION: ${{ steps.setup-xwin.outputs.xwin_sdk_version }}
+          XWIN_VERSION: ${{ steps.setup-xwin.outputs.xwin_version }}
+        run: >-
+          cargo auditable xwin build --locked --release --target "${TARGET}"
+          --xwin-version "${XWIN_VERSION}"
+          --xwin-sdk-version "${XWIN_SDK_VERSION}"
+          --xwin-crt-version "${XWIN_CRT_VERSION}"
+
+      - name: Package build and evidence
+        run: |
+          7z a -mtm=off -mtc=off -mta=off archive.zip "./target/${TARGET}/release/celq.exe"
+          7z rn archive.zip "target/${TARGET}/release/celq.exe" celq.exe
+          mkdir -p artifacts/evidence
+          cp "target/${TARGET}/release/celq.exe" artifacts/binary
+          mv archive.zip artifacts/archive
+          rustc -vV > artifacts/evidence/rustc.txt
+          cargo --version --verbose > artifacts/evidence/cargo.txt
+          printf 'cargo-xwin 0.23.1; cargo-auditable 0.7.5; LLVM 21.1.8; MSVC 17; SDK 10.0.26100; CRT 14.44.17.14\n' > artifacts/evidence/auxiliary.txt
+          printf 'windows-11-vs2026-arm (ARM64)\n' > artifacts/evidence/host.txt
+
+      - name: Upload reproducible build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-windows-x86_64-windows-11-vs2026-arm
+          path: artifacts
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
