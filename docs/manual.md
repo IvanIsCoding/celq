@@ -45,7 +45,7 @@ Arguments:
   [expr]  CEL expression to evaluate [default: this]
 
 Options:
-  -a, --arg <name:type=value>  Define argument variables, types, and values. Format: name:type=value. Supported types: int, uint, float, bool, string
+  -a, --arg <name:type=value>  Define argument variables, types, and values. Format: name:type=value. Supported types: int, uint, float, bool, string, list, map
   -b, --boolean                Return a status code based on boolean output true = 0, false = 1, exception = 2
   -n, --null-input             Do not read JSON input from stdin
       --void                   Do not write JSON output to stdout
@@ -146,6 +146,7 @@ This file contains the simplified response from the Yahoo Finance Unofficial JSO
   * [Boolean output](#boolean-output)
   * [Chaining](#chaining)
   * [File Formats Support](#file-formats-support)
+  * [List and Map Arguments](#list-and-map-arguments)
   * [Pretty Printing](#pretty-printing)
   * [Raw Output](#raw-output)
   * [Grep friendly output](#grep-friendly-output)
@@ -486,6 +487,33 @@ tags:
 </details>
 </div>
 
+### List and Map Arguments
+
+List and map arguments use JSON syntax. Quoting the whole argument prevents the shell from interpreting the JSON value.
+
+<div class="installation-tabs" style="--arity: 2">
+<details name="list-map-arguments" style="--n: 1" open>
+<summary><h4>List</h4></summary>
+<div class="installation-tab-content">
+<p>Lists are passed as JSON arrays:</p>
+
+<pre><code class="language-bash">celq -n --arg='numbers:list=[1,2,3]' 'numbers[1]'</code></pre>
+
+<p>The command outputs <code>2</code>. List elements may contain any JSON value, including nested lists and objects. JSON strings inside a list must be quoted, for example <code>--arg='names:list=["Alice","Bob"]'</code>.</p>
+</div>
+</details>
+<details name="list-map-arguments" style="--n: 2">
+<summary><h4>Map</h4></summary>
+<div class="installation-tab-content">
+<p>Maps are passed as JSON objects:</p>
+
+<pre><code class="language-bash">celq -n --arg='config:map={"port":8080}' 'config.port'</code></pre>
+
+<p>The command outputs <code>8080</code>. Map keys are JSON strings, and values may contain any JSON value, including nested maps and lists.</p>
+</div>
+</details>
+</div>
+
 ### Pretty Printing
 
 `celq` by default uses a compact output. This is a contrast to `jq` where the compact output is an opt-in with the `-c` flag.
@@ -599,7 +627,6 @@ json.bin[0].path = "src/main.rs";
 3. If an argument is repeated, the last definition wins (e.g. `--arg=x:bool=false --arg=x:bool=true`, `x` will be true)
 4. `.` does not work as a root variable name
 5. Pretty-printing can break chaining. `celq` is more limited than `jq` when parsing NDJSON, as it relies heavily on the new-line delimiters. If you pipe the output of a `celq -p` to `celq` again and the original input was NDJSON with multiple lines, things will break.
-6. Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
 
 ## Inspiration
 

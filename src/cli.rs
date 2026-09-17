@@ -103,7 +103,7 @@ impl std::str::FromStr for Argument {
 pub struct Cli {
     /// Define argument variables, types, and values.
     /// Format: name:type=value.
-    /// Supported types: int, uint, float, bool, string
+    /// Supported types: int, uint, float, bool, string, list, map
     #[arg(short = 'a', long = "arg", value_name = "name:type=value")]
     pub args: Vec<Argument>,
 

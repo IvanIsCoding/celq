@@ -100,7 +100,7 @@ pub fn json_to_cel_variables(
 }
 
 /// Convert a serde_json::Value to a cel::objects::Value
-fn json_value_to_cel_value(value: &JsonValue) -> CelValue {
+pub(crate) fn json_value_to_cel_value(value: &JsonValue) -> CelValue {
     match value {
         JsonValue::Null => CelValue::Null,
 

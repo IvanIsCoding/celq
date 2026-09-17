@@ -44,6 +44,44 @@ fn test_bool() {
 }
 
 #[test]
+fn test_list() {
+    let args = vec![(
+        "items".to_string(),
+        "list".to_string(),
+        r#"[1,"two",true,null,[3],{"four":4}]"#.to_string(),
+    )];
+    let vars = args_to_cel_variables(&args).unwrap();
+
+    let CelValue::List(items) = vars.get("items").unwrap() else {
+        panic!("Expected list");
+    };
+
+    assert_eq!(items.len(), 6);
+    assert!(matches!(items[0], CelValue::Int(1)));
+    assert!(matches!(&items[1], CelValue::String(value) if value.as_str() == "two"));
+    assert!(matches!(items[2], CelValue::Bool(true)));
+    assert!(matches!(items[3], CelValue::Null));
+    assert!(matches!(&items[4], CelValue::List(values) if matches!(values[0], CelValue::Int(3))));
+    assert!(matches!(items[5], CelValue::Map(_)));
+}
+
+#[test]
+fn test_map() {
+    let args = vec![(
+        "config".to_string(),
+        "map".to_string(),
+        r#"{"name":"celq","enabled":true,"items":[1,2],"nested":{"value":3}}"#.to_string(),
+    )];
+    let vars = args_to_cel_variables(&args).unwrap();
+
+    let CelValue::Map(config) = vars.get("config").unwrap() else {
+        panic!("Expected map");
+    };
+
+    assert_eq!(config.map.len(), 4);
+}
+
+#[test]
 fn test_alias_types() {
     let args = vec![
         ("x".to_string(), "i64".to_string(), "42".to_string()),
@@ -87,11 +125,53 @@ fn test_multiple_args() {
 
 #[test]
 fn test_unsupported_type() {
-    let args = vec![("x".to_string(), "list".to_string(), "[]".to_string())];
+    let args = vec![("x".to_string(), "bytes".to_string(), "value".to_string())];
     let result = args_to_cel_variables(&args);
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();
     assert!(err_msg.contains("Unsupported type"));
+}
+
+#[test]
+fn test_list_invalid_json() {
+    let args = vec![("items".to_string(), "list".to_string(), "[1,".to_string())];
+    let error = args_to_cel_variables(&args).unwrap_err().to_string();
+    assert!(error.contains("Failed to parse argument 'items': invalid JSON for list"));
+}
+
+#[test]
+fn test_list_requires_json_array() {
+    let args = vec![(
+        "items".to_string(),
+        "list".to_string(),
+        r#"{"one":1}"#.to_string(),
+    )];
+    let error = args_to_cel_variables(&args).unwrap_err().to_string();
+    assert_eq!(
+        error,
+        "Failed to parse argument 'items': expected a JSON array for list"
+    );
+}
+
+#[test]
+fn test_map_invalid_json() {
+    let args = vec![(
+        "config".to_string(),
+        "map".to_string(),
+        "{\"one\":".to_string(),
+    )];
+    let error = args_to_cel_variables(&args).unwrap_err().to_string();
+    assert!(error.contains("Failed to parse argument 'config': invalid JSON for map"));
+}
+
+#[test]
+fn test_map_requires_json_object() {
+    let args = vec![("config".to_string(), "map".to_string(), "[1,2]".to_string())];
+    let error = args_to_cel_variables(&args).unwrap_err().to_string();
+    assert_eq!(
+        error,
+        "Failed to parse argument 'config': expected a JSON object for map"
+    );
 }
 
 #[test]

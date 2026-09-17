@@ -1,12 +1,14 @@
+use crate::json2cel::json_value_to_cel_value;
 use anyhow::Context;
 use anyhow::Result;
 use anyhow::bail;
 use cel::objects::Value as CelValue;
+use serde_json::Value as JsonValue;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
 /// Convert CLI arguments into a BTreeMap of CEL values.
-/// Only supports simple types: int, uint, float, string, bool
+/// Supports int, uint, float, string, bool, and JSON-encoded lists and maps.
 pub fn args_to_cel_variables(
     args: &[(String, String, String)], // (name, type_name, value)
 ) -> Result<BTreeMap<String, CelValue>> {
@@ -56,9 +58,11 @@ pub fn args_to_cel_variables(
                 CelValue::Bool(parsed)
             }
 
+            json_type @ ("list" | "map") => parse_json_argument(name, json_type, value_str)?,
+
             _ => {
                 bail!(
-                    "Unsupported type: '{}'. Only simple types (int, uint, float, string, bool) are supported.",
+                    "Unsupported type: '{}'. Supported types are int, uint, float, string, bool, list, and map.",
                     type_name
                 );
             }
@@ -68,6 +72,34 @@ pub fn args_to_cel_variables(
     }
 
     Ok(variables)
+}
+
+fn parse_json_argument(name: &str, json_type: &str, value: &str) -> Result<CelValue> {
+    let parsed: JsonValue = serde_json::from_str(value).map_err(|error| {
+        anyhow::anyhow!(
+            "Failed to parse argument '{}': invalid JSON for {}: {}",
+            name,
+            json_type,
+            error
+        )
+    })?;
+
+    let (has_expected_type, expected_json_type) = match json_type {
+        "list" => (parsed.is_array(), "array"),
+        "map" => (parsed.is_object(), "object"),
+        _ => unreachable!("JSON argument type must be list or map"),
+    };
+
+    if !has_expected_type {
+        bail!(
+            "Failed to parse argument '{}': expected a JSON {} for {}",
+            name,
+            expected_json_type,
+            json_type
+        );
+    }
+
+    Ok(json_value_to_cel_value(&parsed))
 }
 
 #[cfg(test)]

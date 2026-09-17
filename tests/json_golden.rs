@@ -165,6 +165,91 @@ test!(
     "6.28318"
 );
 
+// Arguments: list type (values use JSON syntax)
+test!(
+    arg_list_empty,
+    &["-n", "--arg", "items:list=[]", "size(items)"],
+    "",
+    "0"
+);
+
+test!(
+    arg_list_int,
+    &["-n", "--arg", "items:list=[10,20,30]", "items[1]"],
+    "",
+    "20"
+);
+
+test!(
+    arg_list_string,
+    &["-n", "--arg", r#"names:list=["Alice","Bob"]"#, "names[1]"],
+    "",
+    r#""Bob""#
+);
+
+test!(
+    arg_list_nested,
+    &["-n", "--arg", "matrix:list=[[1,2],[3,4]]", "matrix[1][0]"],
+    "",
+    "3"
+);
+
+test!(
+    arg_list_with_object,
+    &[
+        "-n",
+        "--arg",
+        r#"people:list=[{"name":"Alice"}]"#,
+        "people[0].name"
+    ],
+    "",
+    r#""Alice""#
+);
+
+// Arguments: map type (values use JSON syntax)
+test!(
+    arg_map_empty,
+    &["-n", "--arg", "config:map={}", "size(config)"],
+    "",
+    "0"
+);
+
+test!(
+    arg_map_value,
+    &[
+        "-n",
+        "--arg",
+        r#"config:map={"name":"celq","enabled":true}"#,
+        "config.name"
+    ],
+    "",
+    r#""celq""#
+);
+
+test!(
+    arg_map_nested,
+    &[
+        "-n",
+        "--arg",
+        r#"config:map={"database":{"port":5432}}"#,
+        "config.database.port"
+    ],
+    "",
+    "5432"
+);
+
+test!(
+    arg_map_with_list,
+    &[
+        "-n",
+        "--arg",
+        r#"config:map={"ports":[8080,8081]}"#,
+        "config.ports[1]"
+    ],
+    "",
+    "8081"
+);
+
 // JSON input - accessing fields
 test!(
     json_input_field,

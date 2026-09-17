@@ -1,6 +1,5 @@
 mod base;
 
-#[cfg(all(feature = "from-xml", feature = "from-yaml"))]
 use base::golden_test_failure;
 
 use std::io;
@@ -56,6 +55,42 @@ fn test_slice_fails_without_extensions() -> io::Result<()> {
     );
 
     Ok(())
+}
+
+#[test]
+fn test_list_argument_with_invalid_json_fails() -> io::Result<()> {
+    golden_test_failure(
+        &["-n", "--arg", "items:list=[1,", "items"],
+        "",
+        "Failed to parse argument 'items': invalid JSON for list",
+    )
+}
+
+#[test]
+fn test_list_argument_requires_json_array() -> io::Result<()> {
+    golden_test_failure(
+        &["-n", "--arg", "items:list=42", "items"],
+        "",
+        "Failed to parse argument 'items': expected a JSON array for list",
+    )
+}
+
+#[test]
+fn test_map_argument_with_invalid_json_fails() -> io::Result<()> {
+    golden_test_failure(
+        &["-n", "--arg", "config:map={\"one\":", "config"],
+        "",
+        "Failed to parse argument 'config': invalid JSON for map",
+    )
+}
+
+#[test]
+fn test_map_argument_requires_json_object() -> io::Result<()> {
+    golden_test_failure(
+        &["-n", "--arg", "config:map=[1,2]", "config"],
+        "",
+        "Failed to parse argument 'config': expected a JSON object for map",
+    )
 }
 
 #[cfg(all(feature = "from-xml", feature = "from-yaml"))]

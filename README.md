@@ -258,10 +258,6 @@ Currently, there are no benchmarks for `celq`. I believe the tool is "good enoug
 
 There may be edge cases or advanced features where behavior differs from the official implementation. If you find one, open an issue at the celq repository and we'll triage the issue before sending it to cel-rust.
 
-### List and Map Arguments
-
-Currently, the `--arg` syntax only supports `int`, `bool`, `float`, and `string`. Support for other CEL types will be added in the future.
-
 ### Malformed expressions
 
 Currently, the error messages for CEL expressions that are invalid are cryptic. We will enhance them in future releases.
