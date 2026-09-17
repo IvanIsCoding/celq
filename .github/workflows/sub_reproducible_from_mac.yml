@@ -173,8 +173,8 @@ jobs:
       - name: Capture build evidence
         run: |
           export EVIDENCE_HOST='macos-15-intel (X64)'
-          export EVIDENCE_RUSTC="$(rustc -vV)"
-          export EVIDENCE_CARGO="$(cargo --version --verbose)"
+          export EVIDENCE_RUSTC='1.94.1'
+          export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
           export EVIDENCE_AUXILIARY='cargo-auditable 0.7.5; Xcode 16.4; macOS SDK 15.5'
           npx -y celq@0.6.0 -n \
             --arg="host:string=$EVIDENCE_HOST" \

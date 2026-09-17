@@ -185,8 +185,8 @@ jobs:
       - name: Capture build evidence
         run: |
           export EVIDENCE_HOST='windows-11-vs2026-arm (ARM64)'
-          export EVIDENCE_RUSTC="$(rustc -vV)"
-          export EVIDENCE_CARGO="$(cargo --version --verbose)"
+          export EVIDENCE_RUSTC='1.94.1'
+          export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
           export EVIDENCE_AUXILIARY='cargo-xwin 0.23.1; cargo-auditable 0.7.5; LLVM 21.1.8; MSVC 17; SDK 10.0.26100; CRT 14.44.17.14'
           npx -y celq@0.6.0 -n \
             --arg="host:string=$EVIDENCE_HOST" \

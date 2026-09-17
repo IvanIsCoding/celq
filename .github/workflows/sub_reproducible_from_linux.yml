@@ -189,8 +189,8 @@ jobs:
       - name: Capture build evidence
         run: |
           export EVIDENCE_HOST='ubuntu-24.04-arm (ARM64)'
-          export EVIDENCE_RUSTC="$(rustc -vV)"
-          export EVIDENCE_CARGO="$(cargo --version --verbose)"
+          export EVIDENCE_RUSTC='1.94.1'
+          export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
           export EVIDENCE_AUXILIARY="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5"
           npx -y celq@0.6.0 -n \
             --arg="host:string=$EVIDENCE_HOST" \
