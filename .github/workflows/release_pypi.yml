@@ -58,6 +58,19 @@ jobs:
               ZIG: 0.15.1,
             }
           - {
+              NAME: linux-ppc64le,
+              OS: ubuntu-24.04,
+              TARGET: powerpc64le-unknown-linux-gnu,
+              MANYLINUX: manylinux_2_28,
+              ZIG: 0.15.1,
+            }
+          - {
+              NAME: linux-ppc64le,
+              OS: ubuntu-24.04,
+              TARGET: powerpc64le-unknown-linux-musl,
+              ZIG: 0.15.1,
+            }
+          - {
               NAME: win32-x64-msvc,
               OS: ubuntu-24.04,
               TARGET: x86_64-pc-windows-msvc,

@@ -112,6 +112,12 @@ pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-riscv64-musl{ 
 [package.metadata.binstall.overrides.riscv64gc-unknown-linux-gnu]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-riscv64-gnu{ archive-suffix }"
 
+[package.metadata.binstall.overrides.powerpc64le-unknown-linux-musl]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-ppc64le-musl{ archive-suffix }"
+
+[package.metadata.binstall.overrides.powerpc64le-unknown-linux-gnu]
+pkg-url = "{ repo }/releases/download/v{ version }/{ name }-linux-ppc64le-gnu{ archive-suffix }"
+
 [package.metadata.binstall.overrides.x86_64-unknown-freebsd]
 pkg-url = "{ repo }/releases/download/v{ version }/{ name }-freebsd-x86_64{ archive-suffix }"
 
