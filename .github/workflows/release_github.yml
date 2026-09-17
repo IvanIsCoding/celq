@@ -355,7 +355,7 @@ jobs:
 
   update-install-script:
     name: Update install script on GitHub Pages
-    needs: [build, build_mac, build_xwin]
+    needs: [build, build_mac, build_xwin, create-zstd-archives]
     permissions:
       contents: write
       id-token: write

@@ -33,6 +33,8 @@ OPTIONS:
     --verify-checksum   Verify the downloaded archive's SHA256 checksum
     --verify-minisign   Verify the downloaded archive's Minisign signature (requires minisign)
     --verify-attestation Verify the binary's GitHub Actions attestation (requires GitHub CLI with authentication)
+    --no-zstd           Disable zstd archives and use gzip instead
+                        (no-op for targets without zstd artifacts)
 EOF
 }
 
@@ -107,33 +109,49 @@ check_minisign() {
 # Get expected SHA256 checksum for a target
 get_expected_checksum() {
   local rust_target="$1"
+  local extension="$2"
   
-  case "$rust_target" in
-    aarch64-apple-darwin)
+  case "$rust_target:$extension" in
+    aarch64-apple-darwin:tar.zst)
+      echo "{{CHECKSUM_MACOS_AARCH64_ZSTD}}"
+      ;;
+    aarch64-apple-darwin:*)
       echo "{{CHECKSUM_MACOS_AARCH64}}"
       ;;
-    x86_64-apple-darwin)
+    x86_64-apple-darwin:*)
       echo "{{CHECKSUM_MACOS_X86_64}}"
       ;;
-    x86_64-pc-windows-msvc)
+    x86_64-pc-windows-msvc:*)
       echo "{{CHECKSUM_WINDOWS_X86_64}}"
       ;;
-    x86_64-unknown-linux-musl)
+    x86_64-unknown-linux-musl:tar.zst)
+      echo "{{CHECKSUM_LINUX_X86_64_MUSL_ZSTD}}"
+      ;;
+    x86_64-unknown-linux-musl:*)
       echo "{{CHECKSUM_LINUX_X86_64_MUSL}}"
       ;;
-    aarch64-unknown-linux-musl)
+    aarch64-unknown-linux-musl:tar.zst)
+      echo "{{CHECKSUM_LINUX_AARCH64_MUSL_ZSTD}}"
+      ;;
+    aarch64-unknown-linux-musl:*)
       echo "{{CHECKSUM_LINUX_AARCH64_MUSL}}"
       ;;
-    x86_64-unknown-linux-gnu)
+    x86_64-unknown-linux-gnu:tar.zst)
+      echo "{{CHECKSUM_LINUX_X86_64_GNU_ZSTD}}"
+      ;;
+    x86_64-unknown-linux-gnu:*)
       echo "{{CHECKSUM_LINUX_X86_64_GNU}}"
       ;;
-    aarch64-unknown-linux-gnu)
+    aarch64-unknown-linux-gnu:tar.zst)
+      echo "{{CHECKSUM_LINUX_AARCH64_GNU_ZSTD}}"
+      ;;
+    aarch64-unknown-linux-gnu:*)
       echo "{{CHECKSUM_LINUX_AARCH64_GNU}}"
       ;;
-    riscv64gc-unknown-linux-musl)
+    riscv64gc-unknown-linux-musl:*)
       echo "{{CHECKSUM_LINUX_RISCV64_MUSL}}"
       ;;
-    riscv64gc-unknown-linux-gnu)
+    riscv64gc-unknown-linux-gnu:*)
       echo "{{CHECKSUM_LINUX_RISCV64_GNU}}"
       ;;
     *)
@@ -145,13 +163,14 @@ get_expected_checksum() {
 verify_checksum() {
   local file="$1"
   local target="$2"
+  local extension="$3"
   
   say "Verifying checksum for $file"
   
   local expected_checksum
-  expected_checksum=$(get_expected_checksum "$target")
+  expected_checksum=$(get_expected_checksum "$target" "$extension")
   
-  if [ -z "$expected_checksum" ] || [ "$expected_checksum" = "{{CHECKSUM_"* ]; then
+  if [ -z "$expected_checksum" ] || [[ "$expected_checksum" == "{{CHECKSUM_"* ]]; then
     err "Checksum template not populated for target: $target"
   fi
   
@@ -195,7 +214,23 @@ target_to_pretty_name() {
   esac
 }
 
+target_has_zstd() {
+  case "$1" in
+    aarch64-apple-darwin | \
+    x86_64-unknown-linux-musl | \
+    aarch64-unknown-linux-musl | \
+    x86_64-unknown-linux-gnu | \
+    aarch64-unknown-linux-gnu)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 force=false
+use_zstd=true
 verify_attestation=false
 verify_checksums=false
 verify_minisign=false
@@ -207,6 +242,9 @@ while test $# -gt 0; do
     --help | -h)
       help
       exit 0
+      ;;
+    --no-zstd)
+      use_zstd=false
       ;;
     --target)
       target=$2
@@ -310,9 +348,14 @@ case $target in
     celq_suffix=".exe"
     ;;
   *) 
-    extension=tar.gz
     need tar
     celq_suffix=""
+
+    if [ "$use_zstd" = true ] && target_has_zstd "$target" && command -v zstd > /dev/null 2>&1; then
+      extension=tar.zst
+    else
+      extension=tar.gz
+    fi
     ;;
 esac
 
@@ -347,7 +390,7 @@ if [ "$extension" = "zip" ]; then
   archive_file="$td/celq.zip"
   
   if [ "$verify_checksums" = true ]; then
-    verify_checksum "$archive_file" "$target" || err "Checksum verification failed"
+    verify_checksum "$archive_file" "$target" "$extension" || err "Checksum verification failed"
   fi
 
   if [ "$verify_minisign" = true ]; then
@@ -360,11 +403,11 @@ if [ "$extension" = "zip" ]; then
   
   unzip -d "$td" "$archive_file"
 else
-  download "$archive" "$td/celq.tar.gz"
-  archive_file="$td/celq.tar.gz"
+  archive_file="$td/celq.$extension"
+  download "$archive" "$archive_file"
   
   if [ "$verify_checksums" = true ]; then
-    verify_checksum "$archive_file" "$target" || err "Checksum verification failed"
+    verify_checksum "$archive_file" "$target" "$extension" || err "Checksum verification failed"
   fi
 
   if [ "$verify_minisign" = true ]; then
@@ -375,7 +418,11 @@ else
     check_attestation "$archive_file" || err "Attestation verification failed"
   fi
   
-  tar -C "$td" -xzf "$archive_file"
+  if [ "$extension" = "tar.zst" ]; then
+    zstd --decompress --stdout "$archive_file" | tar -C "$td" -xf -
+  else
+    tar -C "$td" -xzf "$archive_file"
+  fi
 fi
 
 if [ -e "$dest/celq${celq_suffix}" ] && [ "$force" = false ]; then
