@@ -368,6 +368,8 @@ jobs:
       attestations: write
       artifact-metadata: write
     uses: $/.github/workflows/release_sub_pages.yml
+    secrets:
+      PAGES_DEPLOY_TOKEN: ${{ secrets.PAGES_DEPLOY_TOKEN }}
 
   generate-checksums:
     name: Generate SHA256 checksums
@@ -604,6 +606,8 @@ jobs:
     permissions:
       contents: read
     uses: $/.github/workflows/release_sub_homebrew.yml
+    secrets:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
 
   update-scoop-manifest:
     name: Update Scoop manifest
@@ -611,3 +615,5 @@ jobs:
     permissions:
       contents: read
     uses: $/.github/workflows/release_sub_scoop.yml
+    secrets:
+      SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}

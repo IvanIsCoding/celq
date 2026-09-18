@@ -2,8 +2,20 @@ name: Scoop (Release Subworkflow)
 
 on:
   workflow_call:
+    inputs:
+      version:
+        description: Release tag to publish
+        required: false
+        type: string
+        default: ""
+    secrets:
+      SCOOP_BUCKET_TOKEN:
+        required: true
 
 permissions: {}
+
+env:
+  VERSION: ${{ inputs.version || github.ref_name }}
 
 defaults:
   run:
@@ -22,12 +34,11 @@ jobs:
         with:
           persist-credentials: false
           path: celq-repo
+          ref: ${{ env.VERSION }}
 
       - name: Check if pre-release
         id: check_prerelease
         run: |
-          VERSION="${{ github.ref_name }}"
-
           # Check if this is a pre-release (contains hyphen followed by alpha/beta/rc/etc)
           if [[ "$VERSION" =~ -[a-zA-Z] ]]; then
             echo "Pre-release detected: $VERSION"
@@ -49,8 +60,6 @@ jobs:
       - name: Download Windows binaries and calculate SHA256 hashes
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
         run: |
-          VERSION="${{ github.ref_name }}"
-
           # Download the Windows binary zips (using pretty names)
           X86_64_ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-x86_64.zip"
           ARM64_ZIP_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}/celq-windows-arm64.zip"
@@ -76,7 +85,6 @@ jobs:
         run: |
           cd celq-repo
 
-          VERSION="${{ github.ref_name }}"
           VERSION_WITHOUT_V="${VERSION#v}"  # Remove 'v' prefix
 
           echo "Generating Scoop manifest for version: $VERSION_WITHOUT_V"
@@ -101,7 +109,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add bucket/celq.json
-          git commit -m "Update celq to ${{ github.ref_name }}" || echo "No changes to commit"
+          git commit -m "Update celq to ${VERSION}" || echo "No changes to commit"
           git push
 
-          echo "✅ Scoop manifest updated to ${{ github.ref_name }}"
+          echo "✅ Scoop manifest updated to ${VERSION}"

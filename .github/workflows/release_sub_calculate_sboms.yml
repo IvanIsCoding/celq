@@ -15,6 +15,11 @@ on:
         description: Binary filename inside the release archive
         required: true
         type: string
+      version:
+        description: Release tag containing the archive
+        required: false
+        type: string
+        default: ""
     outputs:
       spdx_json_path:
         description: Path to the generated SPDX JSON document
@@ -43,7 +48,7 @@ jobs:
         env:
           ARCHIVE: ${{ inputs.archive }}
           GH_TOKEN: ${{ github.token }}
-          VERSION: ${{ github.ref_name }}
+          VERSION: ${{ inputs.version || github.ref_name }}
         run: |
           mkdir -p release-assets
           gh release download "${VERSION}" \

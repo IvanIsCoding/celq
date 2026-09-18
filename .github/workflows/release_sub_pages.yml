@@ -2,8 +2,20 @@ name: GitHub Pages (Release Subworkflow)
 
 on:
   workflow_call:
+    inputs:
+      version:
+        description: Release tag to publish
+        required: false
+        type: string
+        default: ""
+    secrets:
+      PAGES_DEPLOY_TOKEN:
+        required: true
 
 permissions: {}
+
+env:
+  VERSION: ${{ inputs.version || github.ref_name }}
 
 defaults:
   run:
@@ -22,6 +34,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
+          ref: ${{ env.VERSION }}
 
       - name: Read Minisign public key from Cargo.toml
         id: read-key
@@ -46,6 +59,7 @@ jobs:
         with:
           persist-credentials: false
           path: celq-repo
+          ref: ${{ env.VERSION }}
 
       - name: Checkout get-celq.github.io repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -60,7 +74,6 @@ jobs:
           MINISIGN_PUBLIC_KEY: ${{ needs.get-minisign-public-key.outputs.public_key }}
         run: |
           cd celq-repo
-          VERSION="${{ github.ref_name }}"
 
           # Run the generation script
           bash .github/scripts/generate-install-script.sh "$VERSION" "$MINISIGN_PUBLIC_KEY"
@@ -88,15 +101,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cd celq-repo
-          gh release upload ${{ github.ref_name }} install.sh --clobber
+          gh release upload "${VERSION}" install.sh --clobber
 
       - name: Commit and push changes to Pages repo
         run: |
           cd pages-repo
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          VERSION="${{ github.ref_name }}"
 
           # Add versioned install script
           git add "${VERSION}/install.sh"
