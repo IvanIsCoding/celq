@@ -45,7 +45,7 @@ jobs:
           tag_commit=$(git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}")
           test "$(git rev-parse HEAD)" = "$tag_commit"
           release=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isDraft)
-          printf '%s\n' "$release" | npx -y celq@0.6.0 \
+          printf '%s\n' "$release" | npx -y celq@0.7.1 \
             --arg="tag:string=$RELEASE_TAG" \
             'this.tagName == tag && !this.isDraft' --boolean --void
           echo "commit=$tag_commit" >> "$GITHUB_OUTPUT"

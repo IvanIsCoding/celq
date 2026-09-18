@@ -192,7 +192,7 @@ jobs:
           export EVIDENCE_RUSTC='1.94.1'
           export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
           export EVIDENCE_AUXILIARY="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5"
-          npx -y celq@0.6.0 -n \
+          npx -y celq@0.7.1 -n \
             --arg="host:string=$EVIDENCE_HOST" \
             --arg="rustc:string=$EVIDENCE_RUSTC" \
             --arg="cargo:string=$EVIDENCE_CARGO" \

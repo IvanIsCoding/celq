@@ -102,16 +102,8 @@ jobs:
           envs: TARGET TARGET_SUFFIX SOURCE_DATE_EPOCH
           prepare: |
             set -eu
-            pkg install -y ca_root_nss git sysutils/mise devel/rustup-init archivers/gtar archivers/gzip
+            pkg install -y ca_root_nss git sysutils/mise devel/rustup-init archivers/gtar archivers/gzip npm
             mise use --global zig@0.15.2
-
-            cd /tmp
-            mkdir -p /tmp/celq-evidence
-            fetch https://github.com/IvanIsCoding/celq/releases/download/v0.6.0/celq-freebsd-x86_64.tar.gz
-            test "$(sha256 -q celq-freebsd-x86_64.tar.gz)" = \
-              "77a65b6a848f7db1da48975598dd6e903030dc62e8c909bcd77944ca8a8f6fe7"
-            tar -xzf celq-freebsd-x86_64.tar.gz -C /tmp/celq-evidence
-            install -m 755 /tmp/celq-evidence/celq /usr/local/bin/celq
 
             rustup-init -y --profile minimal --default-toolchain 1.94.1
             . "$HOME/.cargo/env"
@@ -148,8 +140,8 @@ jobs:
             export EVIDENCE_HOST='FreeBSD 14.4 VM (x86_64) on ubuntu-24.04'
             export EVIDENCE_RUSTC='1.94.1'
             export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
-            export EVIDENCE_AUXILIARY="zig $(mise exec -- zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.6.0"
-            celq -n \
+            export EVIDENCE_AUXILIARY="zig $(mise exec -- zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.7.1"
+            npx -y celq@0.7.1 -n \
               --arg="host:string=$EVIDENCE_HOST" \
               --arg="rustc:string=$EVIDENCE_RUSTC" \
               --arg="cargo:string=$EVIDENCE_CARGO" \

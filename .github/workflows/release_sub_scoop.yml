@@ -84,7 +84,7 @@ jobs:
 
           echo "Generating Scoop manifest for version: $VERSION_WITHOUT_V"
 
-          npx -y celq@0.6.0 \
+          npx -y celq@0.7.1 \
             -n \
             -p \
             -S \

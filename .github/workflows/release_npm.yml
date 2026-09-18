@@ -86,7 +86,7 @@ jobs:
           ARCHIVE: ${{ matrix.build.ARCHIVE }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          RELEASE_VERSION=$(npx -y celq@0.6.0 --from-toml --raw-output "this.package.version" < Cargo.toml)
+          RELEASE_VERSION=$(npx -y celq@0.7.1 --from-toml --raw-output "this.package.version" < Cargo.toml)
           TAG="v${RELEASE_VERSION}"
           mkdir -p release-assets release-binary
           gh release download "${TAG}" \
@@ -142,11 +142,11 @@ jobs:
       - name: Publish the package
         shell: bash
         run: |
-          RELEASE_VERSION=$(npx -y celq@0.6.0 --from-toml --raw-output  "this.package.version" < "Cargo.toml")
+          RELEASE_VERSION=$(npx -y celq@0.7.1 --from-toml --raw-output  "this.package.version" < "Cargo.toml")
           cp README.md npm/celq/README.md
           cp LICENSE-APACHE npm/celq/LICENSE-APACHE
           cp LICENSE-MIT npm/celq/LICENSE-MIT
-          npx -y celq@0.6.0 \
+          npx -y celq@0.7.1 \
               -n \
               -p \
               -S \

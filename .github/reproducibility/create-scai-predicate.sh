@@ -33,7 +33,7 @@ workflow_path=".github/workflows/release_reproducible_build.yml"
 workflow_uri="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${GITHUB_WORKFLOW_SHA}/${workflow_path}"
 release_workflow_uri="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/${SCAI_COMMIT}/.github/workflows/release_github.yml"
 
-npx -y celq@0.6.0 \
+npx -y celq@0.7.1 \
   --arg="archive:string=$SCAI_ARCHIVE" \
   --arg="digest:string=$published_digest" \
   --arg="release_uri:string=$release_uri" \
@@ -87,7 +87,7 @@ npx -y celq@0.6.0 \
           "target": target,
           "command": build_command,
           "toolchain": this.toolchain,
-          "predicateGenerator": "npx -y celq@0.6.0"
+          "predicateGenerator": "npx -y celq@0.7.1"
         }
       },
       "evidence": {
