@@ -59,6 +59,85 @@ jobs:
             /usr/local/bin/celq-musl --version
             sh .github/scripts/smoke-test.sh /usr/local/bin/celq-musl
 
+  test-curl-install-ppc64le:
+    name: Test curl installer on Debian PowerPC64LE
+    needs: test-curl-install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Download and run installer script on x86-64 host
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL \
+            https://get-celq.github.io/install.sh -o install.sh
+          mkdir -p ppc64le-bin/gnu ppc64le-bin/musl
+          bash install.sh --target powerpc64le-unknown-linux-gnu --to ppc64le-bin/gnu
+          bash install.sh --target powerpc64le-unknown-linux-musl --to ppc64le-bin/musl
+
+      - name: Test on Debian PowerPC64LE
+        uses: vmactions/debian-vm@389ba1da28ff5b440cba52db8e03fc2e08e2affa # v1.0.0
+        with:
+          release: "13"
+          arch: ppc64le
+          usesh: true
+          run: |
+            chmod +x ppc64le-bin/gnu/celq ppc64le-bin/musl/celq
+            mv ppc64le-bin/gnu/celq /usr/local/bin/celq-gnu
+            mv ppc64le-bin/musl/celq /usr/local/bin/celq-musl
+            /usr/local/bin/celq-gnu --version
+            sh .github/scripts/smoke-test.sh /usr/local/bin/celq-gnu
+            /usr/local/bin/celq-musl --version
+            sh .github/scripts/smoke-test.sh /usr/local/bin/celq-musl
+
+  test-curl-install-with-minisign:
+    name: Test curl installer with Minisign verification on Ubuntu
+    needs: test-curl-install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Install Minisign and zstd
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes minisign zstd
+
+      - name: Download installer script
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL \
+            https://get-celq.github.io/install.sh -o install.sh
+
+      - name: Install and verify zstd archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bash install.sh \
+            --target x86_64-unknown-linux-musl \
+            --verify-minisign \
+            --to minisign-bin/zstd
+
+      - name: Install and verify gzip archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          bash install.sh \
+            --target x86_64-unknown-linux-musl \
+            --verify-minisign \
+            --no-zstd \
+            --to minisign-bin/gzip
+
+      - name: Run smoke tests
+        run: |
+          minisign-bin/zstd/celq --version
+          sh .github/scripts/smoke-test.sh minisign-bin/zstd/celq
+          minisign-bin/gzip/celq --version
+          sh .github/scripts/smoke-test.sh minisign-bin/gzip/celq
+
   test-curl-install-with-checksum:
     name: Test curl installer with checksum verification on ubuntu-slim
     runs-on: ubuntu-slim
@@ -522,9 +601,11 @@ jobs:
     name: Installation Tests Summary
     needs:
       - test-curl-install
+      - test-curl-install-ppc64le
       - test-curl-install-riscv64
       - test-curl-install-with-attestation
       - test-curl-install-with-checksum
+      - test-curl-install-with-minisign
       - test-curl-install-windows
       - test-npm-install
       - test-pip-install
@@ -548,9 +629,11 @@ jobs:
         run: |
           echo "Installation test results:"
           echo "- curl installer: ${{ needs.test-curl-install.result }}"
+          echo "- curl installer (PowerPC64LE): ${{ needs.test-curl-install-ppc64le.result }}"
           echo "- curl installer (RISC-V 64): ${{ needs.test-curl-install-riscv64.result }}"
           echo "- curl installer (attestation): ${{ needs.test-curl-install-with-attestation.result }}"
           echo "- curl installer (checksum): ${{ needs.test-curl-install-with-checksum.result }}"
+          echo "- curl installer (Minisign, zstd and gzip): ${{ needs.test-curl-install-with-minisign.result }}"
           echo "- curl installer (Windows): ${{ needs.test-curl-install-windows.result }}"
           echo "- npm install: ${{ needs.test-npm-install.result }}"
           echo "- pip install: ${{ needs.test-pip-install.result }}"
@@ -569,9 +652,11 @@ jobs:
           echo "- freebsd install: ${{ needs.test-freebsd-install.result }}"
 
           if [ "${{ needs.test-curl-install.result }}" != "success" ] || \
+             [ "${{ needs.test-curl-install-ppc64le.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-riscv64.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-with-attestation.result }}" != "success" ] || \
-              [ "${{ needs.test-curl-install-with-checksum.result }}" != "success" ] || \
+             [ "${{ needs.test-curl-install-with-checksum.result }}" != "success" ] || \
+             [ "${{ needs.test-curl-install-with-minisign.result }}" != "success" ] || \
              [ "${{ needs.test-curl-install-windows.result }}" != "success" ] || \
              [ "${{ needs.test-npm-install.result }}" != "success" ] || \
              [ "${{ needs.test-pip-install.result }}" != "success" ] || \
