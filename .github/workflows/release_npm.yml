@@ -39,6 +39,16 @@ jobs:
               ARCHIVE: celq-linux-riscv64-musl.tar.gz,
             }
           - {
+              NAME: linux-ppc64-musl,
+              OS: ubuntu-24.04,
+              ARCHIVE: celq-linux-ppc64le-musl.tar.gz,
+            }
+          - {
+              NAME: freebsd-x64,
+              OS: ubuntu-24.04,
+              ARCHIVE: celq-freebsd-x86_64.tar.gz,
+            }
+          - {
               NAME: win32-x64-msvc,
               OS: windows-2025,
               ARCHIVE: celq-windows-x86_64.zip,
