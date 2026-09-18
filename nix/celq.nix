@@ -8,17 +8,17 @@
 
 rustPlatform.buildRustPackage (finalAttrs: {
   pname = "celq";
-  version = "0.6.0";
+  version = "0.7.0";
 
   # Fetch from crates.io
   src = fetchCrate {
     pname = finalAttrs.pname;
     version = finalAttrs.version;
     registryDl = "https://static.crates.io/crates";
-    sha256 = "sha256-ldT9TfgZqhnRNmccCIxDFKNWQmVZW+MWR2bDCWGN6Ds=";
+    sha256 = "sha256-+HXe3VydkvqH8ms0e6yjMBVAfdNh82frFh+eY7SLeck=";
   };
 
-  cargoHash = "sha256-X5eNy4Aj/mo6NbeX13NitjkNayR6h4QdO16vfuFlz8M=";
+  cargoHash = "sha256-XcqCfjdCNZRulomqCOcxUnOZ3SKF4DA/ZR5xWNLgh20=";
 
   nativeInstallCheckInputs = [
     versionCheckHook
