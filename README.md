@@ -103,7 +103,7 @@ cargo install celq --locked
 If you have [cargo-binstall](https://github.com/cargo-bins/cargo-binstall) installed, you can install pre-built binaries directly:
 
 ```bash
-cargo binstall celq
+cargo binstall celq --only-signed
 ```
 
 ### Mise
