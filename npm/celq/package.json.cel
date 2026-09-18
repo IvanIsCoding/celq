@@ -34,7 +34,9 @@
   "optionalDependencies": {
     "@ivaniscoding/celq-darwin-arm64": node_version,
     "@ivaniscoding/celq-darwin-x64": node_version,
+    "@ivaniscoding/celq-freebsd-x64": node_version,
     "@ivaniscoding/celq-linux-arm64": node_version,
+    "@ivaniscoding/celq-linux-ppc64": node_version,
     "@ivaniscoding/celq-linux-riscv64": node_version,
     "@ivaniscoding/celq-linux-x64": node_version,
     "@ivaniscoding/celq-windows-arm64": node_version,
