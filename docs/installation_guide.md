@@ -32,9 +32,9 @@ curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/install.sh | bas
 <details name="installer-option" style="--n: 3">
 <summary><h5>Version</h5></summary>
 <div class="installation-tab-content">
-<p>Include a version in the URL to pin the installation. This example always installs version 0.7.0:</p>
+<p>Include a version in the URL to pin the installation. This example always installs version 0.7.1:</p>
 
-<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.7.0/install.sh | bash</code></pre>
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -sSf https://get-celq.github.io/v0.7.1/install.sh | bash</code></pre>
 </div>
 </details>
 <details name="installer-option" style="--n: 4">
@@ -163,7 +163,7 @@ Alternatively, add this to `mise.toml`:
   id: exampleID
   uses: get-celq/celq-action@v0.1
   with:
-    version: '0.7.0'
+    version: '0.7.1'
     cmd: celq 'this.exampleID' &lt; example.json
 
 - name: Reuse a variable obtained in another step

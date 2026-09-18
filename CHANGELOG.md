@@ -1,6 +1,13 @@
 Changelog
 =========
 
+[v0.7.1](https://github.com/IvanIsCoding/celq/releases/tag/v0.7.1) - 2026-09-17
+------------------------------------------------------------------------
+
+### Fixed
+
+* Fixed `cargo-binstall` support for Zstandard-compressed release archives by correcting the package format metadata from `tar.zst` to `tzstd`.
+
 [v0.7.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.7.0) - 2026-09-17
 ------------------------------------------------------------------------
 
