@@ -1,6 +1,24 @@
 Changelog
 =========
 
+[v0.7.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.7.0) - 2026-09-17
+------------------------------------------------------------------------
+
+### Added
+
+* Added support for JSON-encoded lists and maps as `--arg` values.
+* Release archives are now signed with minisign. The installer can verify signatures with `--verify-minisign`, and `cargo-binstall` can verify them with `cargo binstall celq --only-signed`.
+* Release archives for several targets now use zstd compression. If you use Homebrew, `cargo-binstall`, or have `zstd` available, you will be able to download smaller files to install celq
+* Significantly improved the documentation's organization, formatting, navigation, installation guidance, examples, and coverage of release verification.
+
+### Miscellaneous
+
+* Split celq's XML and greppable JSON implementations into the new `two_xml2json` and `serde_greppable` crates. celq now consumes those parsers as optional dependencies. Future releases of those two crates will polish their public surface.
+* Bumped the CEL interpreter (`cel` -> 0.14.5), YAML parser (`serde-saphyr` -> 1.2.0), and TOML parser (`toml` -> 1.1.6).
+* This is the first release that tries to provide reproducible builds. Independent rebuilds compare selected release archives and publish attestations when they match. This is a best-effort initiative, if the builds fail to reproduce the release will still be considered a success.
+* There are now pre-built Linux PowerPC64LE binaries for both GNU and musl environments.
+* There are now NPM packages for FreeBSD x86-64 and Linux PowerPC64LE.
+
 [v0.6.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.6.0) - 2026-08-28
 ------------------------------------------------------------------------
 
