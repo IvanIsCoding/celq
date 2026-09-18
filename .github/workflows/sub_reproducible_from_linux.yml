@@ -1,0 +1,210 @@
+name: Reproducible builds from Linux (Subworkflow)
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Commit or tag to build
+        required: true
+        type: string
+      runner:
+        description: Linux runner label
+        required: true
+        type: string
+      use_cache:
+        description: Whether tool setup actions may use caches
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  patched_cargo:
+    name: Patched Cargo for Linux ARM64
+    if: inputs.runner == 'ubuntu-24.04-arm'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: aarch64-unknown-linux-gnu
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: ${{ inputs.use_cache }}
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: aarch64-unknown-linux-gnu
+          patch-file: .github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
+          build-command: zigbuild
+        env:
+          CFG_VER_DESCRIPTION: linux-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+
+  native:
+    name: Linux x86-64 (${{ matrix.pretty_target }})
+    if: inputs.runner == 'ubuntu-24.04'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            target_suffix: .2.28
+            pretty_target: linux-x86_64-gnu
+          - target: x86_64-unknown-linux-musl
+            target_suffix: ""
+            pretty_target: linux-x86_64-musl
+          - target: aarch64-unknown-linux-gnu
+            target_suffix: .2.28
+            pretty_target: linux-aarch64-gnu
+          - target: aarch64-unknown-linux-musl
+            target_suffix: ""
+            pretty_target: linux-aarch64-musl
+    env:
+      TARGET: ${{ matrix.target }}
+      TARGET_SUFFIX: ${{ matrix.target_suffix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: ${{ matrix.target }}
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: ${{ inputs.use_cache }}
+
+      - name: Configure reproducible build
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        run: cargo auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
+
+      - name: Package build
+        run: |
+          mkdir -p artifacts
+          cp "target/${TARGET}/release/celq" artifacts/binary
+          tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
+          gzip -n -9 artifacts/celq.tar
+          mv artifacts/celq.tar.gz artifacts/archive
+
+      - name: Upload reproducible build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-${{ matrix.pretty_target }}-ubuntu-24.04
+          path: artifacts
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+
+  arm_host:
+    name: Linux ARM64 host (${{ matrix.pretty_target }})
+    if: inputs.runner == 'ubuntu-24.04-arm'
+    needs: patched_cargo
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            target_suffix: .2.28
+            pretty_target: linux-x86_64-gnu
+          - target: x86_64-unknown-linux-musl
+            target_suffix: ""
+            pretty_target: linux-x86_64-musl
+    env:
+      TARGET: ${{ matrix.target }}
+      TARGET_SUFFIX: ${{ matrix.target_suffix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-aarch64-unknown-linux-gnu
+          path: patched-cargo
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: ${{ matrix.target }}
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: ${{ inputs.use_cache }}
+
+      - name: Select patched Cargo
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
+          echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
+          echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
+
+      - name: Configure reproducible build
+        run: |
+          test "$(command -v cargo)" = "$CARGO"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        run: cargo auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
+
+      - name: Package build
+        run: |
+          mkdir -p artifacts
+          cp "target/${TARGET}/release/celq" artifacts/binary
+          tar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
+          gzip -n -9 artifacts/celq.tar
+          mv artifacts/celq.tar.gz artifacts/archive
+
+      - name: Capture build evidence
+        run: |
+          export EVIDENCE_HOST='ubuntu-24.04-arm (ARM64)'
+          export EVIDENCE_RUSTC='1.94.1'
+          export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
+          export EVIDENCE_AUXILIARY="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5"
+          npx -y celq@0.6.0 -n \
+            --arg="host:string=$EVIDENCE_HOST" \
+            --arg="rustc:string=$EVIDENCE_RUSTC" \
+            --arg="cargo:string=$EVIDENCE_CARGO" \
+            --arg="auxiliary:string=$EVIDENCE_AUXILIARY" \
+            '{"host": host, "toolchain": {"rustc": rustc, "cargo": cargo, "auxiliary": auxiliary}}' \
+            > artifacts/evidence.json
+
+      - name: Upload reproducible build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-${{ matrix.pretty_target }}-ubuntu-24.04-arm
+          path: artifacts
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0

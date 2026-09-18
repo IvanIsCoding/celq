@@ -2,6 +2,12 @@ name: Reproducible FreeBSD tooling (Subworkflow)
 
 on:
   workflow_call:
+    inputs:
+      use_cache:
+        description: Whether setup-zig may use its download cache
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -25,7 +31,7 @@ jobs:
           target: x86_64-unknown-freebsd
           rust_components: rust-src
           install_target: "true"
-          use_cache: "false"
+          use_cache: ${{ inputs.use_cache }}
 
       - name: Install cargo-clone
         run: |

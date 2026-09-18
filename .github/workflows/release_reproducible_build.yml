@@ -1,0 +1,192 @@
+name: Attest reproducible release builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing non-draft GitHub release tag to reproduce
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  RELEASE_TAG: ${{ inputs.tag }}
+
+jobs:
+  resolve_tag:
+    name: Resolve release tag
+    runs-on: ubuntu-24.04
+    outputs:
+      commit: ${{ steps.tag.outputs.commit }}
+    steps:
+      - name: Check out celq at release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+          persist-credentials: false
+
+      - name: Install Node.js for pinned celq
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Verify tag and published release
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag_commit=$(git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}")
+          test "$(git rev-parse HEAD)" = "$tag_commit"
+          release=$(gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json tagName,isDraft)
+          printf '%s\n' "$release" | npx -y celq@0.6.0 \
+            --arg="tag:string=$RELEASE_TAG" \
+            'this.tagName == tag && !this.isDraft' --boolean --void
+          echo "commit=$tag_commit" >> "$GITHUB_OUTPUT"
+
+  linux:
+    name: Rebuild from Linux ARM64
+    needs: resolve_tag
+    uses: $/.github/workflows/sub_reproducible_from_linux.yml
+    with:
+      source_ref: ${{ needs.resolve_tag.outputs.commit }}
+      runner: ubuntu-24.04-arm
+      use_cache: false
+
+  freebsd:
+    name: Rebuild from FreeBSD x86-64
+    needs: resolve_tag
+    uses: $/.github/workflows/sub_reproducible_from_freebsd.yml
+    with:
+      source_ref: ${{ needs.resolve_tag.outputs.commit }}
+      use_cache: false
+
+  windows:
+    name: Rebuild from Windows ARM64
+    needs: resolve_tag
+    uses: $/.github/workflows/sub_reproducible_from_windows.yml
+    with:
+      source_ref: ${{ needs.resolve_tag.outputs.commit }}
+      runner: windows-11-vs2026-arm
+      use_cache: false
+
+  macos:
+    name: Rebuild from Intel macOS
+    needs: resolve_tag
+    uses: $/.github/workflows/sub_reproducible_from_mac.yml
+    with:
+      source_ref: ${{ needs.resolve_tag.outputs.commit }}
+      runner: macos-15-intel
+
+  attest:
+    name: Attest ${{ matrix.archive }}
+    needs: [resolve_tag, linux, freebsd, windows, macos]
+    if: ${{ !cancelled() && needs.resolve_tag.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      artifact-metadata: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - archive: celq-linux-x86_64-gnu.tar.gz
+            artifact: reproducible-linux-x86_64-gnu-ubuntu-24.04-arm
+            target: x86_64-unknown-linux-gnu.2.28
+            build_workflow: .github/workflows/sub_reproducible_from_linux.yml
+            build_command: cargo auditable zigbuild --locked --release
+            release_host: ubuntu-24.04 (X64)
+            release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
+          - archive: celq-linux-x86_64-musl.tar.gz
+            artifact: reproducible-linux-x86_64-musl-ubuntu-24.04-arm
+            target: x86_64-unknown-linux-musl
+            build_workflow: .github/workflows/sub_reproducible_from_linux.yml
+            build_command: cargo auditable zigbuild --locked --release
+            release_host: ubuntu-24.04 (X64)
+            release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
+          - archive: celq-linux-aarch64-gnu.tar.gz
+            artifact: reproducible-linux-aarch64-gnu-freebsd-14.4-x86_64
+            target: aarch64-unknown-linux-gnu.2.28
+            build_workflow: .github/workflows/sub_reproducible_from_freebsd.yml
+            build_command: cargo auditable zigbuild --locked --release
+            release_host: ubuntu-24.04 (X64)
+            release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
+          - archive: celq-linux-aarch64-musl.tar.gz
+            artifact: reproducible-linux-aarch64-musl-freebsd-14.4-x86_64
+            target: aarch64-unknown-linux-musl
+            build_workflow: .github/workflows/sub_reproducible_from_freebsd.yml
+            build_command: cargo auditable zigbuild --locked --release
+            release_host: ubuntu-24.04 (X64)
+            release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
+          - archive: celq-windows-x86_64.zip
+            artifact: reproducible-windows-x86_64-windows-11-vs2026-arm
+            target: x86_64-pc-windows-msvc
+            build_workflow: .github/workflows/sub_reproducible_from_windows.yml
+            build_command: cargo auditable xwin build --locked --release
+            release_host: windows-2025 (X64)
+            release_tools: rustc/cargo 1.94.1; cargo-xwin 0.23.1; cargo-auditable 0.7.5; LLVM 21.1.8; MSVC 17; SDK 10.0.26100; CRT 14.44.17.14
+          - archive: celq-macos-aarch64.tar.gz
+            artifact: reproducible-macos-aarch64-macos-15-intel
+            target: aarch64-apple-darwin
+            build_workflow: .github/workflows/sub_reproducible_from_mac.yml
+            build_command: cargo auditable build --locked --release
+            release_host: macos-15 (ARM64)
+            release_tools: rustc/cargo 1.94.1; cargo-auditable 0.7.5; Xcode 16.4; macOS SDK 15.5
+    steps:
+      - name: Check out attestation workflow
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Install Node.js for pinned celq
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Download independent rebuild
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: ${{ matrix.artifact }}
+          path: rebuilt
+
+      - name: Download published release archive
+        env:
+          ARCHIVE: ${{ matrix.archive }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p published
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "$ARCHIVE" --dir published
+
+      - name: Compare and create SCAI predicate
+        env:
+          SCAI_ARCHIVE: ${{ matrix.archive }}
+          SCAI_PUBLISHED: published/${{ matrix.archive }}
+          SCAI_REBUILT: rebuilt/archive
+          SCAI_TAG: ${{ env.RELEASE_TAG }}
+          SCAI_COMMIT: ${{ needs.resolve_tag.outputs.commit }}
+          SCAI_TARGET: ${{ matrix.target }}
+          SCAI_RELEASE_HOST: ${{ matrix.release_host }}
+          SCAI_RELEASE_TOOLS: ${{ matrix.release_tools }}
+          SCAI_BUILD_EVIDENCE: rebuilt/evidence.json
+          SCAI_BUILD_WORKFLOW: ${{ matrix.build_workflow }}
+          SCAI_BUILD_COMMAND: ${{ matrix.build_command }}
+        run: |
+          bash .github/reproducibility/create-scai-predicate.sh
+
+      - name: Attest reproducible release archive
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: published/${{ matrix.archive }}
+          predicate-type: https://in-toto.io/attestation/scai/v0.3
+          predicate-path: scai-predicate.json

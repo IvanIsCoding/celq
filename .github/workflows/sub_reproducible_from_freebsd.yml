@@ -1,0 +1,167 @@
+name: Reproducible builds from FreeBSD (Subworkflow)
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Commit or tag to build
+        required: true
+        type: string
+      use_cache:
+        description: Whether tool setup actions may use caches
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  patched_cargo:
+    name: Patched Cargo for FreeBSD x86-64
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Setup Zigbuild
+        uses: $/.github/actions/setup-zigbuild
+        with:
+          target: x86_64-unknown-freebsd
+          rust_components: rust-src
+          install_target: "true"
+          use_cache: ${{ inputs.use_cache }}
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: x86_64-unknown-freebsd
+          patch-file: .github/reproducibility/patches/cargo-linux-x86_64-metadata.patch
+          build-command: zigbuild
+        env:
+          CFG_VER_DESCRIPTION: linux-x86_64-metadata-patch
+          LIBZ_SYS_STATIC: "1"
+
+  tools:
+    name: Build FreeBSD tools
+    uses: $/.github/workflows/sub_reproducible_freebsd_tooling.yml
+    with:
+      use_cache: ${{ inputs.use_cache }}
+
+  build:
+    name: FreeBSD x86-64 host (${{ matrix.pretty_target }})
+    needs: [patched_cargo, tools]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-gnu
+            target_suffix: .2.28
+            pretty_target: linux-aarch64-gnu
+          - target: aarch64-unknown-linux-musl
+            target_suffix: ""
+            pretty_target: linux-aarch64-musl
+    env:
+      TARGET: ${{ matrix.target }}
+      TARGET_SUFFIX: ${{ matrix.target_suffix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Capture source timestamp
+        run: echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-x86_64-unknown-freebsd
+          path: patched-cargo
+
+      - name: Download FreeBSD tools
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: freebsd-tools-x86_64
+          path: freebsd-tools
+
+      - name: Build from source on FreeBSD
+        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
+        with:
+          release: "14.4"
+          arch: x86_64
+          sync: rsync
+          copyback: true
+          envs: TARGET TARGET_SUFFIX SOURCE_DATE_EPOCH
+          prepare: |
+            set -eu
+            pkg install -y ca_root_nss git sysutils/mise devel/rustup-init archivers/gtar archivers/gzip
+            mise use --global zig@0.15.2
+
+            cd /tmp
+            mkdir -p /tmp/celq-evidence
+            fetch https://github.com/IvanIsCoding/celq/releases/download/v0.6.0/celq-freebsd-x86_64.tar.gz
+            test "$(sha256 -q celq-freebsd-x86_64.tar.gz)" = \
+              "77a65b6a848f7db1da48975598dd6e903030dc62e8c909bcd77944ca8a8f6fe7"
+            tar -xzf celq-freebsd-x86_64.tar.gz -C /tmp/celq-evidence
+            install -m 755 /tmp/celq-evidence/celq /usr/local/bin/celq
+
+            rustup-init -y --profile minimal --default-toolchain 1.94.1
+            . "$HOME/.cargo/env"
+            rustup component add rust-src --toolchain 1.94.1
+
+          run: |
+            set -eu
+            ROOT=$(pwd -P)
+            . "$HOME/.cargo/env"
+            install -m 755 freebsd-tools/cargo-zigbuild "$HOME/.cargo/bin/"
+            mkdir -p /home/runner/.cargo/bin
+            install -m 755 freebsd-tools/cargo-auditable /home/runner/.cargo/bin/
+            export PATH="/home/runner/.cargo/bin:$PATH"
+            test "$(mise exec -- zig version)" = 0.15.2
+            rustup target add --toolchain 1.94.1 "$TARGET"
+            export RUSTUP_TOOLCHAIN=1.94.1
+            export CARGO_TERM_COLOR=always TZ=UTC LC_ALL=C SOURCE_DATE_EPOCH
+            RUST_SYSROOT=$(rustc --print sysroot)
+            export RUSTFLAGS="--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${ROOT}=/src"
+            export CARGO="$ROOT/patched-cargo/cargo"
+            chmod +x "$CARGO"
+            export PATH="$ROOT/patched-cargo:$PATH"
+            test "$(command -v cargo)" = "$CARGO"
+            mise exec -- "$CARGO" auditable zigbuild --locked --release --target "${TARGET}${TARGET_SUFFIX}"
+
+            mkdir -p artifacts
+            cp "target/${TARGET}/release/celq" artifacts/binary
+            gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+              --owner=0 --group=0 --numeric-owner --mode=0755 \
+              -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
+            /usr/local/bin/gzip -n -9 artifacts/celq.tar
+            mv artifacts/celq.tar.gz artifacts/archive
+
+            export EVIDENCE_HOST='FreeBSD 14.4 VM (x86_64) on ubuntu-24.04'
+            export EVIDENCE_RUSTC='1.94.1'
+            export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
+            export EVIDENCE_AUXILIARY="zig $(mise exec -- zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.6.0"
+            celq -n \
+              --arg="host:string=$EVIDENCE_HOST" \
+              --arg="rustc:string=$EVIDENCE_RUSTC" \
+              --arg="cargo:string=$EVIDENCE_CARGO" \
+              --arg="auxiliary:string=$EVIDENCE_AUXILIARY" \
+              '{"host": host, "toolchain": {"rustc": rustc, "cargo": cargo, "auxiliary": auxiliary}}' \
+              > artifacts/evidence.json
+
+      - name: Upload reproducible build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-${{ matrix.pretty_target }}-freebsd-14.4-x86_64
+          path: artifacts
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0

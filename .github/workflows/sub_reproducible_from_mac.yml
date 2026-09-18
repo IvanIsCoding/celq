@@ -1,0 +1,194 @@
+name: Reproducible builds from macOS (Subworkflow)
+
+on:
+  workflow_call:
+    inputs:
+      source_ref:
+        description: Commit or tag to build
+        required: true
+        type: string
+      runner:
+        description: macOS runner label
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+  MACOSX_DEPLOYMENT_TARGET: "11.0"
+  TARGET: aarch64-apple-darwin
+
+jobs:
+  patched_cargo:
+    name: Patched Cargo for Intel macOS
+    if: inputs.runner == 'macos-15-intel'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Select pinned macOS SDK
+        run: echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: x86_64-apple-darwin
+
+      - name: Setup patched Cargo
+        uses: $/.github/actions/setup-patched-cargo
+        with:
+          ref: 29ea6fb6a5db279426f4cc4e17aa385f05a0cfbc
+          target: x86_64-apple-darwin
+          patch-file: .github/reproducibility/patches/cargo-macos-aarch64-metadata.patch
+        env:
+          CFG_VER_DESCRIPTION: macos-aarch64-metadata-patch
+
+  native:
+    name: macOS ARM64 host
+    if: inputs.runner == 'macos-15'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Select pinned macOS SDK
+        run: |
+          xcodebuild -version
+          echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
+      - name: Configure reproducible build
+        run: |
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        run: cargo auditable build --locked --release --target "$TARGET"
+
+      - name: Package build
+        run: |
+          brew install gnu-tar
+          mkdir -p artifacts
+          cp "target/${TARGET}/release/celq" artifacts/binary
+          gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
+          gzip -n -9 artifacts/celq.tar
+          mv artifacts/celq.tar.gz artifacts/archive
+
+      - name: Upload reproducible build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-macos-aarch64-macos-15
+          path: artifacts
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
+
+  intel:
+    name: Intel macOS host
+    if: inputs.runner == 'macos-15-intel'
+    needs: patched_cargo
+    runs-on: macos-15-intel
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.source_ref }}
+          persist-credentials: false
+
+      - name: Select pinned macOS SDK
+        run: |
+          xcodebuild -version
+          echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
+
+      - name: Install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        with:
+          targets: ${{ env.TARGET }}
+
+      - name: Install cargo-auditable
+        uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+        with:
+          tool: cargo-auditable@0.7.5
+          fallback: none
+
+      - name: Download patched Cargo
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: patched-cargo-x86_64-apple-darwin
+          path: patched-cargo
+
+      - name: Select patched Cargo
+        run: |
+          chmod +x "$GITHUB_WORKSPACE/patched-cargo/cargo"
+          echo "$GITHUB_WORKSPACE/patched-cargo" >> "$GITHUB_PATH"
+          echo "CARGO=$GITHUB_WORKSPACE/patched-cargo/cargo" >> "$GITHUB_ENV"
+          echo "RUSTC=$(rustup which rustc)" >> "$GITHUB_ENV"
+          echo "RUSTDOC=$(rustup which rustdoc)" >> "$GITHUB_ENV"
+
+      - name: Configure reproducible build
+        run: |
+          test "$(command -v cargo)" = "$CARGO"
+          echo "SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct)" >> "$GITHUB_ENV"
+          echo "TZ=UTC" >> "$GITHUB_ENV"
+          echo "LC_ALL=C" >> "$GITHUB_ENV"
+          RUST_SYSROOT=$(rustc --print sysroot)
+          echo "RUSTFLAGS=--remap-path-prefix=${CARGO_HOME:-$HOME/.cargo}=/cargo --remap-path-prefix=${RUST_SYSROOT}=/rust-toolchain --remap-path-prefix=${GITHUB_WORKSPACE}=/src" >> "$GITHUB_ENV"
+
+      - name: Build from source
+        run: cargo auditable build --locked --release --target "$TARGET"
+
+      - name: Package build
+        run: |
+          brew install gnu-tar
+          mkdir -p artifacts
+          cp "target/${TARGET}/release/celq" artifacts/binary
+          gtar --format=gnu --sort=name --mtime="@${SOURCE_DATE_EPOCH}" \
+            --owner=0 --group=0 --numeric-owner --mode=0755 \
+            -cf artifacts/celq.tar -C "target/${TARGET}/release" celq
+          gzip -n -9 artifacts/celq.tar
+          mv artifacts/celq.tar.gz artifacts/archive
+
+      - name: Capture build evidence
+        run: |
+          export EVIDENCE_HOST='macos-15-intel (X64)'
+          export EVIDENCE_RUSTC='1.94.1'
+          export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
+          export EVIDENCE_AUXILIARY='cargo-auditable 0.7.5; Xcode 16.4; macOS SDK 15.5'
+          npx -y celq@0.6.0 -n \
+            --arg="host:string=$EVIDENCE_HOST" \
+            --arg="rustc:string=$EVIDENCE_RUSTC" \
+            --arg="cargo:string=$EVIDENCE_CARGO" \
+            --arg="auxiliary:string=$EVIDENCE_AUXILIARY" \
+            '{"host": host, "toolchain": {"rustc": rustc, "cargo": cargo, "auxiliary": auxiliary}}' \
+            > artifacts/evidence.json
+
+      - name: Upload reproducible build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: reproducible-macos-aarch64-macos-15-intel
+          path: artifacts
+          retention-days: 1
+          if-no-files-found: error
+          compression-level: 0
