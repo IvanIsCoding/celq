@@ -5,19 +5,19 @@ rules:
     ignore:
       - release_choco.yml
       - release_github.yml:107
-      - release_github.yml:287
-      - release_github.yml:381
-      - release_github.yml:420
-      - release_sub_homebrew.yml:29
-      - release_sub_homebrew.yml:56
-      - release_sub_homebrew.yml:69
+      - release_github.yml:293
+      - release_github.yml:389
+      - release_github.yml:428
+      - release_sub_homebrew.yml:32
+      - release_sub_homebrew.yml:59
       - release_sub_homebrew.yml:72
-      - release_sub_pages.yml:63
-      - release_sub_pages.yml:91
-      - release_sub_pages.yml:99
-      - release_sub_scoop.yml:29
-      - release_sub_scoop.yml:52
-      - release_sub_scoop.yml:79
-      - release_sub_scoop.yml:104
+      - release_sub_homebrew.yml:75
+      - release_sub_pages.yml:66
+      - release_sub_pages.yml:94
+      - release_sub_pages.yml:102
+      - release_sub_scoop.yml:32
+      - release_sub_scoop.yml:55
+      - release_sub_scoop.yml:82
       - release_sub_scoop.yml:107
+      - release_sub_scoop.yml:110
       - release_playground.yml
