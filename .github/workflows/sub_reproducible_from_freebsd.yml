@@ -102,7 +102,7 @@ jobs:
           envs: TARGET TARGET_SUFFIX SOURCE_DATE_EPOCH
           prepare: |
             set -eu
-            pkg install -y ca_root_nss git sysutils/mise devel/rustup-init archivers/gtar archivers/gzip npm
+            pkg install -y ca_root_nss git sysutils/mise devel/rustup-init archivers/gtar archivers/gzip
             mise use --global zig@0.15.2
 
             rustup-init -y --profile minimal --default-toolchain 1.94.1
@@ -141,7 +141,7 @@ jobs:
             export EVIDENCE_RUSTC='1.94.1'
             export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
             export EVIDENCE_AUXILIARY="zig $(mise exec -- zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.7.1"
-            npx -y celq@0.7.1 -n \
+            mise exec --yes github:IvanIsCoding/celq@0.7.1 -- celq -n \
               --arg="host:string=$EVIDENCE_HOST" \
               --arg="rustc:string=$EVIDENCE_RUSTC" \
               --arg="cargo:string=$EVIDENCE_CARGO" \
