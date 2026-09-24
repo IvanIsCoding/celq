@@ -17,11 +17,11 @@ class Celq < Formula
   
   if OS.linux?
     if Hardware::CPU.arm?
-      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-linux-aarch64-gnu.tar.zst"
+      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-linux-aarch64-gnu.tar.gz"
       sha256 "{{CELQ_SHA256_LINUX_ARM64}}"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-linux-x86_64-gnu.tar.zst"
+      url "https://github.com/IvanIsCoding/celq/releases/download/v{{CELQ_VERSION}}/celq-linux-x86_64-gnu.tar.gz"
       sha256 "{{CELQ_SHA256_LINUX_X86_64}}"
     end
   end
