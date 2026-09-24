@@ -60,8 +60,10 @@ fn handle_buffer<R: Read>(
     program: &Program,
     arg_variables: &BTreeMap<String, CelValue>,
     input_params: &InputParameters,
-    reader: BufReader<R>,
+    mut reader: BufReader<R>,
 ) -> Result<Vec<(String, bool)>> {
+    let root_context = root_context(arg_variables, input_params)?;
+
     // Check if we're processing JSON or NDJSON that is not slurped
     if input_params.input_format == InputFormat::Json {
         // Determine thread pool size
@@ -78,24 +80,22 @@ fn handle_buffer<R: Read>(
             input_params.parallelism as usize
         };
 
-        // Collect all non-empty lines first
-        let lines: Vec<String> = reader
-            .lines()
-            .collect::<std::io::Result<Vec<_>>>()
-            .context("Failed to read lines from input")?
-            .into_iter()
-            .filter(|line| !line.trim().is_empty())
-            .collect();
+        // Read the whole input once, then split it into non-empty lines without copying
+        let mut buffer = String::new();
+        reader
+            .read_to_string(&mut buffer)
+            .context("Failed to read input")?;
+        let lines = non_empty_lines(&buffer);
 
         // If no lines were processed, execute with no input
         if lines.is_empty() {
-            let result = handle_json(program, arg_variables, input_params, None)?;
+            let result = handle_json(program, &root_context, input_params, None)?;
             return Ok(vec![result]);
         }
 
         // Try to process the last line
         let last_idx = lines.len() - 1;
-        let last_result = handle_json(program, arg_variables, input_params, Some(&lines[last_idx]));
+        let last_result = handle_json(program, &root_context, input_params, Some(lines[last_idx]));
 
         match last_result {
             Ok(last_output) => {
@@ -108,7 +108,7 @@ fn handle_buffer<R: Read>(
                     // Use regular iterator for single-threaded execution
                     lines[..last_idx]
                         .iter()
-                        .map(|line| handle_json(program, arg_variables, input_params, Some(line)))
+                        .map(|&line| handle_json(program, &root_context, input_params, Some(line)))
                         .collect()
                 } else {
                     // Use Rayon for parallel execution
@@ -119,8 +119,8 @@ fn handle_buffer<R: Read>(
                         .install(|| {
                             lines[..last_idx]
                                 .par_iter()
-                                .map(|line| {
-                                    handle_json(program, arg_variables, input_params, Some(line))
+                                .map(|&line| {
+                                    handle_json(program, &root_context, input_params, Some(line))
                                 })
                                 .collect()
                         })
@@ -132,8 +132,7 @@ fn handle_buffer<R: Read>(
             }
             Err(_) => {
                 // Last line failed, try reading entire input as single JSON document
-                let full_buffer = lines.join("\n");
-                let result = handle_json(program, arg_variables, input_params, Some(&full_buffer))?;
+                let result = handle_json(program, &root_context, input_params, Some(&buffer))?;
                 Ok(vec![result])
             }
         }
@@ -152,28 +151,40 @@ fn handle_buffer<R: Read>(
         }
 
         // Process the entire buffer as one document
-        let result = handle_json(program, arg_variables, input_params, Some(&buffer))?;
+        let result = handle_json(program, &root_context, input_params, Some(&buffer))?;
         Ok(vec![result])
     }
 }
 
-/// Execute the CEL program with given JSON input and argument variables
+/// Split input into its non-blank lines
+fn non_empty_lines(input: &str) -> Vec<&str> {
+    let mut lines = Vec::new();
+    let mut start = 0;
+    // '\n' is ASCII, so every split point is a valid UTF-8 boundary
+    // we use memchr to hopefully get some SIMD boost.
+    for end in memchr::memchr_iter(b'\n', input.as_bytes()).chain(std::iter::once(input.len())) {
+        let line = &input[start..end];
+        if !line.trim().is_empty() {
+            lines.push(line);
+        }
+        start = end + 1;
+    }
+    lines
+}
+
+/// Build the context shared by every input: standard library, extensions and argument variables
 ///
 /// # Arguments
-/// * `program` - The compiled CEL program
 /// * `arg_variables` - BTreeMap of variables from CLI arguments
 /// * `input_params` - Input configuration parameters
-/// * `json_str` - Optional JSON string to process
 ///
 /// # Returns
-/// * Ok((output_string, is_truthy)) - The output and whether it's truthy
+/// * Ok(Context) - The root context, meant to be reused via `new_inner_scope`
 /// * Err(anyhow::Error) - Any error that occurred
-fn handle_json(
-    program: &Program,
+fn root_context(
     arg_variables: &BTreeMap<String, CelValue>,
     input_params: &InputParameters,
-    json_str: Option<&str>,
-) -> Result<(String, bool)> {
+) -> Result<Context<'static>> {
     // Create context with default values
     let mut context = Context::default();
 
@@ -187,6 +198,29 @@ fn handle_json(
             .add_variable(name.clone(), value.clone())
             .with_context(|| format!("Failed to add variable '{}'", name))?;
     }
+
+    Ok(context)
+}
+
+/// Execute the CEL program with given JSON input
+///
+/// # Arguments
+/// * `program` - The compiled CEL program
+/// * `root_context` - Shared context from `root_context`
+/// * `input_params` - Input configuration parameters
+/// * `json_str` - Optional JSON string to process
+///
+/// # Returns
+/// * Ok((output_string, is_truthy)) - The output and whether it's truthy
+/// * Err(anyhow::Error) - Any error that occurred
+fn handle_json(
+    program: &Program,
+    root_context: &Context,
+    input_params: &InputParameters,
+    json_str: Option<&str>,
+) -> Result<(String, bool)> {
+    // Input variables live in a child scope, so the root context is never copied
+    let mut context = root_context.new_inner_scope();
 
     // If we have input, parse it and add to context
     if let Some(json) = json_str {

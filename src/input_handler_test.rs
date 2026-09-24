@@ -24,7 +24,13 @@ fn test_handle_json_null_input() {
     let args = BTreeMap::new();
     let params = default_params();
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert!(output.contains("5"));
     assert!(is_truthy);
@@ -37,7 +43,13 @@ fn test_handle_json_with_json() {
     let json = r#"{"x": 10, "y": 20}"#;
     let params = default_params();
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, Some(json)).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        Some(json),
+    )
+    .unwrap();
 
     assert!(output.contains("30"));
     assert!(is_truthy);
@@ -51,7 +63,13 @@ fn test_handle_json_with_args() {
     args.insert("y".to_string(), CelValue::Int(7));
     let params = default_params();
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert!(output.contains("12"));
     assert!(is_truthy);
@@ -65,7 +83,13 @@ fn test_handle_json_input_overrides_arg_with_same_name() {
     let json = r#"{"value": 50}"#;
     let params = default_params();
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, Some(json)).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        Some(json),
+    )
+    .unwrap();
 
     assert!(output.contains("50"));
     assert!(is_truthy);
@@ -79,7 +103,13 @@ fn test_handle_json_args_and_json() {
     let json = r#"{"value": 50}"#;
     let params = default_params();
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, Some(json)).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        Some(json),
+    )
+    .unwrap();
 
     assert!(output.contains("150"));
     assert!(is_truthy);
@@ -91,7 +121,13 @@ fn test_handle_json_boolean_false() {
     let args = BTreeMap::new();
     let params = default_params();
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert!(output.contains("false"));
     assert!(!is_truthy);
@@ -103,7 +139,13 @@ fn test_handle_json_boolean_true() {
     let args = BTreeMap::new();
     let params = default_params();
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert!(output.contains("true"));
     assert!(is_truthy);
@@ -115,7 +157,13 @@ fn test_handle_json_truthiness_zero() {
     let args = BTreeMap::new();
     let params = default_params();
 
-    let (_output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (_output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert!(!is_truthy);
 }
@@ -126,7 +174,13 @@ fn test_handle_json_truthiness_empty_string() {
     let args = BTreeMap::new();
     let params = default_params();
 
-    let (_output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (_output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert!(!is_truthy);
 }
@@ -177,7 +231,13 @@ fn test_handle_json_raw_output_for_string() {
     let mut params = default_params();
     params.raw_output = true;
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert_eq!(output, "hello");
     assert!(is_truthy);
@@ -191,7 +251,13 @@ fn test_handle_json_sorted_pretty_output() {
     params.sort_keys = true;
     params.pretty_print = true;
 
-    let (output, is_truthy) = handle_json(&program, &args, &params, None).unwrap();
+    let (output, is_truthy) = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    )
+    .unwrap();
 
     assert_eq!(
         output,
@@ -224,7 +290,12 @@ fn test_handle_json_invalid_json() {
     let json = r#"not valid json"#;
     let params = default_params();
 
-    let result = handle_json(&program, &args, &params, Some(json));
+    let result = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        Some(json),
+    );
 
     assert!(result.is_err());
 }
@@ -235,7 +306,12 @@ fn test_handle_json_missing_variable() {
     let args = BTreeMap::new();
     let params = default_params();
 
-    let result = handle_json(&program, &args, &params, None);
+    let result = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        None,
+    );
 
     assert!(result.is_err());
 }
@@ -385,9 +461,14 @@ fn test_handle_json_greppable_disabled() {
     let mut params = default_params();
     params.greppable = true;
 
-    let err = handle_json(&program, &args, &params, Some(r#"{"x": 42}"#))
-        .unwrap_err()
-        .to_string();
+    let err = handle_json(
+        &program,
+        &root_context(&args, &params).unwrap(),
+        &params,
+        Some(r#"{"x": 42}"#),
+    )
+    .unwrap_err()
+    .to_string();
 
     assert!(err.contains("Binary was compiled without greppable support"));
 }
