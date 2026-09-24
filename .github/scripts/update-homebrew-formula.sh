@@ -23,8 +23,8 @@ echo "Temporary directory: $TEMP_DIR"
 declare -A DOWNLOADS=(
   ["macos-aarch64"]="celq-macos-aarch64.tar.zst"
   ["macos-x86_64"]="celq-macos-x86_64.tar.gz"
-  ["linux-x86_64-gnu"]="celq-linux-x86_64-gnu.tar.zst"
-  ["linux-aarch64-gnu"]="celq-linux-aarch64-gnu.tar.zst"
+  ["linux-x86_64-gnu"]="celq-linux-x86_64-gnu.tar.gz"
+  ["linux-aarch64-gnu"]="celq-linux-aarch64-gnu.tar.gz"
 )
 
 declare -A CHECKSUMS
