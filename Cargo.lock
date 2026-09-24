@@ -160,6 +160,7 @@ dependencies = [
  "cel",
  "clap",
  "json5",
+ "memchr",
  "mimalloc",
  "rayon",
  "serde",
