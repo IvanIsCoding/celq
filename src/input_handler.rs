@@ -184,12 +184,14 @@ fn non_empty_lines(input: &str) -> Vec<&str> {
 fn root_context(
     arg_variables: &BTreeMap<String, CelValue>,
     input_params: &InputParameters,
-) -> Result<Context<'static>> {
+) -> Result<Context<'static, 'static>> {
     // Create context with default values
     let mut context = Context::default();
 
     if !input_params.no_extensions {
-        context.add_function("slice", slice_extension::slice);
+        context
+            .add_function("slice", slice_extension::slice)
+            .map_err(|e| anyhow::anyhow!("Failed to add slice extension: {e}"))?;
     }
 
     // Add argument variables to context
