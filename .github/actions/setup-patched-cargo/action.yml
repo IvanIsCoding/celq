@@ -72,7 +72,7 @@ runs:
       run: cargo zigbuild --locked --release --package cargo --bin cargo --features all-static --target "$TARGET"
 
     - name: Upload patched Cargo
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: patched-cargo-${{ inputs.target }}
         path: cargo-source/target/${{ inputs.target }}/release/cargo${{ endsWith(inputs.target, '-windows-msvc') && '.exe' || '' }}

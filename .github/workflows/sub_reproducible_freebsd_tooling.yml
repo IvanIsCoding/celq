@@ -54,7 +54,7 @@ jobs:
             --target-dir "$GITHUB_WORKSPACE/freebsd-tools-build"
 
       - name: Upload FreeBSD tools
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: freebsd-tools-x86_64
           path: |

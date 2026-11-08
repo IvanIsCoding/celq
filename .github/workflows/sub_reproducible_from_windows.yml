@@ -43,7 +43,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust 1.94.1 with Windows ARM64 target
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
         with:
           targets: aarch64-pc-windows-msvc
 
@@ -105,7 +105,7 @@ jobs:
           mv archive.zip artifacts/archive
 
       - name: Upload reproducible build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: reproducible-windows-x86_64-windows-2025
           path: artifacts
@@ -143,7 +143,7 @@ jobs:
           test "$(rustc -vV | sed -n 's/^host: //p' | tr -d '\r')" = aarch64-pc-windows-msvc
 
       - name: Download patched Cargo
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: patched-cargo-aarch64-pc-windows-msvc
           path: patched-cargo
@@ -197,7 +197,7 @@ jobs:
             > artifacts/evidence.json
 
       - name: Upload reproducible build
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: reproducible-windows-x86_64-windows-11-vs2026-arm
           path: artifacts

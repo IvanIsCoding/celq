@@ -39,7 +39,7 @@ jobs:
             binaryen=121
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
         with:
           targets: wasm32-wasip1
           components: rust-src

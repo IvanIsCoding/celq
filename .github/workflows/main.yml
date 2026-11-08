@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
 
       - name: Restore Cargo downloads
         id: cargo-cache
@@ -66,7 +66,7 @@ jobs:
         uses: $/.github/actions/restore-cargo-downloads
       
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
       
       - name: Build with locked dependencies
         run: cargo build --locked
@@ -84,7 +84,7 @@ jobs:
           persist-credentials: false
       
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           toolchain: stable
           components: rustfmt
@@ -105,7 +105,7 @@ jobs:
         uses: $/.github/actions/restore-cargo-downloads
       
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
         with:
           components: clippy
       
@@ -160,7 +160,7 @@ jobs:
           echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
       
       - name: Install Rust ${{ matrix.rust }}
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
@@ -197,7 +197,7 @@ jobs:
         uses: $/.github/actions/restore-cargo-downloads
 
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
 
       - name: Run tests
         run: cargo test --locked ${{ matrix.features }}
@@ -278,7 +278,7 @@ jobs:
           -Z build-std=std,panic_abort
 
       - name: Upload celq binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: celq-${{ matrix.target }}
           path: target/${{ matrix.target }}/debug/celq
@@ -337,7 +337,7 @@ jobs:
           --xwin-cache-dir "${XWIN_CACHE_DIR}"
 
       - name: Upload celq binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: celq-${{ matrix.target }}-xwin
           path: target/${{ matrix.target }}/debug/celq.exe

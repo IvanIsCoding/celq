@@ -22,7 +22,7 @@ jobs:
         uses: $/.github/actions/restore-cargo-downloads
 
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@6bed0761d98439e5a578e2877258200ad565ba87 # stable
+        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
         with:
           toolchain: stable
 
@@ -30,7 +30,7 @@ jobs:
         run: cargo rustdoc --lib --all-features -- -D warnings --extend-css docs/rustdoc.css --html-in-header docs/rustdoc-header.html
 
       - name: Upload documentation
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: documentation
           path: target/doc/

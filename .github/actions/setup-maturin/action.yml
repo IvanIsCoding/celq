@@ -62,7 +62,7 @@ runs:
 
     - name: Install Rust 1.94.1 for native builds
       if: inputs.use_xwin == 'false' && inputs.use_zigbuild == 'false'
-      uses: dtolnay/rust-toolchain@9376cdc5a5e25b16da71af47712785cf06b0d6d4 # 1.94.1
+      uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
       with:
         toolchain: 1.94.1
         targets: ${{ inputs.target }}

@@ -78,13 +78,13 @@ jobs:
             verify_host: freebsd-14.4-x86_64
     steps:
       - name: Download Linux x86-64-host artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: reproducible-${{ matrix.pretty_target }}-ubuntu-24.04
           path: artifacts/original
 
       - name: Download alternative-host artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: reproducible-${{ matrix.pretty_target }}-${{ matrix.verify_host }}
           path: artifacts/verification
@@ -101,13 +101,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Download Windows x86-64-host artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: reproducible-windows-x86_64-windows-2025
           path: artifacts/original
 
       - name: Download Windows ARM64-host artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: reproducible-windows-x86_64-windows-11-vs2026-arm
           path: artifacts/verification
@@ -124,13 +124,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Download macOS ARM64-host artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: reproducible-macos-aarch64-macos-15
           path: artifacts/original
 
       - name: Download Intel macOS-host artifact
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: reproducible-macos-aarch64-macos-15-intel
           path: artifacts/verification

@@ -19,13 +19,13 @@ jobs:
           persist-credentials: false
 
       - name: Download Linux celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: celq-x86_64-unknown-linux-gnu
           path: ./bin/linux
 
       - name: Download Windows celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: celq-x86_64-pc-windows-msvc-xwin
           path: ./bin/windows
@@ -57,7 +57,7 @@ jobs:
         # zizmor: ignore[template-injection] command path comes from the pinned Syft action
 
       - name: Upload SBOMs
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: celq-sboms
           path: |
