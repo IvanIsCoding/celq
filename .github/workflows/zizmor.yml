@@ -33,4 +33,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
 
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@v0.6.2
+        uses: zizmorcore/zizmor-action@v0.8.1
