@@ -93,7 +93,7 @@ jobs:
           path: freebsd-tools
 
       - name: Build from source on FreeBSD
-        uses: vmactions/freebsd-vm@v1.5.5
+        uses: vmactions/freebsd-vm@v1.5.9
         with:
           release: "14.4"
           arch: x86_64

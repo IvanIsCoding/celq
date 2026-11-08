@@ -31,7 +31,7 @@ jobs:
           path: ./bin
 
       - name: Test on Debian
-        uses: vmactions/debian-vm@v1.0.0
+        uses: vmactions/debian-vm@v1.0.1
         with:
           release: "13"
           arch: riscv64

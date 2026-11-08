@@ -45,7 +45,7 @@ jobs:
 
       - name: Test on NetBSD
         if: steps.filter.outputs.rust == 'true'
-        uses: vmactions/netbsd-vm@v1.4.8
+        uses: vmactions/netbsd-vm@v1.5.3
         with:
           release: "10.1"
           usesh: true

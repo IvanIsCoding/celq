@@ -45,7 +45,7 @@ jobs:
 
       - name: Test on OpenBSD
         if: steps.filter.outputs.rust == 'true'
-        uses: vmactions/openbsd-vm@v1.4.7
+        uses: vmactions/openbsd-vm@v1.4.9
         with:
           release: "7.9"
           usesh: true

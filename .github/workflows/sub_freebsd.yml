@@ -45,7 +45,7 @@ jobs:
 
       - name: Test on FreeBSD
         if: steps.filter.outputs.rust == 'true'
-        uses: vmactions/freebsd-vm@v1.5.5
+        uses: vmactions/freebsd-vm@v1.5.9
         with:
           release: "14.4"
           usesh: true

@@ -45,7 +45,7 @@ jobs:
           bash install.sh --target riscv64gc-unknown-linux-musl --to riscv-bin/musl
 
       - name: Test on Debian RISC-V 64
-        uses: vmactions/debian-vm@v1.0.0
+        uses: vmactions/debian-vm@v1.0.1
         with:
           release: "13"
           arch: riscv64
@@ -79,7 +79,7 @@ jobs:
           bash install.sh --target powerpc64le-unknown-linux-musl --to ppc64le-bin/musl
 
       - name: Test on Debian PowerPC64LE
-        uses: vmactions/debian-vm@v1.0.0
+        uses: vmactions/debian-vm@v1.0.1
         with:
           release: "13"
           arch: ppc64le
@@ -574,7 +574,7 @@ jobs:
           echo "Latest version: $VERSION"
 
       - name: Test on FreeBSD
-        uses: vmactions/freebsd-vm@v1.5.5
+        uses: vmactions/freebsd-vm@v1.5.9
         with:
           release: '14.4'
           usesh: true

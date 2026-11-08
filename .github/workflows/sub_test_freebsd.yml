@@ -34,7 +34,7 @@ jobs:
           path: ./bin
 
       - name: Test on FreeBSD
-        uses: vmactions/freebsd-vm@v1.5.5
+        uses: vmactions/freebsd-vm@v1.5.9
         with:
           release: ${{ matrix.release }}
           arch: ${{ matrix.arch }}

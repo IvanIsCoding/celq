@@ -84,17 +84,17 @@ workflows:
         - 'actions/cache@v5.1.0'
         - 'actions/checkout@v7.0.1'
         - 'dorny/paths-filter@v4.0.3'
-        - 'vmactions/freebsd-vm@v1.5.5'
+        - 'vmactions/freebsd-vm@v1.5.9'
     '.github/workflows/sub_netbsd.yml':
         - 'actions/cache@v5.1.0'
         - 'actions/checkout@v7.0.1'
         - 'dorny/paths-filter@v4.0.3'
-        - 'vmactions/netbsd-vm@v1.4.8'
+        - 'vmactions/netbsd-vm@v1.5.3'
     '.github/workflows/sub_openbsd.yml':
         - 'actions/cache@v5.1.0'
         - 'actions/checkout@v7.0.1'
         - 'dorny/paths-filter@v4.0.3'
-        - 'vmactions/openbsd-vm@v1.4.7'
+        - 'vmactions/openbsd-vm@v1.4.9'
     '.github/workflows/sub_reproducible_freebsd_tooling.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.1'
@@ -108,7 +108,7 @@ workflows:
         - 'dtolnay/rust-toolchain@1.94'
         - 'jdx/mise-action@v4.3.0'
         - 'taiki-e/install-action@v2.87.2'
-        - 'vmactions/freebsd-vm@v1.5.5'
+        - 'vmactions/freebsd-vm@v1.5.9'
     '.github/workflows/sub_reproducible_from_linux.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
@@ -136,15 +136,15 @@ workflows:
     '.github/workflows/sub_test_freebsd.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
-        - 'vmactions/freebsd-vm@v1.5.5'
+        - 'vmactions/freebsd-vm@v1.5.9'
     '.github/workflows/sub_test_ppc64le.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
-        - 'vmactions/debian-vm@v1.0.0'
+        - 'vmactions/debian-vm@v1.0.1'
     '.github/workflows/sub_test_riscv64.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
-        - 'vmactions/debian-vm@v1.0.0'
+        - 'vmactions/debian-vm@v1.0.1'
     '.github/workflows/sub_test_xwin.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
@@ -158,8 +158,8 @@ workflows:
         - 'jdx/mise-action@v4.3.0'
         - 'prefix-dev/setup-pixi@v0.9.3'
         - 'taiki-e/install-action@v2.87.2'
-        - 'vmactions/debian-vm@v1.0.0'
-        - 'vmactions/freebsd-vm@v1.5.5'
+        - 'vmactions/debian-vm@v1.0.1'
+        - 'vmactions/freebsd-vm@v1.5.9'
     '.github/workflows/util_calculate_nix_hashes.yml':
         - 'actions/checkout@v7.0.1'
         - 'cachix/install-nix-action@v31.11.1'
@@ -287,24 +287,24 @@ dependencies:
         commit: 'sha1-1ed6d7be6168f6c9046541087ff549b6bc581fdf'
         owner_id: 43724913
         repo_id: 442947557
-    'vmactions/debian-vm@v1.0.0':
-        ref: 'v1.0.0'
-        commit: 'sha1-389ba1da28ff5b440cba52db8e03fc2e08e2affa'
+    'vmactions/debian-vm@v1.0.1':
+        ref: 'v1.0.1'
+        commit: 'sha1-626b64f9a6be64bbeaf3850f8bac2532d4e77db4'
         owner_id: 71690866
         repo_id: 1346896094
-    'vmactions/freebsd-vm@v1.5.5':
-        ref: 'v1.5.5'
-        commit: 'sha1-f0552d3b69211736abd97f02ff3d4674c56b73b1'
+    'vmactions/freebsd-vm@v1.5.9':
+        ref: 'v1.5.9'
+        commit: 'sha1-c46abacb49f09938ca4e1702d15d836285d694cc'
         owner_id: 71690866
         repo_id: 300290246
-    'vmactions/netbsd-vm@v1.4.8':
-        ref: 'v1.4.8'
-        commit: 'sha1-07366ff288a2661e3998b69c5d48eda270050635'
+    'vmactions/netbsd-vm@v1.5.3':
+        ref: 'v1.5.3'
+        commit: 'sha1-5957cf330aef2e6ddc63c604364c99ce2e02b91d'
         owner_id: 71690866
         repo_id: 324264532
-    'vmactions/openbsd-vm@v1.4.7':
-        ref: 'v1.4.7'
-        commit: 'sha1-86cdc08415d9d0865267e686561e276c52d62530'
+    'vmactions/openbsd-vm@v1.4.9':
+        ref: 'v1.4.9'
+        commit: 'sha1-f1ca8bc8ecc5b6ef7218e5b914836e067e1546d3'
         owner_id: 71690866
         repo_id: 300542254
     'zizmorcore/zizmor-action@v0.6.2':
