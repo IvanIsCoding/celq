@@ -33,7 +33,7 @@ runs:
   using: composite
   steps:
     - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@ebc0426251bc40c7cd31162802432c68818ab8f0 # v2.0.9
+      uses: KyleMayes/install-llvm-action@v2.0.9 # zizmor: ignore[unpinned-uses]
       with:
         version: "21.1.8"
         arch: ${{ runner.arch == 'ARM64' && 'arm64' || 'x64' }}
@@ -47,26 +47,26 @@ runs:
     - name: Restore cargo-xwin downloads
       if: inputs.use_cache == 'true'
       id: xwin-cache
-      uses: actions/cache/restore@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache/restore@v5.0.5 # zizmor: ignore[unpinned-uses]
       with:
         path: ${{ inputs.cache_directory }}
         key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}
 
     - name: Install Rust 1.94.1
-      uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
+      uses: dtolnay/rust-toolchain@1.94 # zizmor: ignore[unpinned-uses]
       with:
         toolchain: 1.94.1
         targets: ${{ inputs.target }}
         components: ${{ inputs.rust_components }}
 
     - name: Install cargo-xwin
-      uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+      uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
       with:
         tool: cargo-xwin@0.23.1
         fallback: none
 
     - name: Install cargo-auditable
-      uses: taiki-e/install-action@1ed6d7be6168f6c9046541087ff549b6bc581fdf # v2.87.2
+      uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
       with:
         tool: cargo-auditable@0.7.5
         fallback: none
@@ -85,7 +85,7 @@ runs:
 
     - name: Save cargo-xwin downloads
       if: inputs.use_cache == 'true' && steps.xwin-cache.outputs.cache-hit != 'true'
-      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      uses: actions/cache/save@v5.0.5 # zizmor: ignore[unpinned-uses]
       with:
         path: ${{ inputs.cache_directory }}
         key: cargo-xwin-${{ runner.os }}-v0.23.1-msvc17-sdk10.0.26100-crt14.44.17.14-${{ steps.xwin-cache-key.outputs.bucket }}

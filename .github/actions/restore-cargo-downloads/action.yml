@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: Restore Cargo downloads
-      uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+      uses: actions/cache/restore@v5.1.0 # zizmor: ignore[unpinned-uses]
       with:
         path: |
           ~/.cargo/registry
