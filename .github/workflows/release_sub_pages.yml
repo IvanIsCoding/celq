@@ -22,13 +22,13 @@ jobs:
       public_key: ${{ steps.read-key.outputs.result }}
     steps:
       - name: Checkout celq repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Read Minisign public key from Cargo.toml
         id: read-key
-        uses: get-celq/celq-action@2b79f5dddde4445d57eb28c6da5d38b1892eb44c # main
+        uses: get-celq/celq-action@main
         with:
           version: 0.6.0
           cmd: celq --from-toml --raw-output 'this.package.metadata.binstall.signing.pubkey' < Cargo.toml
@@ -45,13 +45,13 @@ jobs:
       artifact-metadata: write
     steps:
       - name: Checkout celq repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           path: celq-repo
 
       - name: Checkout get-celq.github.io repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v7.0.1
         with:
           repository: get-celq/get-celq.github.io
           token: ${{ secrets.PAGES_DEPLOY_TOKEN }}
@@ -82,7 +82,7 @@ jobs:
           fi
 
       - name: Generate attestation for install script
-        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        uses: actions/attest@v4.2.2
         with:
           subject-path: celq-repo/install.sh
 

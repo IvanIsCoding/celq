@@ -21,7 +21,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout celq repository (for template)
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
           path: celq-repo
@@ -43,7 +43,7 @@ jobs:
 
       - name: Checkout scoop-bucket repository # zizmor: ignore[artipacked] credentials intentionally persist for the subsequent push
         if: steps.check_prerelease.outputs.is_prerelease == 'false'
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v7.0.1
         with:
           repository: get-celq/scoop-bucket
           token: ${{ secrets.SCOOP_BUCKET_TOKEN }}

@@ -23,18 +23,18 @@ jobs:
             arch: aarch64
             artifact: celq-aarch64-unknown-freebsd
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Download celq binary
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        uses: actions/download-artifact@v8.0.1
         with:
           name: ${{ matrix.artifact }}
           path: ./bin
 
       - name: Test on FreeBSD
-        uses: vmactions/freebsd-vm@f0552d3b69211736abd97f02ff3d4674c56b73b1 # v1.5.5
+        uses: vmactions/freebsd-vm@v1.5.5
         with:
           release: ${{ matrix.release }}
           arch: ${{ matrix.arch }}

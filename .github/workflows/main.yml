@@ -20,16 +20,16 @@ jobs:
     name: Fetch Cargo dependencies
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
+        uses: dtolnay/rust-toolchain@1.94
 
       - name: Restore Cargo downloads
         id: cargo-cache
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache@v5.1.0
         with:
           path: |
             ~/.cargo/registry
@@ -58,7 +58,7 @@ jobs:
     needs: cargo-cache
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -66,7 +66,7 @@ jobs:
         uses: $/.github/actions/restore-cargo-downloads
       
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
+        uses: dtolnay/rust-toolchain@1.94
       
       - name: Build with locked dependencies
         run: cargo build --locked
@@ -79,12 +79,12 @@ jobs:
     needs: cargo-cache
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       
       - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: stable
           components: rustfmt
@@ -97,7 +97,7 @@ jobs:
     needs: cargo-cache
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -105,7 +105,7 @@ jobs:
         uses: $/.github/actions/restore-cargo-downloads
       
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
+        uses: dtolnay/rust-toolchain@1.94
         with:
           components: clippy
       
@@ -142,7 +142,7 @@ jobs:
             rust: stable
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -160,7 +160,7 @@ jobs:
           echo "SDKROOT=$(xcrun --sdk macosx15.5 --show-sdk-path)" >> "$GITHUB_ENV"
       
       - name: Install Rust ${{ matrix.rust }}
-        uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ matrix.rust }}
           targets: ${{ matrix.target }}
@@ -189,7 +189,7 @@ jobs:
           - "--no-default-features --features greppable"
           - "--all-features"
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -197,7 +197,7 @@ jobs:
         uses: $/.github/actions/restore-cargo-downloads
 
       - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@ee868d7805ade43a1b47dd054727ab76c9108b4f # 1.94.1
+        uses: dtolnay/rust-toolchain@1.94
 
       - name: Run tests
         run: cargo test --locked ${{ matrix.features }}
@@ -251,7 +251,7 @@ jobs:
             zigtargetsuffix: ""
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -278,7 +278,7 @@ jobs:
           -Z build-std=std,panic_abort
 
       - name: Upload celq binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: celq-${{ matrix.target }}
           path: target/${{ matrix.target }}/debug/celq
@@ -298,7 +298,7 @@ jobs:
           - x86_64-pc-windows-msvc
           - aarch64-pc-windows-msvc
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
@@ -337,7 +337,7 @@ jobs:
           --xwin-cache-dir "${XWIN_CACHE_DIR}"
 
       - name: Upload celq binary
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: celq-${{ matrix.target }}-xwin
           path: target/${{ matrix.target }}/debug/celq.exe
@@ -369,7 +369,7 @@ jobs:
             target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
