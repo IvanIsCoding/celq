@@ -1,6 +1,16 @@
 Changelog
 =========
 
+[v0.8.0](https://github.com/IvanIsCoding/celq/releases/tag/v0.8.0) - 2026-11-08
+------------------------------------------------------------------------
+
+### Miscellaneous
+
+* Bumped the CEL interpreter (`cel` -> 0.15.0).
+* Bumped the YAML parser (`serde-saphyr` -> 2.1.1), TOML parser (`toml` -> 1.2.1), XML parser (`two_xml2json` -> 0.0.2 / `quick-xml` -> 0.42.0), JSON parser (`serde_json` -> 1.0.154), and JSON5 parser (`json5` -> 1.3.7).
+* Improved NDJSON processing performance by scanning line boundaries with `memchr` and reusing the CEL execution context across lines.
+* Switched the Linuxbrew formula to use `.tar.gz` archives instead of `.tar.zst` to avoid requiring `zstd` on Linuxbrew setups.
+
 [v0.7.1](https://github.com/IvanIsCoding/celq/releases/tag/v0.7.1) - 2026-09-17
 ------------------------------------------------------------------------
 
