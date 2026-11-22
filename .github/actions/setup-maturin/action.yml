@@ -60,11 +60,11 @@ runs:
         cache_directory: ${{ inputs.cache_directory }}
         use_cache: ${{ inputs.use_cache }}
 
-    - name: Install Rust 1.94.1 for native builds
+    - name: Install Rust 1.96.1 for native builds
       if: inputs.use_xwin == 'false' && inputs.use_zigbuild == 'false'
-      uses: dtolnay/rust-toolchain@1.94 # zizmor: ignore[unpinned-uses]
+      uses: dtolnay/rust-toolchain@1.96 # zizmor: ignore[unpinned-uses]
       with:
-        toolchain: 1.94.1
+        toolchain: 1.96.1
         targets: ${{ inputs.target }}
         components: ${{ inputs.rust_components }}
 

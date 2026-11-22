@@ -9,7 +9,7 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.1'
         - 'astral-sh/setup-uv@v7.6.0'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'dtolnay/rust-toolchain@stable'
         - 'jdx/mise-action@v4.3.0'
         - 'kylemayes/install-llvm-action@v2.0.9'
@@ -22,14 +22,14 @@ workflows:
         - 'crazy-max/ghaction-import-gpg@v6.3.0'
     '.github/workflows/release_crates_io.yml':
         - 'actions/checkout@v7.0.1'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'rust-lang/crates-io-auth-action@v1.0.5'
     '.github/workflows/release_github.yml':
         - 'actions/attest@v4.2.2'
         - 'actions/cache@v5.0.5'
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'jdx/mise-action@v4.3.0'
         - 'kylemayes/install-llvm-action@v2.0.9'
         - 'taiki-e/install-action@v2.87.2'
@@ -38,13 +38,13 @@ workflows:
         - 'actions/setup-node@v6.5.0'
     '.github/workflows/release_playground.yml':
         - 'actions/checkout@v7.0.1'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'prefix-dev/setup-pixi@v0.9.3'
     '.github/workflows/release_pypi.yml':
         - 'actions/cache@v5.0.5'
         - 'actions/checkout@v7.0.1'
         - 'astral-sh/setup-uv@v7.6.0'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'jdx/mise-action@v4.3.0'
         - 'kylemayes/install-llvm-action@v2.0.9'
         - 'taiki-e/install-action@v2.87.2'
@@ -98,14 +98,14 @@ workflows:
     '.github/workflows/sub_reproducible_freebsd_tooling.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/upload-artifact@v7.0.1'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'jdx/mise-action@v4.3.0'
         - 'taiki-e/install-action@v2.87.2'
     '.github/workflows/sub_reproducible_from_freebsd.yml':
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
         - 'actions/upload-artifact@v7.0.1'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'jdx/mise-action@v4.3.0'
         - 'taiki-e/install-action@v2.87.2'
         - 'vmactions/freebsd-vm@v1.5.9'
@@ -113,7 +113,7 @@ workflows:
         - 'actions/checkout@v7.0.1'
         - 'actions/download-artifact@v8.0.1'
         - 'actions/upload-artifact@v7.0.1'
-        - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'jdx/mise-action@v4.3.0'
         - 'taiki-e/install-action@v2.87.2'
     '.github/workflows/sub_reproducible_from_mac.yml':
@@ -128,6 +128,7 @@ workflows:
         - 'actions/download-artifact@v8.0.1'
         - 'actions/upload-artifact@v7.0.1'
         - 'dtolnay/rust-toolchain@1.94'
+        - 'dtolnay/rust-toolchain@1.96'
         - 'kylemayes/install-llvm-action@v2.0.9'
         - 'taiki-e/install-action@v2.87.2'
     '.github/workflows/sub_test_debian_oldoldstable.yml':
@@ -239,12 +240,17 @@ dependencies:
         repo_id: 265601040
     'dtolnay/rust-toolchain@1.94':
         ref: '1.94'
-        commit: 'sha1-ee868d7805ade43a1b47dd054727ab76c9108b4f'
+        commit: 'sha1-2d81d658c8c4093152107cdb91c1e9545a9f992c'
+        owner_id: 1940490
+        repo_id: 260749683
+    'dtolnay/rust-toolchain@1.96':
+        ref: '1.96'
+        commit: 'sha1-083fe80ad9eef062785971a2d47135b1f499d5e1'
         owner_id: 1940490
         repo_id: 260749683
     'dtolnay/rust-toolchain@stable':
         ref: 'stable'
-        commit: 'sha1-b725eda525362e7cf34af9a7243cac1e3f01a7ec'
+        commit: 'sha1-39008827e6b4319a349e9a42dfc90579dd25f1ca'
         owner_id: 1940490
         repo_id: 260749683
     'get-celq/celq-action@main':

@@ -18,16 +18,16 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install Rust 1.94.1 with target
+    - name: Install Rust 1.96.1 with target
       if: inputs.install_target == 'true'
-      uses: dtolnay/rust-toolchain@1.94 # zizmor: ignore[unpinned-uses]
+      uses: dtolnay/rust-toolchain@1.96 # zizmor: ignore[unpinned-uses]
       with:
         targets: ${{ inputs.target }}
         components: ${{ inputs.rust_components }}
 
-    - name: Install Rust 1.94.1 without target
+    - name: Install Rust 1.96.1 without target
       if: inputs.install_target == 'false'
-      uses: dtolnay/rust-toolchain@1.94 # zizmor: ignore[unpinned-uses]
+      uses: dtolnay/rust-toolchain@1.96 # zizmor: ignore[unpinned-uses]
       with:
         components: ${{ inputs.rust_components }}
 
