@@ -393,7 +393,7 @@ jobs:
           CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
           TARGET: ${{ matrix.target }}
         run: |
-          uvx --from maturin==1.15.0 maturin build --release \
+          uvx --from maturin==1.16.0 maturin build --release \
             --target "${TARGET}" --zig \
             --compatibility manylinux_2_28 --out dist
 

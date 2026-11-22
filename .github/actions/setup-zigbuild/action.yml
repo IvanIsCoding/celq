@@ -38,16 +38,16 @@ runs:
         minimum_release_age: 2d
         mise_toml: |
           [tools]
-          zig = "0.15.2"
-        version: 2026.9.9
+          zig = "0.17.1"
+        version: 2026.11.10
 
     - name: Install cargo-zigbuild
       uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
       with:
-        tool: cargo-zigbuild@0.23.2
+        tool: cargo-zigbuild@0.24.1
 
     - name: Install cargo-auditable
       uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
       with:
-        tool: cargo-auditable@0.7.5
+        tool: cargo-auditable@0.7.7
         fallback: none

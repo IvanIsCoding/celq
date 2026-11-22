@@ -72,7 +72,7 @@ runs:
       if: inputs.use_xwin == 'false' && inputs.use_zigbuild == 'false'
       uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
       with:
-        tool: cargo-auditable@0.7.5
+        tool: cargo-auditable@0.7.7
         fallback: none
 
     - name: Install uv

@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          # setup-maturin installs Zig 0.15.2, while uvx supplies the wheel-specific
+          # setup-maturin installs Zig 0.17.1, while uvx supplies the wheel-specific
           # Zig versions below until their architecture constraints are unified.
           - {
               NAME: linux-x64,
@@ -129,7 +129,7 @@ jobs:
           TARGET: ${{ matrix.build.TARGET }}
           ZIG: ${{ matrix.build.ZIG }}
         run: |
-          uvx --from "maturin==1.15.0" --with "ziglang==${ZIG}" \
+          uvx --from "maturin==1.16.0" --with "ziglang==${ZIG}" \
             maturin build --release --target "${TARGET}" --zig \
             --compatibility "${MANYLINUX}" --out dist
 
@@ -141,7 +141,7 @@ jobs:
           TARGET: ${{ matrix.build.TARGET }}
           ZIG: ${{ matrix.build.ZIG }}
         run: |
-          uvx --from "maturin==1.15.0" --with "ziglang==${ZIG}" \
+          uvx --from "maturin==1.16.0" --with "ziglang==${ZIG}" \
             maturin build --release --target "${TARGET}" --zig --out dist
 
       - name: Build Python wheels (Windows with Xwin)
@@ -155,7 +155,7 @@ jobs:
           XWIN_CRT_VERSION: ${{ steps.setup-maturin.outputs.xwin_crt_version }}
           XWIN_SDK_VERSION: ${{ steps.setup-maturin.outputs.xwin_sdk_version }}
           XWIN_VERSION: ${{ steps.setup-maturin.outputs.xwin_version }}
-        run: uvx --from maturin==1.15.0 maturin build --release --target "${TARGET}" --out dist
+        run: uvx --from maturin==1.16.0 maturin build --release --target "${TARGET}" --out dist
 
       - name: Build Python wheels (macOS)
         if: runner.os == 'macOS'
@@ -164,7 +164,7 @@ jobs:
           CARGO: ${{ steps.setup-maturin.outputs.cargo_executable }}
           TARGET: ${{ matrix.build.TARGET }}
         run: |
-          uvx --from maturin==1.15.0 maturin build --release \
+          uvx --from maturin==1.16.0 maturin build --release \
             --target "${TARGET}" --out dist
 
       - name: Publish wheels to PyPI

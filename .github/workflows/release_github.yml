@@ -61,7 +61,7 @@ jobs:
       - name: Install cargo-auditable
         uses: taiki-e/install-action@v2.87.2
         with:
-          tool: cargo-auditable@0.7.5
+          tool: cargo-auditable@0.7.7
           fallback: none
 
       - name: Configure reproducible builds
@@ -321,7 +321,7 @@ jobs:
           mise_toml: |
             [tools]
             "conda:zstd" = "1.5.7"
-          version: 2026.9.9
+          version: 2026.11.10
 
       - name: Download gzip release archive
         env:

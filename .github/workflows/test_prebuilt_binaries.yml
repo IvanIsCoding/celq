@@ -509,7 +509,7 @@ jobs:
           mise_toml: |
             [tools]
             "conda:celq" = "latest"
-          version: 2026.9.9
+          version: 2026.11.10
 
       - name: Print celq version
         run: celq --version

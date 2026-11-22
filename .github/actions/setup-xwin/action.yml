@@ -68,7 +68,7 @@ runs:
     - name: Install cargo-auditable
       uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
       with:
-        tool: cargo-auditable@0.7.5
+        tool: cargo-auditable@0.7.7
         fallback: none
 
     - name: Pre-cache Microsoft CRT and Windows SDK
