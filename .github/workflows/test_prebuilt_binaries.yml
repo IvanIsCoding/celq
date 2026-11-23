@@ -557,7 +557,7 @@ jobs:
         run: nix run github:IvanIsCoding/celq#dev -- --version
 
   test-freebsd-install:
-    name: Test FreeBSD 14.4 (x86_64)
+    name: Test FreeBSD 15.1 (x86_64)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -574,9 +574,9 @@ jobs:
           echo "Latest version: $VERSION"
 
       - name: Test on FreeBSD
-        uses: vmactions/freebsd-vm@v1.5.9
+        uses: vmactions/freebsd-vm@v1.6.0
         with:
-          release: '14.4'
+          release: '15.1'
           usesh: true
           prepare: |
             pkg install -y curl

@@ -47,7 +47,7 @@ jobs:
         if: steps.filter.outputs.rust == 'true'
         uses: vmactions/openbsd-vm@v1.4.9
         with:
-          release: "7.9"
+          release: "8.0"
           usesh: true
           prepare: |
             pkg_add rust

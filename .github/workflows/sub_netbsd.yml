@@ -47,7 +47,7 @@ jobs:
         if: steps.filter.outputs.rust == 'true'
         uses: vmactions/netbsd-vm@v1.5.3
         with:
-          release: "10.1"
+          release: "11.1"
           usesh: true
           prepare: |
             /usr/sbin/pkg_add rust

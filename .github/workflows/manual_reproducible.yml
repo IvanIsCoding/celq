@@ -73,9 +73,9 @@ jobs:
           - pretty_target: linux-x86_64-musl
             verify_host: ubuntu-24.04-arm
           - pretty_target: linux-aarch64-gnu
-            verify_host: freebsd-14.4-x86_64
+            verify_host: freebsd-15.1-x86_64
           - pretty_target: linux-aarch64-musl
-            verify_host: freebsd-14.4-x86_64
+            verify_host: freebsd-15.1-x86_64
     steps:
       - name: Download Linux x86-64-host artifact
         uses: actions/download-artifact@v8.0.1
