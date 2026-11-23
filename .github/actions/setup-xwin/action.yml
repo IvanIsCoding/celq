@@ -60,13 +60,13 @@ runs:
         components: ${{ inputs.rust_components }}
 
     - name: Install cargo-xwin
-      uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
+      uses: taiki-e/install-action@v2.90.8 # zizmor: ignore[unpinned-uses]
       with:
         tool: cargo-xwin@0.23.1
         fallback: none
 
     - name: Install cargo-auditable
-      uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
+      uses: taiki-e/install-action@v2.90.8 # zizmor: ignore[unpinned-uses]
       with:
         tool: cargo-auditable@0.7.7
         fallback: none

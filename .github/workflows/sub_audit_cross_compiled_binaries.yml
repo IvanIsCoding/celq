@@ -31,7 +31,7 @@ jobs:
           path: ./bin/windows
 
       - name: Install cargo-audit
-        uses: taiki-e/install-action@v2.87.2
+        uses: taiki-e/install-action@v2.90.8
         with:
           tool: cargo-audit@0.22.2
           fallback: none

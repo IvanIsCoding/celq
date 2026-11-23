@@ -70,7 +70,7 @@ runs:
 
     - name: Install cargo-auditable for native builds
       if: inputs.use_xwin == 'false' && inputs.use_zigbuild == 'false'
-      uses: taiki-e/install-action@v2.87.2 # zizmor: ignore[unpinned-uses]
+      uses: taiki-e/install-action@v2.90.8 # zizmor: ignore[unpinned-uses]
       with:
         tool: cargo-auditable@0.7.7
         fallback: none

@@ -59,7 +59,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Install cargo-auditable
-        uses: taiki-e/install-action@v2.87.2
+        uses: taiki-e/install-action@v2.90.8
         with:
           tool: cargo-auditable@0.7.7
           fallback: none
