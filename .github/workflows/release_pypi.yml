@@ -21,54 +21,52 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          # setup-maturin installs Zig 0.17.1, while uvx supplies the wheel-specific
-          # Zig versions below until their architecture constraints are unified.
+          # setup-maturin and uvx both use Zig 0.17.1 for Linux wheels.
           - {
               NAME: linux-x64,
               OS: ubuntu-24.04,
               TARGET: x86_64-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_28,
-              ZIG: 0.15.1,
+              MANYLINUX: manylinux_2_31,
+              ZIG: 0.17.1,
             }
           - {
               NAME: linux-x64,
               OS: ubuntu-24.04,
               TARGET: x86_64-unknown-linux-musl,
-              ZIG: 0.15.1,
+              ZIG: 0.17.1,
             }
-          # Linux wheels use explicit Zig versions per architecture.
           - {
               NAME: linux-arm64,
               OS: ubuntu-24.04-arm,
               TARGET: aarch64-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_28,
-              ZIG: 0.14.1,
+              MANYLINUX: manylinux_2_31,
+              ZIG: 0.17.1,
             }
           - {
               NAME: linux-riscv64,
               OS: ubuntu-24.04,
               TARGET: riscv64gc-unknown-linux-gnu,
               MANYLINUX: manylinux_2_31,
-              ZIG: 0.15.1,
+              ZIG: 0.17.1,
             }
           - {
               NAME: linux-riscv64,
               OS: ubuntu-24.04,
               TARGET: riscv64gc-unknown-linux-musl,
-              ZIG: 0.15.1,
+              ZIG: 0.17.1,
             }
           - {
               NAME: linux-ppc64le,
               OS: ubuntu-24.04,
               TARGET: powerpc64le-unknown-linux-gnu,
-              MANYLINUX: manylinux_2_28,
-              ZIG: 0.15.1,
+              MANYLINUX: manylinux_2_32,
+              ZIG: 0.17.1,
             }
           - {
               NAME: linux-ppc64le,
               OS: ubuntu-24.04,
               TARGET: powerpc64le-unknown-linux-musl,
-              ZIG: 0.15.1,
+              ZIG: 0.17.1,
             }
           - {
               NAME: win32-x64-msvc,
@@ -94,7 +92,7 @@ jobs:
               NAME: linux-arm64,
               OS: ubuntu-24.04-arm,
               TARGET: aarch64-unknown-linux-musl,
-              ZIG: 0.14.1,
+              ZIG: 0.17.1,
             }
     steps:
       - name: Checkout

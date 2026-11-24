@@ -221,10 +221,10 @@ jobs:
         include:
           - arch: x86-64
             target: x86_64-unknown-linux-gnu
-            zigtargetsuffix: .2.28
+            zigtargetsuffix: .2.31
           - arch: ARM
             target: aarch64-unknown-linux-gnu
-            zigtargetsuffix: .2.28
+            zigtargetsuffix: .2.31
           - arch: x86-64
             target: x86_64-unknown-linux-musl
             zigtargetsuffix: ""
@@ -395,7 +395,7 @@ jobs:
         run: |
           uvx --from maturin==1.16.0 maturin build --release \
             --target "${TARGET}" --zig \
-            --compatibility manylinux_2_28 --out dist
+            --compatibility manylinux_2_31 --out dist
 
   test-debian-oldoldstable:
     name: Test on Debian Oldoldstable
