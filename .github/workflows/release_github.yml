@@ -210,8 +210,8 @@ jobs:
           # Linux RISC-V 64 (zigbuild - musl static binary)
           - { target: riscv64gc-unknown-linux-musl, zigtargetsuffix: "", pretty_target: linux-riscv64-musl }
 
-          # Linux PowerPC 64 LE (zigbuild - glibc 2.28)
-          - { target: powerpc64le-unknown-linux-gnu, zigtargetsuffix: .2.28, pretty_target: linux-ppc64le-gnu }
+          # Linux PowerPC 64 LE (zigbuild - glibc 2.32)
+          - { target: powerpc64le-unknown-linux-gnu, zigtargetsuffix: .2.32, pretty_target: linux-ppc64le-gnu }
 
           # Linux PowerPC 64 LE (zigbuild - musl static binary)
           - { target: powerpc64le-unknown-linux-musl, zigtargetsuffix: "", pretty_target: linux-ppc64le-musl }

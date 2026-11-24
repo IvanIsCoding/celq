@@ -239,7 +239,7 @@ jobs:
             zigtargetsuffix: ""
           - arch: PowerPC 64 LE
             target: powerpc64le-unknown-linux-gnu
-            zigtargetsuffix: .2.28
+            zigtargetsuffix: .2.32
           - arch: PowerPC 64 LE
             target: powerpc64le-unknown-linux-musl
             zigtargetsuffix: ""
