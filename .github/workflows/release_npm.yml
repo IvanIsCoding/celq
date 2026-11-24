@@ -14,7 +14,7 @@ permissions:
 jobs:
   publish-npm-binaries:
     name: Publish NPM packages
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: npm_release
     permissions:
       contents: read
@@ -25,27 +25,27 @@ jobs:
         build:
           - {
               NAME: linux-x64-musl,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               ARCHIVE: celq-linux-x86_64-musl.tar.gz,
             }
           - {
               NAME: linux-arm64-musl,
-              OS: ubuntu-24.04-arm,
+              OS: ubuntu-26.04-arm,
               ARCHIVE: celq-linux-aarch64-musl.tar.gz,
             }
           - {
               NAME: linux-riscv64-musl,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               ARCHIVE: celq-linux-riscv64-musl.tar.gz,
             }
           - {
               NAME: linux-ppc64-musl,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               ARCHIVE: celq-linux-ppc64le-musl.tar.gz,
             }
           - {
               NAME: freebsd-x64,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               ARCHIVE: celq-freebsd-x86_64.tar.gz,
             }
           - {
@@ -122,7 +122,7 @@ jobs:
     name: Publish the base NPM package
     needs: publish-npm-binaries
     environment: npm_release
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       id-token: write

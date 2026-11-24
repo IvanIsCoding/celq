@@ -16,11 +16,11 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-24.04
+          - os: ubuntu-26.04
             arch: x86-64
             gnu_target: x86_64-unknown-linux-gnu
             musl_target: x86_64-unknown-linux-musl
-          - os: ubuntu-24.04-arm
+          - os: ubuntu-26.04-arm
             arch: ARM64
             gnu_target: aarch64-unknown-linux-gnu
             musl_target: aarch64-unknown-linux-musl

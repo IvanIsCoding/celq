@@ -21,7 +21,7 @@ env:
 jobs:
   resolve_tag:
     name: Resolve release tag
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       commit: ${{ steps.tag.outputs.commit }}
     steps:
@@ -56,7 +56,7 @@ jobs:
     uses: $/.github/workflows/sub_reproducible_from_linux.yml
     with:
       source_ref: ${{ needs.resolve_tag.outputs.commit }}
-      runner: ubuntu-24.04-arm
+      runner: ubuntu-26.04-arm
       use_cache: false
 
   freebsd:
@@ -88,7 +88,7 @@ jobs:
     name: Attest ${{ matrix.archive }}
     needs: [resolve_tag, linux, freebsd, windows, macos]
     if: ${{ !cancelled() && needs.resolve_tag.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       id-token: write
@@ -99,32 +99,32 @@ jobs:
       matrix:
         include:
           - archive: celq-linux-x86_64-gnu.tar.gz
-            artifact: reproducible-linux-x86_64-gnu-ubuntu-24.04-arm
+            artifact: reproducible-linux-x86_64-gnu-ubuntu-26.04-arm
             target: x86_64-unknown-linux-gnu.2.31
             build_workflow: .github/workflows/sub_reproducible_from_linux.yml
             build_command: cargo auditable zigbuild --locked --release
-            release_host: ubuntu-24.04 (X64)
+            release_host: ubuntu-26.04 (X64)
             release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
           - archive: celq-linux-x86_64-musl.tar.gz
-            artifact: reproducible-linux-x86_64-musl-ubuntu-24.04-arm
+            artifact: reproducible-linux-x86_64-musl-ubuntu-26.04-arm
             target: x86_64-unknown-linux-musl
             build_workflow: .github/workflows/sub_reproducible_from_linux.yml
             build_command: cargo auditable zigbuild --locked --release
-            release_host: ubuntu-24.04 (X64)
+            release_host: ubuntu-26.04 (X64)
             release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
           - archive: celq-linux-aarch64-gnu.tar.gz
             artifact: reproducible-linux-aarch64-gnu-freebsd-15.1-x86_64
             target: aarch64-unknown-linux-gnu.2.31
             build_workflow: .github/workflows/sub_reproducible_from_freebsd.yml
             build_command: cargo auditable zigbuild --locked --release
-            release_host: ubuntu-24.04 (X64)
+            release_host: ubuntu-26.04 (X64)
             release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
           - archive: celq-linux-aarch64-musl.tar.gz
             artifact: reproducible-linux-aarch64-musl-freebsd-15.1-x86_64
             target: aarch64-unknown-linux-musl
             build_workflow: .github/workflows/sub_reproducible_from_freebsd.yml
             build_command: cargo auditable zigbuild --locked --release
-            release_host: ubuntu-24.04 (X64)
+            release_host: ubuntu-26.04 (X64)
             release_tools: rustc/cargo 1.94.1; Zig 0.15.2; cargo-zigbuild 0.23.2; cargo-auditable 0.7.5
           - archive: celq-windows-x86_64.zip
             artifact: reproducible-windows-x86_64-windows-11-vs2026-arm

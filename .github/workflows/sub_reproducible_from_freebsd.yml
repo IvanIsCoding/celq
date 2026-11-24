@@ -22,7 +22,7 @@ env:
 jobs:
   patched_cargo:
     name: Patched Cargo for FreeBSD x86-64
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -57,7 +57,7 @@ jobs:
   build:
     name: FreeBSD x86-64 host (${{ matrix.pretty_target }})
     needs: [patched_cargo, tools]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -137,7 +137,7 @@ jobs:
             /usr/local/bin/gzip -n -9 artifacts/celq.tar
             mv artifacts/celq.tar.gz artifacts/archive
 
-            export EVIDENCE_HOST='FreeBSD 15.1 VM (x86_64) on ubuntu-24.04'
+            export EVIDENCE_HOST='FreeBSD 15.1 VM (x86_64) on ubuntu-26.04'
             export EVIDENCE_RUSTC='1.94.1'
             export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
             export EVIDENCE_AUXILIARY="zig $(mise exec -- zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5; celq 0.7.1"

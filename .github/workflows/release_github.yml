@@ -187,7 +187,7 @@ jobs:
 
   build:
     name: ${{ matrix.target }}${{ matrix.zigtargetsuffix }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: github_release
     permissions:
       contents: write
@@ -295,7 +295,7 @@ jobs:
   create-zstd-archives:
     name: Zstandard (${{ matrix.pretty_target }})
     needs: [build, build_mac]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: github_release
     permissions:
       contents: write

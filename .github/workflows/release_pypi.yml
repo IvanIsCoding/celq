@@ -24,58 +24,58 @@ jobs:
           # setup-maturin and uvx both use Zig 0.17.1 for Linux wheels.
           - {
               NAME: linux-x64,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: x86_64-unknown-linux-gnu,
               MANYLINUX: manylinux_2_31,
               ZIG: 0.17.1,
             }
           - {
               NAME: linux-x64,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: x86_64-unknown-linux-musl,
               ZIG: 0.17.1,
             }
           - {
               NAME: linux-arm64,
-              OS: ubuntu-24.04-arm,
+              OS: ubuntu-26.04-arm,
               TARGET: aarch64-unknown-linux-gnu,
               MANYLINUX: manylinux_2_31,
               ZIG: 0.17.1,
             }
           - {
               NAME: linux-riscv64,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: riscv64gc-unknown-linux-gnu,
               MANYLINUX: manylinux_2_31,
               ZIG: 0.17.1,
             }
           - {
               NAME: linux-riscv64,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: riscv64gc-unknown-linux-musl,
               ZIG: 0.17.1,
             }
           - {
               NAME: linux-ppc64le,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: powerpc64le-unknown-linux-gnu,
               MANYLINUX: manylinux_2_32,
               ZIG: 0.17.1,
             }
           - {
               NAME: linux-ppc64le,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: powerpc64le-unknown-linux-musl,
               ZIG: 0.17.1,
             }
           - {
               NAME: win32-x64-msvc,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: x86_64-pc-windows-msvc,
             }
           - {
               NAME: win32-arm64-msvc,
-              OS: ubuntu-24.04,
+              OS: ubuntu-26.04,
               TARGET: aarch64-pc-windows-msvc,
             }
           - {
@@ -90,7 +90,7 @@ jobs:
             }
           - {
               NAME: linux-arm64,
-              OS: ubuntu-24.04-arm,
+              OS: ubuntu-26.04-arm,
               TARGET: aarch64-unknown-linux-musl,
               ZIG: 0.17.1,
             }
@@ -170,7 +170,7 @@ jobs:
 
   publish-source:
     name: Publish source distribution
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     environment: pypi_release
     permissions:
       contents: read

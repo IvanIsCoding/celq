@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Usage: publish-npm-binary.sh <build-name> <build-os> <binary-path>
-# Example: publish-npm-binary.sh linux-x64-musl ubuntu-24.04 release-binary/celq
+# Example: publish-npm-binary.sh linux-x64-musl ubuntu-26.04 release-binary/celq
 
 BUILD_NAME="$1"
 BUILD_OS="$2"

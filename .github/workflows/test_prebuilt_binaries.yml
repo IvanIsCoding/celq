@@ -464,8 +464,8 @@ jobs:
         run: sh .github/scripts/smoke-test.sh "$(which celq)"
 
   test-pixi-install:
-    name: Test Pixi (conda-forge global) on ubuntu-24.04
-    runs-on: ubuntu-24.04
+    name: Test Pixi (conda-forge global) on ubuntu-26.04
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -519,7 +519,7 @@ jobs:
 
   test-nix-flake:
     name: Test Nix flake validity and run
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Install Nix
         uses: cachix/install-nix-action@v31.11.1
@@ -543,7 +543,7 @@ jobs:
   
   test-nix-flake-dev:
     name: Test Nix flake (dev) validity and run
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Install Nix
         uses: cachix/install-nix-action@v31.11.1
@@ -622,7 +622,7 @@ jobs:
       - test-nix-flake
       - test-nix-flake-dev
       - test-freebsd-install
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     if: always()
     steps:
       - name: Check all installation methods

@@ -26,8 +26,8 @@ env:
 jobs:
   patched_cargo:
     name: Patched Cargo for Linux ARM64
-    if: inputs.runner == 'ubuntu-24.04-arm'
-    runs-on: ubuntu-24.04
+    if: inputs.runner == 'ubuntu-26.04-arm'
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -55,8 +55,8 @@ jobs:
 
   native:
     name: Linux x86-64 (${{ matrix.pretty_target }})
-    if: inputs.runner == 'ubuntu-24.04'
-    runs-on: ubuntu-24.04
+    if: inputs.runner == 'ubuntu-26.04'
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
@@ -114,7 +114,7 @@ jobs:
       - name: Upload reproducible build
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: reproducible-${{ matrix.pretty_target }}-ubuntu-24.04
+          name: reproducible-${{ matrix.pretty_target }}-ubuntu-26.04
           path: artifacts
           retention-days: 1
           if-no-files-found: error
@@ -122,9 +122,9 @@ jobs:
 
   arm_host:
     name: Linux ARM64 host (${{ matrix.pretty_target }})
-    if: inputs.runner == 'ubuntu-24.04-arm'
+    if: inputs.runner == 'ubuntu-26.04-arm'
     needs: patched_cargo
-    runs-on: ubuntu-24.04-arm
+    runs-on: ubuntu-26.04-arm
     strategy:
       fail-fast: false
       matrix:
@@ -188,7 +188,7 @@ jobs:
 
       - name: Capture build evidence
         run: |
-          export EVIDENCE_HOST='ubuntu-24.04-arm (ARM64)'
+          export EVIDENCE_HOST='ubuntu-26.04-arm (ARM64)'
           export EVIDENCE_RUSTC='1.94.1'
           export EVIDENCE_CARGO='1.94.1 (patched host metadata)'
           export EVIDENCE_AUXILIARY="zig $(zig version); cargo-zigbuild 0.23.2; cargo-auditable 0.7.5"
@@ -203,7 +203,7 @@ jobs:
       - name: Upload reproducible build
         uses: actions/upload-artifact@v7.0.1
         with:
-          name: reproducible-${{ matrix.pretty_target }}-ubuntu-24.04-arm
+          name: reproducible-${{ matrix.pretty_target }}-ubuntu-26.04-arm
           path: artifacts
           retention-days: 1
           if-no-files-found: error
